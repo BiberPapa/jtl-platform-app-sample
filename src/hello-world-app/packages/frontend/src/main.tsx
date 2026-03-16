@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { createAppBridge } from '@jtl-software/cloud-apps-core';
 import App from './App';
 import './index.css';
+import { AppBridgeProvider } from './services/appBridgeContext';
 
 function getRootElement(): HTMLElement {
   const element = document.getElementById('root');
@@ -19,7 +20,9 @@ async function bootstrap(): Promise<void> {
 
   createRoot(getRootElement()).render(
     <StrictMode>
-      <App appBridge={appBridge} />
+      <AppBridgeProvider appBridge={appBridge}>
+        <App />
+      </AppBridgeProvider>
     </StrictMode>,
   );
 }

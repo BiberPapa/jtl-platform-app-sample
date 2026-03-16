@@ -1,22 +1,17 @@
-import type { AppBridge } from '@jtl-software/cloud-apps-core';
 import { Button } from '@jtl-software/platform-ui-react';
 import { useCallback, useState } from 'react';
-import { createAppBridgeClient } from '../../services/appBridgeClient';
+import { useAppBridgeClient } from '../../services/appBridgeContext';
 import { connectTenant } from '../../services/setupService';
-
-type SetupPageProps = {
-  appBridge: AppBridge;
-};
 
 type SetupState = { status: 'idle' } | { status: 'submitting' } | { status: 'success'; message: string } | { status: 'error'; message: string };
 
-function SetupPage({ appBridge }: SetupPageProps) {
+function SetupPage() {
   const [setupState, setSetupState] = useState<SetupState>({ status: 'idle' });
+  const appBridgeClient = useAppBridgeClient();
 
   const handleSetupCompleted = useCallback(async (): Promise<void> => {
     try {
       setSetupState({ status: 'submitting' });
-      const appBridgeClient = createAppBridgeClient(appBridge);
       const sessionToken = await appBridgeClient.getSessionToken();
 
       const { message } = await connectTenant(sessionToken);
@@ -26,7 +21,7 @@ function SetupPage({ appBridge }: SetupPageProps) {
       const message = error instanceof Error ? error.message : 'An unexpected error occurred during setup.';
       setSetupState({ status: 'error', message });
     }
-  }, [appBridge]);
+  }, [appBridgeClient]);
 
   return (
     <main className="app-shell">

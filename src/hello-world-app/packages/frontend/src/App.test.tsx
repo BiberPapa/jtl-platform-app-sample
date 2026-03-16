@@ -5,6 +5,7 @@ import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
 import type { AppBridgeClient } from './services/appBridgeClient';
+import { AppBridgeProvider } from './services/appBridgeContext';
 
 const { connectTenantMock, getCurrentCustomerIdMock, requestCustomersMock } = vi.hoisted(() => ({
   connectTenantMock: vi.fn<(sessionToken: string) => Promise<{ message: string }>>(),
@@ -68,7 +69,11 @@ function createAppBridgeMock(): BridgeMock {
 
 function renderAtPath(pathname: string, appBridge: AppBridge): void {
   window.history.pushState({}, '', pathname);
-  render(<App appBridge={appBridge} />);
+  render(
+    <AppBridgeProvider appBridge={appBridge}>
+      <App />
+    </AppBridgeProvider>,
+  );
 }
 
 describe('get app mode rendering', () => {

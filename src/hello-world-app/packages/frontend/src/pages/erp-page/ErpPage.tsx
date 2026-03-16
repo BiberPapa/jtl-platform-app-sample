@@ -1,23 +1,19 @@
-import type { AppBridge } from '@jtl-software/cloud-apps-core';
 import { useCallback, useState } from 'react';
-import { createAppBridgeClient } from '../../services/appBridgeClient';
+import { useAppBridgeClient } from '../../services/appBridgeContext';
 import { requestCustomers } from '../../services/erpService';
 
-type ErpPageProps = {
-  appBridge: AppBridge;
-};
-
-function ErpPage({ appBridge }: ErpPageProps) {
+function ErpPage() {
   const [isRequesting, setIsRequesting] = useState(false);
   const [customerData, setCustomerData] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const view = new URLSearchParams(window.location.search).get('view') ?? 'default';
+  const appBridgeClient = useAppBridgeClient();
 
   const handleRequestCustomersPress = useCallback(async (): Promise<void> => {
     try {
       setIsRequesting(true);
       setErrorMessage(null);
-      const customers = await requestCustomers(createAppBridgeClient(appBridge));
+      const customers = await requestCustomers(appBridgeClient);
       setCustomerData(JSON.stringify(customers, null, 2));
     } catch (error) {
       const message = error instanceof Error ? error.message : 'The customer data could not be loaded.';
@@ -25,7 +21,7 @@ function ErpPage({ appBridge }: ErpPageProps) {
     } finally {
       setIsRequesting(false);
     }
-  }, [appBridge]);
+  }, [appBridgeClient]);
 
   return (
     <main className="app-shell">

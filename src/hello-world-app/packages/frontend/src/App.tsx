@@ -1,22 +1,17 @@
-import type { AppBridge } from '@jtl-software/cloud-apps-core';
 import './App.css';
 import { ErpPage, PanePage, SetupPage } from './pages';
 import { getAppMode } from './routing/getAppMode';
 
-type AppProps = {
-  appBridge: AppBridge;
-};
-
-function App({ appBridge }: AppProps) {
+function App() {
   const mode = getAppMode(window.location.pathname);
 
   switch (mode) {
     case 'setup':
-      return <SetupPage appBridge={appBridge} />;
+      return <SetupPage />;
     case 'erp':
-      return <ErpPage appBridge={appBridge} />;
+      return <ErpPage />;
     case 'pane':
-      return <PanePage appBridge={appBridge} />;
+      return <PanePage />;
     default:
       return (
         <main className="app-shell">

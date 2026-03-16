@@ -1,42 +1,34 @@
-import type { AppBridge } from '@jtl-software/cloud-apps-core';
 import { Button, Input, Stack, Text } from '@jtl-software/platform-ui-react';
 import { useCallback, useEffect, useState } from 'react';
-import { createAppBridgeClient } from '../../services/appBridgeClient';
+import { useAppBridgeClient } from '../../services/appBridgeContext';
 import { getCurrentCustomerId } from '../../services/paneService';
 
-type PanePageProps = {
-  appBridge: AppBridge;
-};
-
-function PanePage({ appBridge }: PanePageProps) {
+function PanePage() {
   const [customer, setCustomer] = useState('');
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const appBridgeClient = useAppBridgeClient();
 
   useEffect(() => {
-    const unsubscribe = createAppBridgeClient(appBridge).subscribeToCustomerChanged(event => {
-      try {
-        setCustomer(event.customerId);
-        setStatusMessage('Customer was updated from the event stream.');
-      } catch {
-        setStatusMessage('The bridge emitted an unexpected CustomerChanged payload.');
-      }
+    const unsubscribe = appBridgeClient.subscribeToCustomerChanged(event => {
+      setCustomer(event.customerId);
+      setStatusMessage('Customer was updated from the event stream.');
     });
 
     return () => {
       unsubscribe();
     };
-  }, [appBridge]);
+  }, [appBridgeClient]);
 
   const handleGetCurrentCustomer = useCallback(async (): Promise<void> => {
     try {
-      const customerId = await getCurrentCustomerId(createAppBridgeClient(appBridge));
+      const customerId = await getCurrentCustomerId(appBridgeClient);
       setCustomer(customerId);
       setStatusMessage('Customer was loaded on demand.');
     } catch (error) {
       const message = error instanceof Error ? error.message : 'The current customer could not be loaded.';
       setStatusMessage(message);
     }
-  }, [appBridge]);
+  }, [appBridgeClient]);
 
   return (
     <main className="app-shell">
