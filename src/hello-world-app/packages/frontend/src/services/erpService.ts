@@ -1,12 +1,8 @@
-import type { AppBridge } from '@jtl-software/cloud-apps-core';
 import { apiUrl } from '../common/constants';
+import type { AppBridgeClient } from './appBridgeClient';
 
-export async function requestCustomers(appBridge: AppBridge): Promise<unknown> {
-  const sessionToken = await appBridge.method.call<unknown>('getSessionToken');
-
-  if (typeof sessionToken !== 'string') {
-    throw new Error('Expected the bridge to return a session token string.');
-  }
+export async function requestCustomers(appBridgeClient: AppBridgeClient): Promise<unknown> {
+  const sessionToken = await appBridgeClient.getSessionToken();
 
   const response = await fetch(`${apiUrl}/erp/customers`, {
     headers: {

@@ -4,11 +4,12 @@ import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
+import type { AppBridgeClient } from './services/appBridgeClient';
 
 const { connectTenantMock, getCurrentCustomerIdMock, requestCustomersMock } = vi.hoisted(() => ({
   connectTenantMock: vi.fn<(sessionToken: string) => Promise<{ message: string }>>(),
-  requestCustomersMock: vi.fn<(appBridge: AppBridge) => Promise<unknown>>(),
-  getCurrentCustomerIdMock: vi.fn<(appBridge: AppBridge) => Promise<string>>(),
+  requestCustomersMock: vi.fn<(appBridgeClient: AppBridgeClient) => Promise<unknown>>(),
+  getCurrentCustomerIdMock: vi.fn<(appBridgeClient: AppBridgeClient) => Promise<string>>(),
 }));
 
 vi.mock('@jtl-software/platform-ui-react', () => ({

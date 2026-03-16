@@ -1,6 +1,7 @@
 import type { AppBridge } from '@jtl-software/cloud-apps-core';
 import { Button } from '@jtl-software/platform-ui-react';
 import { useCallback, useState } from 'react';
+import { createAppBridgeClient } from '../../services/appBridgeClient';
 import { connectTenant } from '../../services/setupService';
 
 type SetupPageProps = {
@@ -15,14 +16,11 @@ function SetupPage({ appBridge }: SetupPageProps) {
   const handleSetupCompleted = useCallback(async (): Promise<void> => {
     try {
       setSetupState({ status: 'submitting' });
-      const sessionToken = await appBridge.method.call('getSessionToken');
-
-      if (typeof sessionToken !== 'string') {
-        throw new Error('Expected the bridge to return a session token string.');
-      }
+      const appBridgeClient = createAppBridgeClient(appBridge);
+      const sessionToken = await appBridgeClient.getSessionToken();
 
       const { message } = await connectTenant(sessionToken);
-      await appBridge.method.call('setupCompleted');
+      await appBridgeClient.setupCompleted();
       setSetupState({ status: 'success', message });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'An unexpected error occurred during setup.';

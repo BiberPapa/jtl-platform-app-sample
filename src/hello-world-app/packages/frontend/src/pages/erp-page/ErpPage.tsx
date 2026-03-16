@@ -1,5 +1,6 @@
 import type { AppBridge } from '@jtl-software/cloud-apps-core';
 import { useCallback, useState } from 'react';
+import { createAppBridgeClient } from '../../services/appBridgeClient';
 import { requestCustomers } from '../../services/erpService';
 
 type ErpPageProps = {
@@ -16,7 +17,7 @@ function ErpPage({ appBridge }: ErpPageProps) {
     try {
       setIsRequesting(true);
       setErrorMessage(null);
-      const customers = await requestCustomers(appBridge);
+      const customers = await requestCustomers(createAppBridgeClient(appBridge));
       setCustomerData(JSON.stringify(customers, null, 2));
     } catch (error) {
       const message = error instanceof Error ? error.message : 'The customer data could not be loaded.';
