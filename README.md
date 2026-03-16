@@ -5,8 +5,9 @@ Welcome to the official sample repository for **JTL-Cloud Apps**! This repositor
 ## ⚡️ Prerequisites
 
 - Node.js (v18 or higher)
-- Yarn package manager
-- Run `yarn install` on repository root to install husky with dependencies
+- Corepack enabled (`corepack enable`)
+- Install dependencies from the repository root with `corepack yarn install`
+- .NET 9 SDK if you want to run the ASP.NET backend sample
 
 ## 🚀 Getting Started
 
@@ -24,6 +25,16 @@ Welcome to the official sample repository for **JTL-Cloud Apps**! This repositor
    ```
 
 3. **Follow the README instructions** in each example directory for specific setup and run instructions.
+
+## ✅ Quality Checks
+
+Run these commands from the repository root:
+
+- `corepack yarn lint`
+- `corepack yarn typecheck`
+- `corepack yarn test`
+- `corepack yarn build`
+- `corepack yarn run check`
 
 ## 📁 Available Examples
 

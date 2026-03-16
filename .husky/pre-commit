@@ -1,17 +1,11 @@
-yarn format:check
+corepack yarn format:check
 
-# Check for changes in src/sdk/js-core
-if git diff --cached --name-only | grep -q '^src/sdk/js-core/'; then
-  echo "Linting files in src/sdk/js-core..."
-  yarn --cwd src/sdk/js-core lint
+# Run focused workspace checks only when the demo app changed.
+if git diff --cached --name-only | grep -q '^src/hello-world-app/'; then
+  echo "Running hello-world-app quality checks..."
+  corepack yarn --cwd src/hello-world-app lint
+  corepack yarn --cwd src/hello-world-app typecheck
+  corepack yarn --cwd src/hello-world-app test
 else
-  echo "No changes in src/sdk/js-core. Skipping lint."
-fi
-
-# Check for changes in src/sdk/js-core
-if git diff --cached --name-only | grep -q '^src/sdk/js-react-internal/'; then
-  echo "Linting files in src/sdk/js-react-internal..."
-  yarn --cwd src/sdk/js-react-internal lint
-else
-  echo "No changes in src/sdk/js-react-internal. Skipping lint."
+  echo "No staged changes in src/hello-world-app. Skipping workspace checks."
 fi

@@ -1,11 +1,16 @@
 # dependencies
 node_modules/
+**/node_modules/
 
 # testing
 coverage
+**/coverage/
+TestResults/
+**/TestResults/
 
 # production
 build
+**/build/
 
 # Editor directories and files
 .vscode/*
@@ -19,6 +24,7 @@ build
 
 # visual studio
 .vs
+**/.vs/
 
 # Rider
 *.DotSettings.user
@@ -26,20 +32,36 @@ build
 # .NET
 bin/
 obj/
+**/bin/
+**/obj/
+.dotnet/
+**/.dotnet/
 nuget.config
 
 # JS
 .npmrc
 dist/
+**/dist/
+.turbo/
+**/.turbo/
+.vite/
+**/.vite/
+*.tsbuildinfo
 
 # Terraform
 .terraform/
+**/.terraform/
 
 # build output
 generators
 
 # testing folder
 /test
+
+# environment files
+.env
+.env.*
+!.env.example
 
 # Logs
 logs

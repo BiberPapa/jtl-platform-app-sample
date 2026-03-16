@@ -17,14 +17,22 @@ jobs:
           node-version: 20
           cache: 'yarn'
 
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Enable Corepack
+        run: corepack enable
+
       - name: Install dependencies
         working-directory: src/hello-world-app
-        run: yarn install
+        run: corepack yarn install
 
       - name: Build Hello World App
         working-directory: src/hello-world-app
-        run: yarn build
+        run: corepack yarn build
 
       - name: Test Hello World App
         working-directory: src/hello-world-app
-        run: yarn test
+        run: corepack yarn test

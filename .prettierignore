@@ -1,3 +1,7 @@
 node_modules
 dist
 env/helm
+src/hello-world-app/.turbo
+**/bin
+**/obj
+src/hello-world-app/packages/backend-dotnet/.dotnet

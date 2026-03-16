@@ -18,16 +18,24 @@ jobs:
           node-version: 20
           cache: 'yarn'
 
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Enable Corepack
+        run: corepack enable
+
       - name: Install dependencies
-        run: yarn install
+        run: corepack yarn install
 
       - name: Validate current commit (last commit) with commitlint
         if: github.event_name == 'push'
-        run: yarn commitlint --last --verbose
+        run: corepack yarn commitlint --last --verbose
 
       - name: Validate PR commits with commitlint
         if: github.event_name == 'pull_request'
-        run: yarn commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
+        run: corepack yarn commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
 
   prettier:
     runs-on: ubuntu-22.04
@@ -41,13 +49,21 @@ jobs:
           node-version: 20
           cache: 'yarn'
 
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Enable Corepack
+        run: corepack enable
+
       - name: Install dependencies
-        run: yarn install
+        run: corepack yarn install
 
       - name: Run prettier
-        run: yarn format:check
+        run: corepack yarn format:check
 
-  eslint-hello-world-app:
+  quality-hello-world-app:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout code
@@ -59,10 +75,26 @@ jobs:
           node-version: 20
           cache: 'yarn'
 
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Enable Corepack
+        run: corepack enable
+
       - name: Install dependencies
         working-directory: src/hello-world-app
-        run: yarn install
+        run: corepack yarn install
 
-      - name: Run eslint
+      - name: Run lint
         working-directory: src/hello-world-app
-        run: yarn lint
+        run: corepack yarn lint
+
+      - name: Run typecheck
+        working-directory: src/hello-world-app
+        run: corepack yarn typecheck
+
+      - name: Run tests
+        working-directory: src/hello-world-app
+        run: corepack yarn test

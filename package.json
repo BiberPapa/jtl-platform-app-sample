@@ -1,4 +1,5 @@
 {
+  "packageManager": "yarn@1.22.22",
   "devDependencies": {
     "@commitlint/cli": "^19.7.1",
     "@commitlint/config-conventional": "^19.7.1",
@@ -6,6 +7,11 @@
     "prettier": "^3.4.2"
   },
   "scripts": {
+    "build": "corepack yarn --cwd src/hello-world-app build",
+    "check": "corepack yarn format:check && corepack yarn lint && corepack yarn typecheck && corepack yarn test",
+    "lint": "corepack yarn --cwd src/hello-world-app lint",
+    "test": "corepack yarn --cwd src/hello-world-app test",
+    "typecheck": "corepack yarn --cwd src/hello-world-app typecheck",
     "prepare": "husky",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
