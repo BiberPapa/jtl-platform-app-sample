@@ -10,8 +10,15 @@
   "scripts": {
     "dev": "turbo dev",
     "build": "turbo build",
+    "dev:backend:dotnet": "yarn workspace hello-world-app-backend-dotnet dev",
+    "dev:backend:ts": "yarn workspace hello-world-app-backend dev",
+    "dev:frontend": "yarn workspace hello-world-app-frontend dev",
     "lint": "turbo lint",
-    "test": "turbo test"
+    "test": "turbo test",
+    "test:backend:dotnet": "yarn workspace hello-world-app-backend-dotnet test",
+    "test:backend:ts": "yarn workspace hello-world-app-backend test",
+    "typecheck": "turbo typecheck",
+    "check": "turbo lint typecheck test build"
   },
   "license": "MIT",
   "devDependencies": {

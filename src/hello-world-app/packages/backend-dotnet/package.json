@@ -1,0 +1,14 @@
+{
+  "name": "hello-world-app-backend-dotnet",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "postinstall": "node ./scripts/run-dotnet.mjs restore",
+    "dev": "node ./scripts/run-dotnet.mjs dev",
+    "build": "node ./scripts/run-dotnet.mjs build",
+    "lint": "node ./scripts/run-dotnet.mjs typecheck",
+    "start": "node ./scripts/run-dotnet.mjs start",
+    "test": "node ./scripts/run-dotnet.mjs test",
+    "typecheck": "node ./scripts/run-dotnet.mjs typecheck"
+  }
+}

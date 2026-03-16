@@ -1,17 +1,18 @@
 import cors from 'cors';
 import dotenv from 'dotenv';
-import express, { Request, Response } from 'express';
-import { importJWK, jwtVerify } from 'jose';
-import { Environment } from './constants.js';
+import express, { type Request, type Response } from 'express';
+import { getAccessToken } from './accessToken.js';
+import { getErpEndpoint } from './config.js';
+import { buildErpProxyRequest } from './erpProxy.js';
+import { verifySessionTokenAndExtractPayload } from './sessionToken.js';
+
 dotenv.config();
+
 const app = express();
 const PORT = 50143;
 
 app.use(cors());
-
 app.use(express.json());
-console.log('CORS enabled');
-console.log('Environment', process.env.API_ENVIRONMENT);
 
 /**
  * This is a simple example of how to maintain the mapping between a tenant ID from THIS application and the JTL Platform tenant ID.
@@ -20,155 +21,69 @@ console.log('Environment', process.env.API_ENVIRONMENT);
  */
 const myMappingDatabase = new Map<string, string>();
 
-app.get('/', async (_req, res) => {
+app.get('/', (_req, res) => {
   res.send('Hello from TypeScript + Express!');
 });
 
-app.post('/connect-tenant', async (req, res) => {
-  const { sessionToken } = req.body;
+type ConnectTenantRequest = Request<Record<string, never>, unknown, unknown>;
+type ErpInfoRequest = Request<{ endpoint: string; tenantId: string }, unknown, unknown>;
 
-  // Verify the session token & extract the payload
+function getSessionTokenFromBody(body: unknown): string | null {
+  if (!body || typeof body !== 'object') {
+    return null;
+  }
+
+  const candidate = body as Record<string, unknown>;
+
+  return typeof candidate.sessionToken === 'string' ? candidate.sessionToken : null;
+}
+
+app.post('/connect-tenant', async (req: ConnectTenantRequest, res: Response) => {
+  const sessionToken = getSessionTokenFromBody(req.body);
+
+  if (!sessionToken) {
+    res.status(400).json({ error: 'sessionToken must be provided as a string.' });
+    return;
+  }
+
   const sessionTokenPayload = await verifySessionTokenAndExtractPayload(sessionToken);
-
-  // the tenant ID can be read from header with authorization or from the JWT or whatever your backend will do
-  // in this example we just use the current time as tenant ID
-  const tenantId = new Date().getTime().toString();
-
-  // Store the mapping in the database
+  const tenantId = Date.now().toString();
   myMappingDatabase.set(tenantId, sessionTokenPayload.tenantId);
 
   res.send(`The tenant ID is ${tenantId} and the JTL Platform tenant ID is ${sessionTokenPayload.tenantId}`);
-
-  res.end();
 });
 
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  process.stdout.write(`Server running on http://localhost:${PORT}\n`);
 });
 
-const wellKnownEndpoint = `https://api${Environment}.jtl-cloud.com/account/.well-known/jwks.json`;
-async function verifySessionTokenAndExtractPayload(sessionToken: string): Promise<SessionTokenPayload> {
-  // Fetch the JWKS
-  const jwt = await getJwt();
-  const response = await fetch(wellKnownEndpoint, {
-    headers: {
-      Authorization: `Bearer ${jwt}`,
-    },
-  });
-  const jwks = await response.json();
-  const key = jwks.keys[0];
-  // Convert the JWK to a CryptoKey
-  const publicKey = await importJWK(key, 'EdDSA');
-
+app.all('/erp-info/:tenantId/:endpoint', async (req: ErpInfoRequest, res: Response) => {
   try {
-    const { payload } = await jwtVerify(sessionToken, publicKey);
-    console.log('✅ Token is valid:', payload);
-    return payload as SessionTokenPayload;
-  } catch (err) {
-    console.error('❌ Invalid token:', err);
-  }
-}
+    const proxyRequest = buildErpProxyRequest({
+      method: req.method,
+      tenantId: req.params.tenantId,
+      endpoint: req.params.endpoint,
+      body: req.body,
+    });
+    const accessToken = await getAccessToken();
 
-type SessionTokenPayload = {
-  userId: string;
-  tenantId: string;
-};
-
-/**
- * Get the authentication endpoint URL for the specified environment.
- * @param env 'prod' | '.dev' | '.beta' | '.qa'
- * @returns The authentication endpoint URL.
- */
-const getAuthEndpoint = (env: string) => {
-  if (env === 'prod' || env === '.beta') return `https://auth.jtl-cloud.com/oauth2/token`;
-  return `https://auth${env}.jtl-cloud.com/oauth2/token`;
-};
-
-/**
- * This function can be removed once we have exposed the endpoint to public.
- */
-export async function getJwt(): Promise<string> {
-  const clientId = process.env.CLIENT_ID;
-  const clientSecret = process.env.CLIENT_SECRET;
-
-  console.log('clientId', clientId);
-  console.log('clientSecret', clientSecret ? `${clientSecret.slice(0, 3)}***${clientSecret.slice(-3)}` : 'undefined');
-  if (!clientId || !clientSecret) {
-    throw new Error('CLIENT_ID and CLIENT_SECRET must be defined in .env file');
-  }
-  const authString = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
-
-  const response = await fetch(getAuthEndpoint(Environment), {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      Authorization: `Basic ${authString}`,
-    },
-    body: new URLSearchParams({
-      grant_type: 'client_credentials',
-    }),
-  });
-  const data = await response.json();
-
-  if (response.ok) {
-    return data.access_token;
-  } else {
-    throw new Error(`Failed to fetch JWT (${response.status}): ${data.error}`);
-  }
-}
-
-app.all('/erp-info/:tenantId/:endpoint', async (req: Request, res: Response) => {
-  try {
-    // Get parameters from the URL and the body if available
-    const urlTenantId = req.params.tenantId;
-    const urlEndpoint = req.params.endpoint;
-    const method = req.method;
-
-    // For POST, PUT, PATCH, check for tenantId and endpoint in the request body
-    let tenantId = urlTenantId;
-    let endpoint = urlEndpoint;
-    let bodyToSend = req.body;
-
-    if (['POST', 'PUT', 'PATCH'].includes(method) && req.body) {
-      // Extract _tenantId and _endpoint from body if present
-      if (req.body._tenantId) {
-        tenantId = req.body._tenantId;
-      }
-
-      if (req.body._endpoint) {
-        endpoint = req.body._endpoint;
-      }
-
-      // Create a new copy of the body without _tenantId and _endpoint
-      const { _tenantId, _endpoint, ...cleanedBody } = req.body;
-      bodyToSend = cleanedBody;
-    }
-
-    // Get JWT for authentication
-    const jwt = await getJwt();
-
-    // Set up request options
     const options: RequestInit = {
-      method: method,
+      method: req.method,
       headers: {
-        'X-Tenant-ID': tenantId,
-        Authorization: `Bearer ${jwt}`,
+        'X-Tenant-ID': proxyRequest.tenantId,
+        Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
     };
 
-    // Add body for methods that support it
-    if (['POST', 'PUT', 'PATCH'].includes(method)) {
-      options.body = JSON.stringify(bodyToSend);
+    if (['POST', 'PUT', 'PATCH'].includes(req.method)) {
+      options.body = JSON.stringify(proxyRequest.body);
     }
 
-    // Call the JTL Platform API
+    const erpInfoResponse = await fetch(getErpEndpoint(proxyRequest.endpoint), options);
 
-    const erpInfoResponse = await fetch(`https://api${Environment}.jtl-cloud.com/erp/${endpoint}`, options);
-
-    // Check if the response is OK and return the appropriate response
     if (erpInfoResponse.ok) {
-      const data = await erpInfoResponse.json();
+      const data: unknown = await erpInfoResponse.json();
       res.json(data);
     } else {
       const errorText = await erpInfoResponse.text();

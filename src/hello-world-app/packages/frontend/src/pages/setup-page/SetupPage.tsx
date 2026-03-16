@@ -1,56 +1,67 @@
-import { useCallback, useState } from 'react';
-import ISetupPageProps from './ISetupPageProps';
+import type { AppBridge } from '@jtl-software/cloud-apps-core';
 import { Button } from '@jtl-software/platform-ui-react';
-import { apiUrl } from '../../common/constants';
+import { useCallback, useState } from 'react';
+import { connectTenant } from '../../services/setupService';
 
-const SetupPage: React.FC<ISetupPageProps> = ({ appBridge }) => {
-  const [isLoading, setIsLoading] = useState(false);
+type SetupPageProps = {
+  appBridge: AppBridge;
+};
+
+type SetupState = { status: 'idle' } | { status: 'submitting' } | { status: 'success'; message: string } | { status: 'error'; message: string };
+
+function SetupPage({ appBridge }: SetupPageProps) {
+  const [setupState, setSetupState] = useState<SetupState>({ status: 'idle' });
 
   const handleSetupCompleted = useCallback(async (): Promise<void> => {
     try {
-      setIsLoading(true);
+      setSetupState({ status: 'submitting' });
       const sessionToken = await appBridge.method.call('getSessionToken');
-      // call your backend to verify the session token and extract the payload
-      const response = await fetch(`${apiUrl}/connect-tenant`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          sessionToken,
-        }),
-      });
 
-      const responseBody = await response.text();
-      console.log('Response from backend:', response.status, responseBody);
-
-      // handle the response from your backend
-      if (response.ok) {
-        await appBridge.method.call('setupCompleted');
+      if (typeof sessionToken !== 'string') {
+        throw new Error('Expected the bridge to return a session token string.');
       }
+
+      const { message } = await connectTenant(sessionToken);
+      await appBridge.method.call('setupCompleted');
+      setSetupState({ status: 'success', message });
     } catch (error) {
-      console.error('An error occurred during setup:', error);
-    } finally {
-      setIsLoading(false);
+      const message = error instanceof Error ? error.message : 'An unexpected error occurred during setup.';
+      setSetupState({ status: 'error', message });
     }
   }, [appBridge]);
 
-  if (isLoading) {
-    return (
-      <div>
-        <h1>Loading...</h1>
-        <p>Please wait while we are setting up your app</p>
-      </div>
-    );
-  }
-
   return (
-    <div>
-      <h1>Setup</h1>
-      <p>Here could a login flow be performed and finally you can ask for confirmation to connect</p>
-      <Button onClick={handleSetupCompleted} label="Setup App" />
-    </div>
+    <main className="app-shell">
+      <section className="app-card page-stack" aria-labelledby="setup-title">
+        <p className="eyebrow">Setup</p>
+        <h1 id="setup-title">Connect the tenant</h1>
+        <p>
+          This demo shows a minimal setup flow: obtain a session token from the app bridge, validate it in the backend and then confirm the setup.
+        </p>
+        {setupState.status === 'submitting' ? (
+          <p className="status-text" aria-live="polite">
+            Please wait while the tenant connection is being established.
+          </p>
+        ) : null}
+        {setupState.status === 'error' ? (
+          <p className="status-text" data-status="error" role="alert">
+            {setupState.message}
+          </p>
+        ) : null}
+        {setupState.status === 'success' ? (
+          <p className="status-text" data-status="success" aria-live="polite">
+            {setupState.message}
+          </p>
+        ) : null}
+        <Button
+          onClick={() => {
+            void handleSetupCompleted();
+          }}
+          label={setupState.status === 'submitting' ? 'Connecting…' : 'Setup App'}
+        />
+      </section>
+    </main>
   );
-};
+}
 
 export default SetupPage;

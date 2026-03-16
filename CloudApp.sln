@@ -1,0 +1,48 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{827E0CD3-B72D-47B6-A68D-7590B98EB39B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "hello-world-app", "hello-world-app", "{DB1B0164-BA0D-FEDB-11BF-18C219A32774}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "packages", "packages", "{CBA37BE8-5EFB-4865-FCAB-70FD01C826EA}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "backend-dotnet", "backend-dotnet", "{860A2CB2-AE0D-9947-D1DD-5C871FD88D99}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HelloWorldApp.Backend.DotNet", "src\hello-world-app\packages\backend-dotnet\HelloWorldApp.Backend.DotNet.csproj", "{83E1D6E2-9D44-5E93-26AA-71EC2BFD4962}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{080C08F5-A8D8-C11D-7B30-D86FD5E330CE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HelloWorldApp.Backend.DotNet.Tests", "src\hello-world-app\packages\backend-dotnet\tests\HelloWorldApp.Backend.DotNet.Tests\HelloWorldApp.Backend.DotNet.Tests.csproj", "{5EF8D108-B3D9-7D4E-DF62-7FDA7732DFB3}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{83E1D6E2-9D44-5E93-26AA-71EC2BFD4962}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{83E1D6E2-9D44-5E93-26AA-71EC2BFD4962}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{83E1D6E2-9D44-5E93-26AA-71EC2BFD4962}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{83E1D6E2-9D44-5E93-26AA-71EC2BFD4962}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5EF8D108-B3D9-7D4E-DF62-7FDA7732DFB3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5EF8D108-B3D9-7D4E-DF62-7FDA7732DFB3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5EF8D108-B3D9-7D4E-DF62-7FDA7732DFB3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5EF8D108-B3D9-7D4E-DF62-7FDA7732DFB3}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{DB1B0164-BA0D-FEDB-11BF-18C219A32774} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
+		{CBA37BE8-5EFB-4865-FCAB-70FD01C826EA} = {DB1B0164-BA0D-FEDB-11BF-18C219A32774}
+		{860A2CB2-AE0D-9947-D1DD-5C871FD88D99} = {CBA37BE8-5EFB-4865-FCAB-70FD01C826EA}
+		{83E1D6E2-9D44-5E93-26AA-71EC2BFD4962} = {860A2CB2-AE0D-9947-D1DD-5C871FD88D99}
+		{080C08F5-A8D8-C11D-7B30-D86FD5E330CE} = {860A2CB2-AE0D-9947-D1DD-5C871FD88D99}
+		{5EF8D108-B3D9-7D4E-DF62-7FDA7732DFB3} = {080C08F5-A8D8-C11D-7B30-D86FD5E330CE}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {E3DAE76E-8A97-40F5-8868-ED15B099370B}
+	EndGlobalSection
+EndGlobal

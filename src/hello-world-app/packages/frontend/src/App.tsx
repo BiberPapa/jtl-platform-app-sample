@@ -1,32 +1,33 @@
-import { AppBridge } from '@jtl-software/cloud-apps-core';
+import type { AppBridge } from '@jtl-software/cloud-apps-core';
 import './App.css';
 import { ErpPage, PanePage, SetupPage } from './pages';
-import { useEffect } from 'react';
+import { getAppMode } from './routing/getAppMode';
 
-type AppMode = 'setup' | 'erp' | 'pane';
+type AppProps = {
+  appBridge: AppBridge;
+};
 
-const App: React.FC<{ appBridge: AppBridge }> = ({ appBridge }) => {
-  const mode: AppMode = location.pathname.substring(1) as AppMode;
-
-  useEffect((): void => {
-    console.log('[HelloWorldApp] bridge created!');
-  }, []);
+function App({ appBridge }: AppProps) {
+  const mode = getAppMode(window.location.pathname);
 
   switch (mode) {
     case 'setup':
-      return appBridge && <SetupPage appBridge={appBridge} />;
+      return <SetupPage appBridge={appBridge} />;
     case 'erp':
-      return appBridge && <ErpPage appBridge={appBridge} />;
+      return <ErpPage appBridge={appBridge} />;
     case 'pane':
-      return appBridge && <PanePage appBridge={appBridge} />;
+      return <PanePage appBridge={appBridge} />;
     default:
       return (
-        <div>
-          <h1>Unknown mode</h1>
-          <p>Unknown mode</p>
-        </div>
+        <main className="app-shell">
+          <section className="app-card page-stack" aria-labelledby="unknown-mode-title">
+            <p className="eyebrow">Hello World App</p>
+            <h1 id="unknown-mode-title">Unknown app mode</h1>
+            <p>Use `/setup`, `/erp` or `/pane` to open one of the documented demo entry points.</p>
+          </section>
+        </main>
       );
   }
-};
+}
 
 export default App;
