@@ -8,7 +8,7 @@ export async function requestCustomers(appBridge: AppBridge): Promise<unknown> {
     throw new Error('Expected the bridge to return a session token string.');
   }
 
-  const response = await fetch(`${apiUrl}/erp-info/customers`, {
+  const response = await fetch(`${apiUrl}/erp/customers`, {
     headers: {
       'X-Session-Token': sessionToken,
     },

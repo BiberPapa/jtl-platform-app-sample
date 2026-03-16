@@ -38,7 +38,7 @@ app.MapPost(
     });
 
 app.MapMethods(
-    "/erp-info/{**endpoint}",
+    "/erp/{**endpoint}",
     ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"],
     async Task<IResult> (
         HttpRequest request,
@@ -63,15 +63,24 @@ app.MapMethods(
 
             var sessionContext = await authService.VerifySessionTokenAsync(sessionToken, cancellationToken);
             var proxyRequest = await ErpProxyRequestBuilder.BuildAsync(request, endpoint, cancellationToken);
-            using var erpResponse = await erpApiClient.ForwardAsync(proxyRequest, sessionContext.TenantId, request.Method, cancellationToken);
+            using var erpResponse = await erpApiClient.ForwardAsync(
+                proxyRequest,
+                sessionContext.TenantId,
+                sessionToken,
+                request.Method,
+                cancellationToken);
             var responseContent = await erpResponse.Content.ReadAsStringAsync(cancellationToken);
             var contentType = erpResponse.Content.Headers.ContentType?.ToString() ?? "text/plain";
+            var rewrittenOpenApiDocument = OpenApiDocumentRewriter.Rewrite(endpoint, request.Method, contentType, responseContent);
 
-            return Results.Content(responseContent, contentType, statusCode: (int)erpResponse.StatusCode);
+            return Results.Content(
+                rewrittenOpenApiDocument ?? responseContent,
+                contentType,
+                statusCode: (int)erpResponse.StatusCode);
         }
         catch (Exception exception)
         {
-            Console.Error.WriteLine($"Error in /erp-info route: {exception}");
+            Console.Error.WriteLine($"Error in /erp route: {exception}");
 
             return Results.Json(
                 new

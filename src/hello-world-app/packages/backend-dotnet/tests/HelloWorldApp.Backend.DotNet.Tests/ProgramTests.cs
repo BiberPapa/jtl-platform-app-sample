@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text;
+using System.Text.Json.Nodes;
 using HelloWorldApp.Backend.DotNet.Models;
 using HelloWorldApp.Backend.DotNet.Services;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -58,7 +59,7 @@ public sealed class ProgramTests
         await using var factory = CreateFactory();
         var client = factory.CreateClient();
 
-        var response = await client.GetAsync("/erp-info/customers");
+        var response = await client.GetAsync("/erp/customers");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
@@ -68,7 +69,7 @@ public sealed class ProgramTests
     {
         var erpApiClient = new CapturingErpApiClient
         {
-            ResponseFactory = _ => new HttpResponseMessage(HttpStatusCode.OK)
+            ResponseFactory = _ => new HttpResponseMessage(HttpStatusCode.Created)
             {
                 Content = new StringContent("""{"result":"ok"}""", Encoding.UTF8, "application/json"),
             },
@@ -80,7 +81,7 @@ public sealed class ProgramTests
         });
         var client = factory.CreateClient();
 
-        using var request = new HttpRequestMessage(HttpMethod.Post, "/erp-info/customers/orders")
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/erp/customers/orders")
         {
             Content = new StringContent("""{"id":7}""", Encoding.UTF8, "application/json"),
         };
@@ -88,9 +89,10 @@ public sealed class ProgramTests
 
         var response = await client.SendAsync(request);
 
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         Assert.NotNull(erpApiClient.LastRequest);
         Assert.Equal("platform-tenant-id", erpApiClient.LastTenantId);
+        Assert.Equal("session-token", erpApiClient.LastSessionToken);
         Assert.Equal("customers/orders", erpApiClient.LastRequest!.Endpoint);
         Assert.Equal("""{"id":7}""", erpApiClient.LastRequest.Body!.ToJsonString());
     }
@@ -113,10 +115,60 @@ public sealed class ProgramTests
         var client = factory.CreateClient();
         client.DefaultRequestHeaders.Add("X-Session-Token", "session-token");
 
-        var response = await client.GetAsync("/erp-info/customers");
+        var response = await client.GetAsync("/erp/customers");
 
         Assert.Equal(HttpStatusCode.BadGateway, response.StatusCode);
         Assert.Equal("downstream failed", await response.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
+    public async Task ErpInfo_RewritesForwardedOpenApiDocument()
+    {
+        var erpApiClient = new CapturingErpApiClient
+        {
+            ResponseFactory = _ => new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(
+                    """
+                    {
+                      "openapi": "3.0.0",
+                      "paths": {
+                        "/customers": {
+                          "get": {
+                            "parameters": [
+                              { "name": "X-Tenant-ID", "in": "header" }
+                            ]
+                          }
+                        }
+                      },
+                      "components": {
+                        "securitySchemes": {
+                          "bearerAuth": { "type": "http", "scheme": "bearer" }
+                        }
+                      }
+                    }
+                    """,
+                    Encoding.UTF8,
+                    "application/json"),
+            },
+        };
+        await using var factory = CreateFactory(services =>
+        {
+            services.RemoveAll<IErpApiClient>();
+            services.AddSingleton<IErpApiClient>(erpApiClient);
+        });
+        var client = factory.CreateClient();
+        client.DefaultRequestHeaders.Add("X-Session-Token", "session-token");
+
+        var response = await client.GetAsync("/erp/openapi.json");
+        var payload = JsonNode.Parse(await response.Content.ReadAsStringAsync())!.AsObject();
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.NotNull(payload["paths"]!["/erp/customers"]);
+        Assert.Equal(
+            "X-Session-Token",
+            payload["components"]!["securitySchemes"]!["SessionTokenHeader"]!["name"]!.GetValue<string>());
+        Assert.Empty(payload["paths"]!["/erp/customers"]!["get"]!["parameters"]!.AsArray());
     }
 
     private static WebApplicationFactory<Program> CreateFactory(Action<IServiceCollection>? configureServices = null)
@@ -158,11 +210,18 @@ public sealed class ProgramTests
 
         public ErpProxyRequest? LastRequest { get; private set; }
         public string? LastTenantId { get; private set; }
+        public string? LastSessionToken { get; private set; }
 
-        public Task<HttpResponseMessage> ForwardAsync(ErpProxyRequest request, string tenantId, string method, CancellationToken cancellationToken)
+        public Task<HttpResponseMessage> ForwardAsync(
+            ErpProxyRequest request,
+            string tenantId,
+            string sessionToken,
+            string method,
+            CancellationToken cancellationToken)
         {
             LastRequest = request;
             LastTenantId = tenantId;
+            LastSessionToken = sessionToken;
             return Task.FromResult(ResponseFactory(request));
         }
     }

@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import express, { type Request, type Response } from 'express';
 import { getAccessToken } from './accessToken.js';
 import { getErpEndpoint } from './config.js';
+import { rewriteOpenApiResponse } from './openApiDocument.js';
 import { getSessionContextFromToken } from './sessionToken.js';
 
 dotenv.config();
@@ -43,7 +44,7 @@ export function createApp() {
     res.json({ message: 'Tenant connected successfully.' });
   });
 
-  app.all(/^\/erp-info\/(.+)$/, async (req: Request, res: Response) => {
+  app.all(/^\/erp\/(.+)$/, async (req: Request, res: Response) => {
     try {
       const sessionToken = getSessionTokenFromHeaders(req.headers);
 
@@ -65,6 +66,7 @@ export function createApp() {
       const options: RequestInit = {
         method: req.method,
         headers: {
+          'X-Session-Token': sessionToken,
           'X-Tenant-ID': sessionContext.tenantId,
           Authorization: `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
@@ -76,16 +78,31 @@ export function createApp() {
       }
 
       const erpInfoResponse = await fetch(getErpEndpoint(endpoint), options);
+      const contentType = erpInfoResponse.headers.get('content-type');
+      const responseBody = erpInfoResponse.status === 204 ? '' : await erpInfoResponse.text();
+      const rewrittenOpenApiResponse = rewriteOpenApiResponse({
+        endpoint,
+        method: req.method,
+        contentType,
+        body: responseBody,
+      });
 
-      if (erpInfoResponse.ok) {
-        const data: unknown = await erpInfoResponse.json();
-        res.json(data);
-      } else {
-        const errorText = await erpInfoResponse.text();
-        res.status(erpInfoResponse.status).send(errorText);
+      if (rewrittenOpenApiResponse) {
+        if (rewrittenOpenApiResponse.contentType) {
+          res.set('Content-Type', rewrittenOpenApiResponse.contentType);
+        }
+
+        res.status(erpInfoResponse.status).send(rewrittenOpenApiResponse.body);
+        return;
       }
+
+      if (contentType) {
+        res.set('Content-Type', contentType);
+      }
+
+      res.status(erpInfoResponse.status).send(responseBody);
     } catch (error) {
-      console.error('Error in /erp-info route:', error);
+      console.error('Error in /erp route:', error);
       res.status(500).json({
         error: 'Failed to fetch ERP info',
         message: error instanceof Error ? error.message : String(error),
