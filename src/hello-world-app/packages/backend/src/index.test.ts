@@ -28,16 +28,16 @@ describe('backend routes', () => {
   it('returns a bad request when the setup route is missing a session token', async () => {
     const { createApp } = await import('./index.js');
 
-    const response = await request(createApp()).post('/connect-tenant').send({});
+    const response = await request(createApp()).post('/connect-tenant');
 
     expect(response.status).toBe(400);
-    expect(response.body).toEqual({ error: 'sessionToken must be provided as a string.' });
+    expect(response.body).toEqual({ error: 'The X-Session-Token header must be provided.' });
   });
 
   it('returns structured success for a valid setup request', async () => {
     const { createApp } = await import('./index.js');
 
-    const response = await request(createApp()).post('/connect-tenant').send({ sessionToken: 'session-token' });
+    const response = await request(createApp()).post('/connect-tenant').set('X-Session-Token', 'session-token');
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual({ message: 'Tenant connected successfully.' });

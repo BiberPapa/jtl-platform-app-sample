@@ -28,9 +28,7 @@ public sealed class ProgramTests
         await using var factory = CreateFactory();
         var client = factory.CreateClient();
 
-        var response = await client.PostAsync(
-            "/connect-tenant",
-            new StringContent("{}", Encoding.UTF8, "application/json"));
+        var response = await client.PostAsync("/connect-tenant", content: null);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
@@ -45,10 +43,9 @@ public sealed class ProgramTests
             services.AddSingleton<IJtlAuthService>(authService);
         });
         var client = factory.CreateClient();
+        client.DefaultRequestHeaders.Add("X-Session-Token", "session-token");
 
-        var response = await client.PostAsync(
-            "/connect-tenant",
-            new StringContent("""{"sessionToken":"session-token"}""", Encoding.UTF8, "application/json"));
+        var response = await client.PostAsync("/connect-tenant", content: null);
         var responseText = await response.Content.ReadAsStringAsync();
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);

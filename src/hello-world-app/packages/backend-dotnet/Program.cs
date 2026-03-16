@@ -1,4 +1,3 @@
-using HelloWorldApp.Backend.DotNet.Models;
 using HelloWorldApp.Backend.DotNet.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,16 +16,23 @@ app.MapGet("/", () => Results.Text("Hello from TypeScript + Express!"));
 app.MapPost(
     "/connect-tenant",
     async Task<IResult> (
-        ConnectTenantRequest requestBody,
+        HttpRequest request,
         IJtlAuthService authService,
         CancellationToken cancellationToken) =>
     {
-        if (string.IsNullOrWhiteSpace(requestBody.SessionToken))
+        if (!request.Headers.TryGetValue("X-Session-Token", out var sessionTokenValues))
         {
-            return Results.BadRequest(new { error = "sessionToken must be provided as a string." });
+            return Results.BadRequest(new { error = "The X-Session-Token header must be provided." });
         }
 
-        await authService.VerifySessionTokenAsync(requestBody.SessionToken, cancellationToken);
+        var sessionToken = sessionTokenValues.ToString();
+
+        if (string.IsNullOrWhiteSpace(sessionToken))
+        {
+            return Results.BadRequest(new { error = "The X-Session-Token header must be provided." });
+        }
+
+        await authService.VerifySessionTokenAsync(sessionToken, cancellationToken);
 
         return Results.Json(new { message = "Tenant connected successfully." });
     });

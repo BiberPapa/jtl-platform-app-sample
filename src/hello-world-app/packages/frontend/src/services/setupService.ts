@@ -8,11 +8,8 @@ export async function connectTenant(sessionToken: string): Promise<ConnectTenant
   const response = await fetch(`${apiUrl}/connect-tenant`, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json',
+      'X-Session-Token': sessionToken,
     },
-    body: JSON.stringify({
-      sessionToken,
-    }),
   });
 
   const payload = (await response.json()) as { error?: string; message?: string };

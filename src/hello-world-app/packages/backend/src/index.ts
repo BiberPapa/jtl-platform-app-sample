@@ -10,18 +10,6 @@ dotenv.config();
 const PORT = 50143;
 const sessionTokenHeaderName = 'x-session-token';
 
-type ConnectTenantRequest = Request<Record<string, never>, unknown, unknown>;
-
-function getSessionTokenFromBody(body: unknown): string | null {
-  if (!body || typeof body !== 'object') {
-    return null;
-  }
-
-  const candidate = body as Record<string, unknown>;
-
-  return typeof candidate.sessionToken === 'string' ? candidate.sessionToken : null;
-}
-
 function getSessionTokenFromHeaders(headers: Request['headers']): string | null {
   const candidate = headers[sessionTokenHeaderName];
 
@@ -42,11 +30,11 @@ export function createApp() {
     res.send('Hello from TypeScript + Express!');
   });
 
-  app.post('/connect-tenant', async (req: ConnectTenantRequest, res: Response) => {
-    const sessionToken = getSessionTokenFromBody(req.body);
+  app.post('/connect-tenant', async (req: Request, res: Response) => {
+    const sessionToken = getSessionTokenFromHeaders(req.headers);
 
     if (!sessionToken) {
-      res.status(400).json({ error: 'sessionToken must be provided as a string.' });
+      res.status(400).json({ error: 'The X-Session-Token header must be provided.' });
       return;
     }
 
