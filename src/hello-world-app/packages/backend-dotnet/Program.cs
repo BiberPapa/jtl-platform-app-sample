@@ -5,7 +5,6 @@ var builder = WebApplication.CreateBuilder(args);
 builder.WebHost.UseUrls(Environment.GetEnvironmentVariable("ASPNETCORE_URLS") ?? "http://0.0.0.0:50144");
 
 builder.Services.AddCors();
-builder.Services.AddSingleton<ITenantMappingStore, InMemoryTenantMappingStore>();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddHttpClient<IJtlAuthService, JtlAuthService>();
 builder.Services.AddHttpClient<IErpApiClient, ErpApiClient>();
@@ -20,7 +19,6 @@ app.MapPost(
     async Task<IResult> (
         ConnectTenantRequest requestBody,
         IJtlAuthService authService,
-        ITenantMappingStore tenantMappingStore,
         CancellationToken cancellationToken) =>
     {
         if (string.IsNullOrWhiteSpace(requestBody.SessionToken))
@@ -28,28 +26,38 @@ app.MapPost(
             return Results.BadRequest(new { error = "sessionToken must be provided as a string." });
         }
 
-        var sessionTokenPayload = await authService.VerifySessionTokenAsync(requestBody.SessionToken, cancellationToken);
-        var tenantId = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString();
-        tenantMappingStore.Save(tenantId, sessionTokenPayload.TenantId);
+        await authService.VerifySessionTokenAsync(requestBody.SessionToken, cancellationToken);
 
-        return Results.Text(
-            $"The tenant ID is {tenantId} and the JTL Platform tenant ID is {sessionTokenPayload.TenantId}");
+        return Results.Json(new { message = "Tenant connected successfully." });
     });
 
 app.MapMethods(
-    "/erp-info/{tenantId}/{endpoint}",
+    "/erp-info/{**endpoint}",
     ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"],
     async Task<IResult> (
         HttpRequest request,
-        string tenantId,
         string endpoint,
+        IJtlAuthService authService,
         IErpApiClient erpApiClient,
         CancellationToken cancellationToken) =>
     {
         try
         {
-            var proxyRequest = await ErpProxyRequestBuilder.BuildAsync(request, tenantId, endpoint, cancellationToken);
-            using var erpResponse = await erpApiClient.ForwardAsync(proxyRequest, request.Method, cancellationToken);
+            if (!request.Headers.TryGetValue("X-Session-Token", out var sessionTokenValues))
+            {
+                return Results.BadRequest(new { error = "The X-Session-Token header must be provided." });
+            }
+
+            var sessionToken = sessionTokenValues.ToString();
+
+            if (string.IsNullOrWhiteSpace(sessionToken))
+            {
+                return Results.BadRequest(new { error = "The X-Session-Token header must be provided." });
+            }
+
+            var sessionContext = await authService.VerifySessionTokenAsync(sessionToken, cancellationToken);
+            var proxyRequest = await ErpProxyRequestBuilder.BuildAsync(request, endpoint, cancellationToken);
+            using var erpResponse = await erpApiClient.ForwardAsync(proxyRequest, sessionContext.TenantId, request.Method, cancellationToken);
             var responseContent = await erpResponse.Content.ReadAsStringAsync(cancellationToken);
             var contentType = erpResponse.Content.Headers.ContentType?.ToString() ?? "text/plain";
 

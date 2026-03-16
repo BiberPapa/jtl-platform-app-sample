@@ -1,6 +1,6 @@
 import type { AppBridge } from '@jtl-software/cloud-apps-core';
 import { useCallback, useState } from 'react';
-import { requestCurrentTime } from '../../services/erpService';
+import { requestCustomers } from '../../services/erpService';
 
 type ErpPageProps = {
   appBridge: AppBridge;
@@ -8,18 +8,18 @@ type ErpPageProps = {
 
 function ErpPage({ appBridge }: ErpPageProps) {
   const [isRequesting, setIsRequesting] = useState(false);
-  const [time, setTime] = useState<string | null>(null);
+  const [customerData, setCustomerData] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const view = new URLSearchParams(window.location.search).get('view') ?? 'default';
 
-  const handleRequestTimestampPress = useCallback(async (): Promise<void> => {
+  const handleRequestCustomersPress = useCallback(async (): Promise<void> => {
     try {
       setIsRequesting(true);
       setErrorMessage(null);
-      const currentTime = await requestCurrentTime(appBridge);
-      setTime(currentTime);
+      const customers = await requestCustomers(appBridge);
+      setCustomerData(JSON.stringify(customers, null, 2));
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'The current time could not be loaded.';
+      const message = error instanceof Error ? error.message : 'The customer data could not be loaded.';
       setErrorMessage(message);
     } finally {
       setIsRequesting(false);
@@ -31,18 +31,18 @@ function ErpPage({ appBridge }: ErpPageProps) {
       <section className="app-card page-stack" aria-labelledby="erp-title">
         <p className="eyebrow">ERP</p>
         <h1 id="erp-title">{`ERP view: ${view}`}</h1>
-        <p>This page demonstrates a typed bridge method roundtrip and keeps the asynchronous state explicit.</p>
+        <p>This page validates the current session in the backend and then loads customer data through the ERP tunnel.</p>
         <button
           type="button"
           onClick={() => {
-            void handleRequestTimestampPress();
+            void handleRequestCustomersPress();
           }}
         >
-          Request time now
+          Load customer data
         </button>
         {isRequesting ? (
           <p className="status-text" aria-live="polite">
-            Requesting the current time from the bridge...
+            Loading customer data from the backend ERP tunnel...
           </p>
         ) : null}
         {errorMessage ? (
@@ -50,7 +50,7 @@ function ErpPage({ appBridge }: ErpPageProps) {
             {errorMessage}
           </p>
         ) : null}
-        {time ? <p className="value-box">{time}</p> : null}
+        {customerData ? <pre className="value-box">{customerData}</pre> : null}
       </section>
     </main>
   );

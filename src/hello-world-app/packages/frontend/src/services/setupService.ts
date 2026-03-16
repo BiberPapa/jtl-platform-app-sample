@@ -15,11 +15,11 @@ export async function connectTenant(sessionToken: string): Promise<ConnectTenant
     }),
   });
 
-  const message = await response.text();
+  const payload = (await response.json()) as { error?: string; message?: string };
 
   if (!response.ok) {
-    throw new Error(message || 'The backend rejected the tenant connection request.');
+    throw new Error(payload.error || 'The backend rejected the tenant connection request.');
   }
 
-  return { message };
+  return { message: payload.message ?? 'Tenant connected successfully.' };
 }

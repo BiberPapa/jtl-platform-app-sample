@@ -1,7 +1,5 @@
 using System.Net;
-using System.Net.Http.Headers;
 using System.Text;
-using System.Text.Json;
 using HelloWorldApp.Backend.DotNet.Models;
 using HelloWorldApp.Backend.DotNet.Services;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -54,11 +52,22 @@ public sealed class ProgramTests
         var responseText = await response.Content.ReadAsStringAsync();
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Contains("the JTL Platform tenant ID is platform-tenant-id", responseText, StringComparison.Ordinal);
+        Assert.Equal("""{"message":"Tenant connected successfully."}""", responseText);
     }
 
     [Fact]
-    public async Task ErpInfo_ForwardsBodyOverridesAndReturnsSuccessPayload()
+    public async Task ErpInfo_RequiresSessionTokenHeader()
+    {
+        await using var factory = CreateFactory();
+        var client = factory.CreateClient();
+
+        var response = await client.GetAsync("/erp-info/customers");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task ErpInfo_UsesValidatedTenantAndReturnsSuccessPayload()
     {
         var erpApiClient = new CapturingErpApiClient
         {
@@ -74,14 +83,18 @@ public sealed class ProgramTests
         });
         var client = factory.CreateClient();
 
-        var response = await client.PostAsync(
-            "/erp-info/route-tenant/customers",
-            new StringContent("""{"_tenantId":"body-tenant","_endpoint":"orders","id":7}""", Encoding.UTF8, "application/json"));
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/erp-info/customers/orders")
+        {
+            Content = new StringContent("""{"id":7}""", Encoding.UTF8, "application/json"),
+        };
+        request.Headers.Add("X-Session-Token", "session-token");
+
+        var response = await client.SendAsync(request);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.NotNull(erpApiClient.LastRequest);
-        Assert.Equal("body-tenant", erpApiClient.LastRequest!.TenantId);
-        Assert.Equal("orders", erpApiClient.LastRequest.Endpoint);
+        Assert.Equal("platform-tenant-id", erpApiClient.LastTenantId);
+        Assert.Equal("customers/orders", erpApiClient.LastRequest!.Endpoint);
         Assert.Equal("""{"id":7}""", erpApiClient.LastRequest.Body!.ToJsonString());
     }
 
@@ -101,8 +114,9 @@ public sealed class ProgramTests
             services.AddSingleton<IErpApiClient>(erpApiClient);
         });
         var client = factory.CreateClient();
+        client.DefaultRequestHeaders.Add("X-Session-Token", "session-token");
 
-        var response = await client.GetAsync("/erp-info/tenant-a/customers");
+        var response = await client.GetAsync("/erp-info/customers");
 
         Assert.Equal(HttpStatusCode.BadGateway, response.StatusCode);
         Assert.Equal("downstream failed", await response.Content.ReadAsStringAsync());
@@ -146,10 +160,12 @@ public sealed class ProgramTests
         };
 
         public ErpProxyRequest? LastRequest { get; private set; }
+        public string? LastTenantId { get; private set; }
 
-        public Task<HttpResponseMessage> ForwardAsync(ErpProxyRequest request, string method, CancellationToken cancellationToken)
+        public Task<HttpResponseMessage> ForwardAsync(ErpProxyRequest request, string tenantId, string method, CancellationToken cancellationToken)
         {
             LastRequest = request;
+            LastTenantId = tenantId;
             return Task.FromResult(ResponseFactory(request));
         }
     }

@@ -5,9 +5,9 @@ import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
 
-const { connectTenantMock, getCurrentCustomerIdMock, requestCurrentTimeMock } = vi.hoisted(() => ({
+const { connectTenantMock, getCurrentCustomerIdMock, requestCustomersMock } = vi.hoisted(() => ({
   connectTenantMock: vi.fn<(sessionToken: string) => Promise<{ message: string }>>(),
-  requestCurrentTimeMock: vi.fn<(appBridge: AppBridge) => Promise<string>>(),
+  requestCustomersMock: vi.fn<(appBridge: AppBridge) => Promise<unknown>>(),
   getCurrentCustomerIdMock: vi.fn<(appBridge: AppBridge) => Promise<string>>(),
 }));
 
@@ -27,7 +27,7 @@ vi.mock('./services/setupService', () => ({
 }));
 
 vi.mock('./services/erpService', () => ({
-  requestCurrentTime: requestCurrentTimeMock,
+  requestCustomers: requestCustomersMock,
 }));
 
 vi.mock('./services/paneService', async () => {
@@ -122,17 +122,19 @@ describe('get app mode rendering', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Backend validation failed.');
   });
 
-  it('renders the ERP page and shows the returned timestamp', async () => {
+  it('renders the ERP page and shows the returned backend payload', async () => {
     const user = userEvent.setup();
     const { appBridge } = createAppBridgeMock();
 
-    requestCurrentTimeMock.mockResolvedValue('2026-03-13T10:15:00.000Z');
+    requestCustomersMock.mockResolvedValue({
+      items: [{ id: 'customer-1' }],
+    });
 
     renderAtPath('/erp?view=details', appBridge);
 
-    await user.click(screen.getByRole('button', { name: 'Request time now' }));
+    await user.click(screen.getByRole('button', { name: 'Load customer data' }));
 
-    expect(await screen.findByText('2026-03-13T10:15:00.000Z')).toBeInTheDocument();
+    expect(await screen.findByText(/customer-1/)).toBeInTheDocument();
   });
 
   it('renders the pane page, reacts to bridge events and loads the current customer on demand', async () => {

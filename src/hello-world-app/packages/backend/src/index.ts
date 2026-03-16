@@ -3,30 +3,14 @@ import dotenv from 'dotenv';
 import express, { type Request, type Response } from 'express';
 import { getAccessToken } from './accessToken.js';
 import { getErpEndpoint } from './config.js';
-import { buildErpProxyRequest } from './erpProxy.js';
 import { getSessionContextFromToken } from './sessionToken.js';
 
 dotenv.config();
 
-const app = express();
 const PORT = 50143;
-
-app.use(cors());
-app.use(express.json());
-
-/**
- * This is a simple example of how to maintain the mapping between a tenant ID from THIS application and the JTL Platform tenant ID.
- * In a real application, you would probably want to use a database or some other persistent storage.
- * The key is the tenant ID from THIS application and the value is the JTL Platform tenant ID.
- */
-const myMappingDatabase = new Map<string, string>();
-
-app.get('/', (_req, res) => {
-  res.send('Hello from TypeScript + Express!');
-});
+const sessionTokenHeaderName = 'x-session-token';
 
 type ConnectTenantRequest = Request<Record<string, never>, unknown, unknown>;
-type ErpInfoRequest = Request<{ endpoint: string; tenantId: string }, unknown, unknown>;
 
 function getSessionTokenFromBody(body: unknown): string | null {
   if (!body || typeof body !== 'object') {
@@ -38,62 +22,96 @@ function getSessionTokenFromBody(body: unknown): string | null {
   return typeof candidate.sessionToken === 'string' ? candidate.sessionToken : null;
 }
 
-app.post('/connect-tenant', async (req: ConnectTenantRequest, res: Response) => {
-  const sessionToken = getSessionTokenFromBody(req.body);
+function getSessionTokenFromHeaders(headers: Request['headers']): string | null {
+  const candidate = headers[sessionTokenHeaderName];
 
-  if (!sessionToken) {
-    res.status(400).json({ error: 'sessionToken must be provided as a string.' });
-    return;
+  if (typeof candidate === 'string' && candidate.length > 0) {
+    return candidate;
   }
 
-  const sessionContext = await getSessionContextFromToken(sessionToken);
-  const tenantId = Date.now().toString();
-  myMappingDatabase.set(tenantId, sessionContext.tenantId);
+  return null;
+}
 
-  res.send(`The tenant ID is ${tenantId} and the JTL Platform tenant ID is ${sessionContext.tenantId}`);
-});
+export function createApp() {
+  const app = express();
 
-app.listen(PORT, () => {
-  process.stdout.write(`Server running on http://localhost:${PORT}\n`);
-});
+  app.use(cors());
+  app.use(express.json());
 
-app.all('/erp-info/:tenantId/:endpoint', async (req: ErpInfoRequest, res: Response) => {
-  try {
-    const proxyRequest = buildErpProxyRequest({
-      method: req.method,
-      tenantId: req.params.tenantId,
-      endpoint: req.params.endpoint,
-      body: req.body,
-    });
-    const accessToken = await getAccessToken();
+  app.get('/', (_req, res) => {
+    res.send('Hello from TypeScript + Express!');
+  });
 
-    const options: RequestInit = {
-      method: req.method,
-      headers: {
-        'X-Tenant-ID': proxyRequest.tenantId,
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-    };
+  app.post('/connect-tenant', async (req: ConnectTenantRequest, res: Response) => {
+    const sessionToken = getSessionTokenFromBody(req.body);
 
-    if (['POST', 'PUT', 'PATCH'].includes(req.method)) {
-      options.body = JSON.stringify(proxyRequest.body);
+    if (!sessionToken) {
+      res.status(400).json({ error: 'sessionToken must be provided as a string.' });
+      return;
     }
 
-    const erpInfoResponse = await fetch(getErpEndpoint(proxyRequest.endpoint), options);
+    await getSessionContextFromToken(sessionToken);
 
-    if (erpInfoResponse.ok) {
-      const data: unknown = await erpInfoResponse.json();
-      res.json(data);
-    } else {
-      const errorText = await erpInfoResponse.text();
-      res.status(erpInfoResponse.status).send(errorText);
+    res.json({ message: 'Tenant connected successfully.' });
+  });
+
+  app.all(/^\/erp-info\/(.+)$/, async (req: Request, res: Response) => {
+    try {
+      const sessionToken = getSessionTokenFromHeaders(req.headers);
+
+      if (!sessionToken) {
+        res.status(400).json({ error: 'The X-Session-Token header must be provided.' });
+        return;
+      }
+
+      const endpoint = req.params[0];
+
+      if (typeof endpoint !== 'string' || endpoint.length === 0) {
+        res.status(400).json({ error: 'An ERP endpoint path must be provided.' });
+        return;
+      }
+
+      const sessionContext = await getSessionContextFromToken(sessionToken);
+      const accessToken = await getAccessToken();
+
+      const options: RequestInit = {
+        method: req.method,
+        headers: {
+          'X-Tenant-ID': sessionContext.tenantId,
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+      };
+
+      if (['POST', 'PUT', 'PATCH'].includes(req.method)) {
+        options.body = JSON.stringify(req.body);
+      }
+
+      const erpInfoResponse = await fetch(getErpEndpoint(endpoint), options);
+
+      if (erpInfoResponse.ok) {
+        const data: unknown = await erpInfoResponse.json();
+        res.json(data);
+      } else {
+        const errorText = await erpInfoResponse.text();
+        res.status(erpInfoResponse.status).send(errorText);
+      }
+    } catch (error) {
+      console.error('Error in /erp-info route:', error);
+      res.status(500).json({
+        error: 'Failed to fetch ERP info',
+        message: error instanceof Error ? error.message : String(error),
+      });
     }
-  } catch (error) {
-    console.error('Error in /erp-info route:', error);
-    res.status(500).json({
-      error: 'Failed to fetch ERP info',
-      message: error instanceof Error ? error.message : String(error),
-    });
-  }
-});
+  });
+
+  return app;
+}
+
+export const app = createApp();
+
+if (!process.env.VITEST) {
+  app.listen(PORT, () => {
+    process.stdout.write(`Server running on http://localhost:${PORT}\n`);
+  });
+}

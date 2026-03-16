@@ -36,7 +36,8 @@ function SetupPage({ appBridge }: SetupPageProps) {
         <p className="eyebrow">Setup</p>
         <h1 id="setup-title">Connect the tenant</h1>
         <p>
-          This demo shows a minimal setup flow: obtain a session token from the app bridge, validate it in the backend and then confirm the setup.
+          This demo shows a minimal setup flow: obtain a session token from the app bridge, validate it in the backend and then confirm the app
+          activation.
         </p>
         {setupState.status === 'submitting' ? (
           <p className="status-text" aria-live="polite">

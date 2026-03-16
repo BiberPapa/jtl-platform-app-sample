@@ -50,6 +50,7 @@ The frontend stays backend-agnostic and only needs `VITE_API_URL`.
 - Keep `VITE_API_URL=http://localhost:50143` for the TypeScript backend.
 - Switch to `VITE_API_URL=http://localhost:50144` for the ASP.NET backend.
 - Both backends cache the ERP access token in-memory until shortly before it expires.
+- Runtime ERP requests send a fresh session token from the bridge to the backend instead of using a stored tenant mapping.
 
 ## 🔌 Ports
 
