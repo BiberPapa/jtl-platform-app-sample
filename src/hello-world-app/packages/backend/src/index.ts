@@ -4,7 +4,7 @@ import express, { type Request, type Response } from 'express';
 import { getAccessToken } from './accessToken.js';
 import { getErpEndpoint } from './config.js';
 import { buildErpProxyRequest } from './erpProxy.js';
-import { verifySessionTokenAndExtractPayload } from './sessionToken.js';
+import { getSessionContextFromToken } from './sessionToken.js';
 
 dotenv.config();
 
@@ -46,11 +46,11 @@ app.post('/connect-tenant', async (req: ConnectTenantRequest, res: Response) => 
     return;
   }
 
-  const sessionTokenPayload = await verifySessionTokenAndExtractPayload(sessionToken);
+  const sessionContext = await getSessionContextFromToken(sessionToken);
   const tenantId = Date.now().toString();
-  myMappingDatabase.set(tenantId, sessionTokenPayload.tenantId);
+  myMappingDatabase.set(tenantId, sessionContext.tenantId);
 
-  res.send(`The tenant ID is ${tenantId} and the JTL Platform tenant ID is ${sessionTokenPayload.tenantId}`);
+  res.send(`The tenant ID is ${tenantId} and the JTL Platform tenant ID is ${sessionContext.tenantId}`);
 });
 
 app.listen(PORT, () => {

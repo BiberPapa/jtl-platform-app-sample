@@ -2,7 +2,7 @@ import { decodeProtectedHeader, importJWK, jwtVerify } from 'jose';
 import { getJwksEndpoint } from './config.js';
 import { getAccessToken } from './accessToken.js';
 
-export type SessionTokenPayload = {
+export type SessionContext = {
   userId: string;
   tenantId: string;
 };
@@ -18,9 +18,9 @@ type JwkSetResponse = {
 const publicKeyCache = new Map<string, Promise<Awaited<ReturnType<typeof importJWK>>>>();
 
 /**
- * Verifies a session token with the matching cached public key and returns the required user claims.
+ * Validates a session token and returns the user and tenant information required by the backend.
  */
-export async function verifySessionTokenAndExtractPayload(sessionToken: string): Promise<SessionTokenPayload> {
+export async function getSessionContextFromToken(sessionToken: string): Promise<SessionContext> {
   const keyId = getKeyIdFromSessionToken(sessionToken);
   const publicKey = await getPublicKeyForKeyId(keyId);
   const { payload } = await jwtVerify(sessionToken, publicKey);

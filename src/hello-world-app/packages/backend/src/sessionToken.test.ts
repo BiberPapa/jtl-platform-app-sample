@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { resetSessionTokenKeyCacheForTests, verifySessionTokenAndExtractPayload } from './sessionToken.js';
+import { getSessionContextFromToken, resetSessionTokenKeyCacheForTests } from './sessionToken.js';
 import { getAccessToken } from './accessToken.js';
 import { decodeProtectedHeader, importJWK, jwtVerify } from 'jose';
 
@@ -47,8 +47,8 @@ describe('session token verification', () => {
       },
     } as never);
 
-    await verifySessionTokenAndExtractPayload('session-token-a');
-    await verifySessionTokenAndExtractPayload('session-token-b');
+    await getSessionContextFromToken('session-token-a');
+    await getSessionContextFromToken('session-token-b');
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(importJWK).toHaveBeenCalledTimes(1);
@@ -73,7 +73,7 @@ describe('session token verification', () => {
       },
     } as never);
 
-    await verifySessionTokenAndExtractPayload('session-token');
+    await getSessionContextFromToken('session-token');
 
     expect(importJWK).toHaveBeenCalledWith(expect.objectContaining({ kid: 'target-key' }), 'EdDSA');
   });
