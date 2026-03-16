@@ -34,8 +34,8 @@
   },
   "lifecycle": {
     "setupUrl": "http://localhost:50142/setup",
-    "connectUrl": "https://jtl.integrations.example.com/lifecycle/connect",
-    "disconnectUrl": "https://jtl.integrations.example.com/lifecycle/disconnect"
+    "connectUrl": "http://localhost:50142/lifecycle/connect",
+    "disconnectUrl": "http://localhost:50142/lifecycle/disconnect"
   },
   "capabilities": {
     "hub": {
@@ -46,21 +46,56 @@
     },
     "erp": {
       "headless": {
-        "url": "https://jtl.integrations.example.com/erp"
+        "url": "http://localhost:50142/erp"
       },
       "menuItems": [
         {
-          "id": "<MENU ITEM ID>",
-          "name": "ERP Menu Item",
-          "url": "http://localhost:50142/erp"
+          "id": "ExamplePage1",
+          "name": "ExamplePage1",
+          "url": "http://localhost:50142/erp/menu/ExamplePage1",
+          "children": [
+            {
+              "id": "ExampleGroup1",
+              "name": "ExampleGroup1",
+              "children": [
+                {
+                  "id": "ExamplePage2",
+                  "name": "ExamplePage2",
+                  "url": "http://localhost:50142/erp/menu/ExamplePage2"
+                },
+                {
+                  "id": "ExamplePage3",
+                  "name": "ExamplePage3",
+                  "url": "http://localhost:50142/erp/menu/ExamplePage3"
+                }
+              ]
+            }
+          ]
         }
       ],
+      "tabs": [
+        {
+          "context": "productDetail",
+          "name": "ExampleTab1",
+          "url": "http://localhost:50142/erp/tabs/ExampleTab1",
+          "features": ["details:full", "pricing:write"]
+        },
+        {
+          "context": "customerDetail",
+          "name": "ExampleTab2",
+          "url": "http://localhost:50142/erp/tabs/ExampleTab2",
+          "features": ["details:write", "address:read"]
+        }
+      ],
+      "api": {
+        "scopes": ["items.read", "items.write"]
+      },
       "pane": [
         {
-          "url": "http://localhost:50142/pane",
-          "title": "Test Pane",
-          "context": "customers",
-          "matchChildContext": true
+          "context": "$tenantSlug.customers.overview",
+          "matchChildContext": false,
+          "title": "<PANE TITLE>",
+          "url": "http://localhost:50142/pane"
         }
       ]
     }

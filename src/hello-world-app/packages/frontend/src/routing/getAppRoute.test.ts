@@ -1,0 +1,29 @@
+import { describe, expect, it } from 'vitest';
+import { getAppRoute } from './getAppRoute';
+
+describe('getAppRoute', () => {
+  it('returns setup and pane routes for their fixed paths', () => {
+    expect(getAppRoute(new URL('http://localhost:50142/setup'))).toEqual({ kind: 'setup' });
+    expect(getAppRoute(new URL('http://localhost:50142/pane'))).toEqual({ kind: 'pane' });
+  });
+
+  it('distinguishes ERP home and ERP menu item routes', () => {
+    expect(getAppRoute(new URL('http://localhost:50142/erp'))).toEqual({ kind: 'erp-home' });
+    expect(getAppRoute(new URL('http://localhost:50142/erp/menu/ExamplePage1'))).toEqual({
+      kind: 'erp-menu-item',
+      menuItemId: 'ExamplePage1',
+    });
+  });
+
+  it('parses ERP tab routes from the wawi tabs path', () => {
+    expect(getAppRoute(new URL('http://localhost:50142/erp/tabs/ExampleTab2'))).toEqual({
+      kind: 'erp-tab',
+      tabId: 'ExampleTab2',
+    });
+  });
+
+  it('returns unknown for unsupported paths', () => {
+    expect(getAppRoute(new URL('http://localhost:50142/'))).toEqual({ kind: 'unknown' });
+    expect(getAppRoute(new URL('http://localhost:50142/unknown'))).toEqual({ kind: 'unknown' });
+  });
+});

@@ -128,7 +128,7 @@ describe('get app mode rendering', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Backend validation failed.');
   });
 
-  it('renders the ERP page and shows the returned backend payload', async () => {
+  it('renders the ERP home page and shows the returned backend payload', async () => {
     const user = userEvent.setup();
     const { appBridge } = createAppBridgeMock();
 
@@ -136,11 +136,57 @@ describe('get app mode rendering', () => {
       items: [{ id: 'customer-1' }],
     });
 
-    renderAtPath('/erp?view=details', appBridge);
+    renderAtPath('/erp', appBridge);
 
     await user.click(screen.getByRole('button', { name: 'Load customer data' }));
 
     expect(await screen.findByText(/customer-1/)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'ERP view: default' })).toBeInTheDocument();
+  });
+
+  it('renders the root ERP menu page', () => {
+    const { appBridge } = createAppBridgeMock();
+
+    renderAtPath('/erp/menu/ExamplePage1', appBridge);
+
+    expect(screen.getByRole('heading', { name: 'ExamplePage1' })).toBeInTheDocument();
+    expect(screen.getByText('Hello World from the ExamplePage1 sample page.')).toBeInTheDocument();
+  });
+
+  it('renders nested ERP menu pages from the registry', () => {
+    const { appBridge } = createAppBridgeMock();
+
+    renderAtPath('/erp/menu/ExamplePage2', appBridge);
+
+    expect(screen.getByRole('heading', { name: 'ExamplePage2' })).toBeInTheDocument();
+    expect(screen.getByText('Hello World from the ExamplePage2 sample page.')).toBeInTheDocument();
+  });
+
+  it('renders ERP tabs from the registry', () => {
+    const { appBridge } = createAppBridgeMock();
+
+    renderAtPath('/erp/tabs/ExampleTab2', appBridge);
+
+    expect(screen.getByRole('heading', { name: 'ExampleTab2' })).toBeInTheDocument();
+    expect(screen.getByText('Hello World from the ExampleTab2 sample page.')).toBeInTheDocument();
+  });
+
+  it('renders an ERP-specific fallback for unknown menu items', () => {
+    const { appBridge } = createAppBridgeMock();
+
+    renderAtPath('/erp/menu/unknown-menu-item', appBridge);
+
+    expect(screen.getByRole('heading', { name: 'Unknown ERP page' })).toBeInTheDocument();
+    expect(screen.getByText('menuItemId: unknown-menu-item')).toBeInTheDocument();
+  });
+
+  it('renders an ERP-specific fallback for unknown tabs', () => {
+    const { appBridge } = createAppBridgeMock();
+
+    renderAtPath('/erp/tabs/unknown-tab', appBridge);
+
+    expect(screen.getByRole('heading', { name: 'Unknown ERP page' })).toBeInTheDocument();
+    expect(screen.getByText('tabId: unknown-tab')).toBeInTheDocument();
   });
 
   it('renders the pane page, reacts to bridge events and loads the current customer on demand', async () => {

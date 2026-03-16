@@ -1,56 +1,24 @@
-import { useCallback, useState } from 'react';
-import { useAppBridgeClient } from '../../services/appBridgeContext';
-import { requestCustomers } from '../../services/erpService';
+import type { AppRoute } from '../../routing/getAppRoute';
+import { resolveErpPage } from './erpPageRegistry';
+import UnknownErpPage from './UnknownErpPage';
 
-function ErpPage() {
-  const [isRequesting, setIsRequesting] = useState(false);
-  const [customerData, setCustomerData] = useState<string | null>(null);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const view = new URLSearchParams(window.location.search).get('view') ?? 'default';
-  const appBridgeClient = useAppBridgeClient();
+type ErpPageProps = {
+  route: Extract<AppRoute, { kind: 'erp-home' | 'erp-menu-item' | 'erp-tab' }>;
+};
 
-  const handleRequestCustomersPress = useCallback(async (): Promise<void> => {
-    try {
-      setIsRequesting(true);
-      setErrorMessage(null);
-      const customers = await requestCustomers(appBridgeClient);
-      setCustomerData(JSON.stringify(customers, null, 2));
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'The customer data could not be loaded.';
-      setErrorMessage(message);
-    } finally {
-      setIsRequesting(false);
+function ErpPage({ route }: ErpPageProps) {
+  const resolvedPage = resolveErpPage(route);
+
+  switch (resolvedPage.kind) {
+    case 'known': {
+      const PageComponent = resolvedPage.component;
+      return <PageComponent />;
     }
-  }, [appBridgeClient]);
-
-  return (
-    <main className="app-shell">
-      <section className="app-card page-stack" aria-labelledby="erp-title">
-        <p className="eyebrow">ERP</p>
-        <h1 id="erp-title">{`ERP view: ${view}`}</h1>
-        <p>This page validates the current session in the backend and then loads customer data through the ERP tunnel.</p>
-        <button
-          type="button"
-          onClick={() => {
-            void handleRequestCustomersPress();
-          }}
-        >
-          Load customer data
-        </button>
-        {isRequesting ? (
-          <p className="status-text" aria-live="polite">
-            Loading customer data from the backend ERP tunnel...
-          </p>
-        ) : null}
-        {errorMessage ? (
-          <p className="status-text" data-status="error" role="alert">
-            {errorMessage}
-          </p>
-        ) : null}
-        {customerData ? <pre className="value-box">{customerData}</pre> : null}
-      </section>
-    </main>
-  );
+    case 'unknown-menu-item':
+      return <UnknownErpPage kind="erp-menu-item" menuItemId={resolvedPage.menuItemId} />;
+    case 'unknown-tab':
+      return <UnknownErpPage kind="erp-tab" tabId={resolvedPage.tabId} />;
+  }
 }
 
 export default ErpPage;

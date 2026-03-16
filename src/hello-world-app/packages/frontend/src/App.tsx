@@ -1,15 +1,17 @@
 import './App.css';
 import { ErpPage, PanePage, SetupPage } from './pages';
-import { getAppMode } from './routing/getAppMode';
+import { getAppRoute } from './routing/getAppRoute';
 
 function App() {
-  const mode = getAppMode(window.location.pathname);
+  const route = getAppRoute(new URL(window.location.href));
 
-  switch (mode) {
+  switch (route.kind) {
     case 'setup':
       return <SetupPage />;
-    case 'erp':
-      return <ErpPage />;
+    case 'erp-home':
+    case 'erp-menu-item':
+    case 'erp-tab':
+      return <ErpPage route={route} />;
     case 'pane':
       return <PanePage />;
     default:
@@ -18,7 +20,7 @@ function App() {
           <section className="app-card page-stack" aria-labelledby="unknown-mode-title">
             <p className="eyebrow">Hello World App</p>
             <h1 id="unknown-mode-title">Unknown app mode</h1>
-            <p>Use `/setup`, `/erp` or `/pane` to open one of the documented demo entry points.</p>
+            <p>Use `/setup`, `/erp`, `/erp/menu/...`, `/erp/tabs/...` or `/pane` to open one of the documented demo entry points.</p>
           </section>
         </main>
       );
