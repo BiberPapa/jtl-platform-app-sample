@@ -24,6 +24,10 @@ vi.mock('@jtl-software/platform-ui-react', () => ({
   Text: ({ children }: { children: ReactNode }) => <div>{children}</div>,
 }));
 
+vi.mock('swagger-ui-react', () => ({
+  default: ({ url }: { url?: string }) => <div>Swagger UI placeholder for {url ?? 'missing-url'}</div>,
+}));
+
 vi.mock('./services/setupService', () => ({
   connectTenant: connectTenantMock,
 }));
@@ -166,6 +170,15 @@ describe('get app mode rendering', () => {
     expect(screen.getByText(/Test-, Evaluierungs- und Demonstrationszwecke/i)).toBeInTheDocument();
   });
 
+  it('renders the hub page', () => {
+    const { appBridge } = createAppBridgeMock();
+
+    renderAtPath('/hub', appBridge);
+
+    expect(screen.getByRole('heading', { name: 'Cloud App Launcher' })).toBeInTheDocument();
+    expect(screen.getByText(/App Launcher entry point/i)).toBeInTheDocument();
+  });
+
   it('renders the ERP home page and shows the returned backend payload', async () => {
     const user = userEvent.setup();
     const { appBridge } = createAppBridgeMock();
@@ -185,19 +198,19 @@ describe('get app mode rendering', () => {
   it('renders the root ERP menu page', () => {
     const { appBridge } = createAppBridgeMock();
 
-    renderAtPath('/erp/menu/ExamplePage1', appBridge);
+    renderAtPath('/erp/menu/Dashboard', appBridge);
 
     expect(screen.getByRole('heading', { name: 'Dashboard' })).toBeInTheDocument();
     expect(screen.getByText('This dashboard is the main entry point for the ERP area.')).toBeInTheDocument();
   });
 
-  it('renders nested ERP menu pages from the registry', () => {
+  it('renders the swagger ERP menu page from the registry', async () => {
     const { appBridge } = createAppBridgeMock();
 
-    renderAtPath('/erp/menu/ExamplePage2', appBridge);
+    renderAtPath('/erp/menu/Swagger', appBridge);
 
-    expect(screen.getByRole('heading', { name: 'Customer Overview' })).toBeInTheDocument();
-    expect(screen.getByText('This page summarizes customer information for the selected context.')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'API Documentation' })).toBeInTheDocument();
+    expect(await screen.findByText('Swagger UI placeholder for /erp/openapi.json')).toBeInTheDocument();
   });
 
   it('renders ERP tabs from the registry', () => {

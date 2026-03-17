@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import type { AppRoute } from '../../routing/getAppRoute';
 import { resolveErpPage } from './erpPageRegistry';
 import UnknownErpPage from './UnknownErpPage';
@@ -12,7 +13,21 @@ function ErpPage({ route }: ErpPageProps) {
   switch (resolvedPage.kind) {
     case 'known': {
       const PageComponent = resolvedPage.component;
-      return <PageComponent />;
+      return (
+        <Suspense
+          fallback={
+            <main className="app-shell">
+              <section className="app-card page-stack" aria-labelledby="erp-page-loading-title">
+                <p className="eyebrow">ERP</p>
+                <h1 id="erp-page-loading-title">Loading page</h1>
+                <p>The requested ERP page is loading.</p>
+              </section>
+            </main>
+          }
+        >
+          <PageComponent />
+        </Suspense>
+      );
     }
     case 'unknown-menu-item':
       return <UnknownErpPage kind="erp-menu-item" menuItemId={resolvedPage.menuItemId} />;

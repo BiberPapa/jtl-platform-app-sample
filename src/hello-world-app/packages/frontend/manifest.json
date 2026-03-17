@@ -40,8 +40,7 @@
   "capabilities": {
     "hub": {
       "appLauncher": {
-        "redirectUrl": "http://localhost:50142/hub",
-        "closedPreviewUrl": "https://example.com/closed-preview"
+        "redirectUrl": "http://localhost:50142/hub"
       }
     },
     "erp": {
@@ -50,27 +49,14 @@
       },
       "menuItems": [
         {
-          "id": "ExamplePage1",
+          "id": "Dashboard",
           "name": "Dashboard",
-          "url": "http://localhost:50142/erp/menu/ExamplePage1",
-          "children": [
-            {
-              "id": "ExampleGroup1",
-              "name": "Customer Insights",
-              "children": [
-                {
-                  "id": "ExamplePage2",
-                  "name": "Customer Overview",
-                  "url": "http://localhost:50142/erp/menu/ExamplePage2"
-                },
-                {
-                  "id": "ExamplePage3",
-                  "name": "Customer Activity",
-                  "url": "http://localhost:50142/erp/menu/ExamplePage3"
-                }
-              ]
-            }
-          ]
+          "url": "http://localhost:50142/erp/menu/Dashboard"
+        },
+        {
+          "id": "Swagger",
+          "name": "Swagger",
+          "url": "http://localhost:50142/erp/menu/Swagger"
         }
       ],
       "tabs": [

@@ -1,5 +1,5 @@
 import './App.css';
-import { ErpPage, PanePage, PrivacyPage, SetupPage, SupportPage, TermsOfUsePage } from './pages';
+import { ErpPage, HubPage, PanePage, PrivacyPage, SetupPage, SupportPage, TermsOfUsePage } from './pages';
 import { getAppRoute } from './routing/getAppRoute';
 
 function App() {
@@ -14,6 +14,8 @@ function App() {
       return <PrivacyPage />;
     case 'terms-of-use':
       return <TermsOfUsePage />;
+    case 'hub':
+      return <HubPage />;
     case 'erp-home':
     case 'erp-menu-item':
     case 'erp-tab':
@@ -27,8 +29,8 @@ function App() {
             <p className="eyebrow">Cloud App</p>
             <h1 id="unknown-mode-title">Unknown app mode</h1>
             <p>
-              Use `/setup`, `/support`, `/privacy`, `/terms-of-use`, `/erp`, `/erp/menu/...`, `/erp/tabs/...` or `/pane` to open one of the documented
-              demo entry points.
+              Use `/setup`, `/support`, `/privacy`, `/terms-of-use`, `/hub`, `/erp`, `/erp/menu/Dashboard`, `/erp/menu/Swagger`, `/erp/tabs/...` or
+              `/pane` to open one of the documented app entry points.
             </p>
           </section>
         </main>

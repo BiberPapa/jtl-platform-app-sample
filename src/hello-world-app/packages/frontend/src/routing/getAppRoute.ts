@@ -3,6 +3,7 @@ export type AppRoute =
   | { kind: 'support' }
   | { kind: 'privacy' }
   | { kind: 'terms-of-use' }
+  | { kind: 'hub' }
   | { kind: 'pane' }
   | { kind: 'erp-home' }
   | { kind: 'erp-menu-item'; menuItemId: string }
@@ -26,6 +27,10 @@ export function getAppRoute(url: URL): AppRoute {
 
   if (normalizedPath === 'terms-of-use') {
     return { kind: 'terms-of-use' };
+  }
+
+  if (normalizedPath === 'hub') {
+    return { kind: 'hub' };
   }
 
   if (normalizedPath === 'pane') {

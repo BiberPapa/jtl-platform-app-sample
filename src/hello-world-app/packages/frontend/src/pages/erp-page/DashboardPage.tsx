@@ -1,6 +1,6 @@
 import HelloWorldErpPage from './HelloWorldErpPage';
 
-function ExamplePage1Page() {
+function DashboardPage() {
   return (
     <HelloWorldErpPage
       eyebrow="ERP Menu"
@@ -11,4 +11,4 @@ function ExamplePage1Page() {
   );
 }
 
-export default ExamplePage1Page;
+export default DashboardPage;

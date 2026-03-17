@@ -7,14 +7,19 @@ describe('getAppRoute', () => {
     expect(getAppRoute(new URL('http://localhost:50142/support'))).toEqual({ kind: 'support' });
     expect(getAppRoute(new URL('http://localhost:50142/privacy'))).toEqual({ kind: 'privacy' });
     expect(getAppRoute(new URL('http://localhost:50142/terms-of-use'))).toEqual({ kind: 'terms-of-use' });
+    expect(getAppRoute(new URL('http://localhost:50142/hub'))).toEqual({ kind: 'hub' });
     expect(getAppRoute(new URL('http://localhost:50142/pane'))).toEqual({ kind: 'pane' });
   });
 
   it('distinguishes ERP home and ERP menu item routes', () => {
     expect(getAppRoute(new URL('http://localhost:50142/erp'))).toEqual({ kind: 'erp-home' });
-    expect(getAppRoute(new URL('http://localhost:50142/erp/menu/ExamplePage1'))).toEqual({
+    expect(getAppRoute(new URL('http://localhost:50142/erp/menu/Dashboard'))).toEqual({
       kind: 'erp-menu-item',
-      menuItemId: 'ExamplePage1',
+      menuItemId: 'Dashboard',
+    });
+    expect(getAppRoute(new URL('http://localhost:50142/erp/menu/Swagger'))).toEqual({
+      kind: 'erp-menu-item',
+      menuItemId: 'Swagger',
     });
   });
 
