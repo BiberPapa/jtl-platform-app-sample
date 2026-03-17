@@ -1,14 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { getSessionContextFromToken, resetSessionTokenKeyCacheForTests } from './sessionToken.js';
 import { getAccessToken } from './accessToken.js';
-import { decodeProtectedHeader, importJWK, jwtVerify } from 'jose';
+import { importJWK, jwtVerify } from 'jose';
 
 vi.mock('./accessToken.js', () => ({
   getAccessToken: vi.fn(),
 }));
 
 vi.mock('jose', () => ({
-  decodeProtectedHeader: vi.fn(),
   importJWK: vi.fn(),
   jwtVerify: vi.fn(),
 }));
@@ -38,7 +37,6 @@ describe('session token verification', () => {
     } satisfies MockFetchResponse);
 
     vi.stubGlobal('fetch', fetchMock);
-    vi.mocked(decodeProtectedHeader).mockReturnValue({ kid: 'key-1' });
     vi.mocked(importJWK).mockResolvedValue('public-key' as never);
     vi.mocked(jwtVerify).mockResolvedValue({
       payload: {
@@ -55,7 +53,7 @@ describe('session token verification', () => {
     expect(jwtVerify).toHaveBeenCalledTimes(2);
   });
 
-  it('selects the matching jwks key by kid instead of taking the first key', async () => {
+  it('tries the next jwks key when verification with the first key fails', async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       json: () =>
         Promise.resolve({
@@ -64,17 +62,21 @@ describe('session token verification', () => {
     } satisfies MockFetchResponse);
 
     vi.stubGlobal('fetch', fetchMock);
-    vi.mocked(decodeProtectedHeader).mockReturnValue({ kid: 'target-key' });
     vi.mocked(importJWK).mockImplementation(key => Promise.resolve(key as never));
-    vi.mocked(jwtVerify).mockResolvedValue({
-      payload: {
-        userId: 'user-1',
-        tenantId: 'tenant-1',
-      },
-    } as never);
+    vi.mocked(jwtVerify)
+      .mockRejectedValueOnce(new Error('Signature verification failed.'))
+      .mockResolvedValue({
+        payload: {
+          userId: 'user-1',
+          tenantId: 'tenant-1',
+        },
+      } as never);
 
     await getSessionContextFromToken('session-token');
 
-    expect(importJWK).toHaveBeenCalledWith(expect.objectContaining({ kid: 'target-key' }), 'EdDSA');
+    expect(importJWK).toHaveBeenNthCalledWith(1, expect.objectContaining({ kid: 'other-key' }), 'EdDSA');
+    expect(importJWK).toHaveBeenNthCalledWith(2, expect.objectContaining({ kid: 'target-key' }), 'EdDSA');
+    expect(jwtVerify).toHaveBeenNthCalledWith(1, 'session-token', expect.objectContaining({ kid: 'other-key' }));
+    expect(jwtVerify).toHaveBeenNthCalledWith(2, 'session-token', expect.objectContaining({ kid: 'target-key' }));
   });
 });

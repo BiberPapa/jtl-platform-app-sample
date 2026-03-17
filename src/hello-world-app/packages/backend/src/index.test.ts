@@ -52,6 +52,19 @@ describe('backend routes', () => {
     expect(getSessionContextFromTokenMock).toHaveBeenCalledWith('session-token');
   });
 
+  it('returns a structured error when setup validation throws', async () => {
+    getSessionContextFromTokenMock.mockRejectedValueOnce(new Error('Session token validation failed.'));
+    const { createApp } = await import('./index.js');
+
+    const response = await request(createApp()).post('/connect-tenant').set('X-Session-Token', 'session-token');
+
+    expect(response.status).toBe(500);
+    expect(response.body).toEqual({
+      error: 'Failed to connect tenant',
+      message: 'Session token validation failed.',
+    });
+  });
+
   it('requires a session token header for ERP requests', async () => {
     const { createApp } = await import('./index.js');
 

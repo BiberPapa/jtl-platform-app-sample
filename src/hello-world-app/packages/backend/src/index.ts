@@ -32,16 +32,24 @@ export function createApp() {
   });
 
   app.post('/connect-tenant', async (req: Request, res: Response) => {
-    const sessionToken = getSessionTokenFromHeaders(req.headers);
+    try {
+      const sessionToken = getSessionTokenFromHeaders(req.headers);
 
-    if (!sessionToken) {
-      res.status(400).json({ error: 'The X-Session-Token header must be provided.' });
-      return;
+      if (!sessionToken) {
+        res.status(400).json({ error: 'The X-Session-Token header must be provided.' });
+        return;
+      }
+
+      await getSessionContextFromToken(sessionToken);
+
+      res.json({ message: 'Tenant connected successfully.' });
+    } catch (error) {
+      console.error('Error in /connect-tenant route:', error);
+      res.status(500).json({
+        error: 'Failed to connect tenant',
+        message: error instanceof Error ? error.message : String(error),
+      });
     }
-
-    await getSessionContextFromToken(sessionToken);
-
-    res.json({ message: 'Tenant connected successfully.' });
   });
 
   app.all(/^\/erp\/(.+)$/, async (req: Request, res: Response) => {
