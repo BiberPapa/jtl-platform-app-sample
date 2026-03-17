@@ -1,5 +1,5 @@
 import './App.css';
-import { ErpPage, PanePage, SetupPage } from './pages';
+import { ErpPage, PanePage, PrivacyPage, SetupPage, SupportPage, TermsOfUsePage } from './pages';
 import { getAppRoute } from './routing/getAppRoute';
 
 function App() {
@@ -8,6 +8,12 @@ function App() {
   switch (route.kind) {
     case 'setup':
       return <SetupPage />;
+    case 'support':
+      return <SupportPage />;
+    case 'privacy':
+      return <PrivacyPage />;
+    case 'terms-of-use':
+      return <TermsOfUsePage />;
     case 'erp-home':
     case 'erp-menu-item':
     case 'erp-tab':
@@ -18,9 +24,12 @@ function App() {
       return (
         <main className="app-shell">
           <section className="app-card page-stack" aria-labelledby="unknown-mode-title">
-            <p className="eyebrow">Hello World App</p>
+            <p className="eyebrow">Cloud App</p>
             <h1 id="unknown-mode-title">Unknown app mode</h1>
-            <p>Use `/setup`, `/erp`, `/erp/menu/...`, `/erp/tabs/...` or `/pane` to open one of the documented demo entry points.</p>
+            <p>
+              Use `/setup`, `/support`, `/privacy`, `/terms-of-use`, `/erp`, `/erp/menu/...`, `/erp/tabs/...` or `/pane` to open one of the documented
+              demo entry points.
+            </p>
           </section>
         </main>
       );

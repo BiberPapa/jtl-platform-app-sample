@@ -1,5 +1,8 @@
 export type AppRoute =
   | { kind: 'setup' }
+  | { kind: 'support' }
+  | { kind: 'privacy' }
+  | { kind: 'terms-of-use' }
   | { kind: 'pane' }
   | { kind: 'erp-home' }
   | { kind: 'erp-menu-item'; menuItemId: string }
@@ -11,6 +14,18 @@ export function getAppRoute(url: URL): AppRoute {
 
   if (normalizedPath === 'setup') {
     return { kind: 'setup' };
+  }
+
+  if (normalizedPath === 'support') {
+    return { kind: 'support' };
+  }
+
+  if (normalizedPath === 'privacy') {
+    return { kind: 'privacy' };
+  }
+
+  if (normalizedPath === 'terms-of-use') {
+    return { kind: 'terms-of-use' };
   }
 
   if (normalizedPath === 'pane') {

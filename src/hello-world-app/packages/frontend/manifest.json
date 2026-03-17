@@ -2,12 +2,12 @@
   "manifestVersion": "1.0.0",
   "version": "1.0.0",
   "name": {
-    "short": "Hello World",
-    "full": "The official Hello World app for Demo"
+    "short": "Cloud App",
+    "full": "Cloud App for Demo"
   },
   "description": {
-    "short": "Lorem ipsum.",
-    "full": "Minions ipsum gelatooo uuuhhh para tú bappleees para tú tank yuuu! Gelatooo po kass. Bappleees poopayee tulaliloo pepete belloo! Wiiiii."
+    "short": "Demo app for ERP, setup and pane integrations.",
+    "full": "Cloud App demonstrates setup, ERP entry points and pane integrations in a compact example application."
   },
   "defaultLocale": "de-DE",
   "locales": {
@@ -19,29 +19,29 @@
     }
   },
   "icon": {
-    "light": "https://i.ibb.co/RkWVbTsG/CODE-LEAP-logo-1024sq-Bach-Tung-Vu.png",
-    "dark": "https://i.ibb.co/RkWVbTsG/CODE-LEAP-logo-1024sq-Bach-Tung-Vu.png"
+    "light": "https://imageslot.com/v1/400x400?bg=dd951c&fg=ffffff&shadow=ffffff&text=Demo&filetype=png",
+    "dark": "https://imageslot.com/v1/400x400?bg=dd951c&fg=ffffff&shadow=ffffff&text=Demo&filetype=png"
   },
   "communication": {
-    "supportUrl": "https://example.com/support-for-app-xy/__ACTIVE_LOCALE__/",
-    "guideUrl": "https://example.com/guide-for-app-xy?lang=__ACTIVE_LOCALE__"
+    "supportUrl": "http://localhost:50142/support",
+    "guideUrl": "https://example.com/guide"
   },
   "legal": {
     "gdprRequestUrl": "https://example.com/gdpr/request",
     "gdprDeleteUrl": "https://example.com/gdpr/delete",
-    "privacyUrl": "https://example.com/privacy",
-    "termsOfUseUrl": "https://example.com/terms-of-use"
+    "privacyUrl": "http://localhost:50142/privacy",
+    "termsOfUseUrl": "http://localhost:50142/terms-of-use"
   },
   "lifecycle": {
     "setupUrl": "http://localhost:50142/setup",
-    "connectUrl": "http://localhost:50142/lifecycle/connect",
-    "disconnectUrl": "http://localhost:50142/lifecycle/disconnect"
+    "connectUrl": "https://example.com/lifecycle/connect",
+    "disconnectUrl": "https://example.com/lifecycle/disconnect"
   },
   "capabilities": {
     "hub": {
       "appLauncher": {
-        "redirectUrl": "http://localhost:50142/erp",
-        "closedPreviewUrl": "http://localhost:50142/closed-preview"
+        "redirectUrl": "http://localhost:50142/hub",
+        "closedPreviewUrl": "https://example.com/closed-preview"
       }
     },
     "erp": {
@@ -51,21 +51,21 @@
       "menuItems": [
         {
           "id": "ExamplePage1",
-          "name": "ExamplePage1",
+          "name": "Dashboard",
           "url": "http://localhost:50142/erp/menu/ExamplePage1",
           "children": [
             {
               "id": "ExampleGroup1",
-              "name": "ExampleGroup1",
+              "name": "Customer Insights",
               "children": [
                 {
                   "id": "ExamplePage2",
-                  "name": "ExamplePage2",
+                  "name": "Customer Overview",
                   "url": "http://localhost:50142/erp/menu/ExamplePage2"
                 },
                 {
                   "id": "ExamplePage3",
-                  "name": "ExamplePage3",
+                  "name": "Customer Activity",
                   "url": "http://localhost:50142/erp/menu/ExamplePage3"
                 }
               ]
@@ -76,13 +76,13 @@
       "tabs": [
         {
           "context": "productDetail",
-          "name": "ExampleTab1",
+          "name": "Product Overview",
           "url": "http://localhost:50142/erp/tabs/ExampleTab1",
           "features": ["details:full", "pricing:write"]
         },
         {
           "context": "customerDetail",
-          "name": "ExampleTab2",
+          "name": "Customer Notes",
           "url": "http://localhost:50142/erp/tabs/ExampleTab2",
           "features": ["details:write", "address:read"]
         }
@@ -94,7 +94,7 @@
         {
           "context": "$tenantSlug.customers.overview",
           "matchChildContext": false,
-          "title": "<PANE TITLE>",
+          "title": "Customer Overview Pane",
           "url": "http://localhost:50142/pane"
         }
       ]

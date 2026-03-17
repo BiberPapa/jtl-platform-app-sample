@@ -1,6 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createAppBridge } from '@jtl-software/cloud-apps-core';
+import { ThemeProvider } from '@jtl-software/platform-ui-react';
 import App from './App';
 import './index.css';
 import { AppBridgeProvider } from './services/appBridgeContext';
@@ -20,9 +21,11 @@ async function bootstrap(): Promise<void> {
 
   createRoot(getRootElement()).render(
     <StrictMode>
-      <AppBridgeProvider appBridge={appBridge}>
-        <App />
-      </AppBridgeProvider>
+      <ThemeProvider defaultTheme="system">
+        <AppBridgeProvider appBridge={appBridge}>
+          <App />
+        </AppBridgeProvider>
+      </ThemeProvider>
     </StrictMode>,
   );
 }

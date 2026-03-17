@@ -4,9 +4,9 @@ function ExamplePage3Page() {
   return (
     <HelloWorldErpPage
       eyebrow="ERP Menu"
-      title="ExamplePage3"
-      description="Hello World from the ExamplePage3 sample page."
-      details="menuItemId: ExamplePage3"
+      title="Customer Activity"
+      description="This page highlights recent customer-related activity in the ERP area."
+      details="Section: Customer Activity"
     />
   );
 }

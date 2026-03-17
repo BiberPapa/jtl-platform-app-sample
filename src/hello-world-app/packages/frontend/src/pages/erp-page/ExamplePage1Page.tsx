@@ -4,9 +4,9 @@ function ExamplePage1Page() {
   return (
     <HelloWorldErpPage
       eyebrow="ERP Menu"
-      title="ExamplePage1"
-      description="Hello World from the ExamplePage1 sample page."
-      details="menuItemId: ExamplePage1"
+      title="Dashboard"
+      description="This dashboard is the main entry point for the ERP area."
+      details="Section: Dashboard"
     />
   );
 }

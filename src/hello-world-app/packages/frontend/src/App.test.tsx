@@ -14,8 +14,8 @@ const { connectTenantMock, getCurrentCustomerIdMock, requestCustomersMock } = vi
 }));
 
 vi.mock('@jtl-software/platform-ui-react', () => ({
-  Button: ({ label, onClick }: { label: string; onClick?: () => void }) => (
-    <button type="button" onClick={onClick}>
+  Button: ({ label, onClick, disabled }: { label: string; onClick?: () => void; disabled?: boolean }) => (
+    <button type="button" onClick={onClick} disabled={disabled}>
       {label}
     </button>
   ),
@@ -43,12 +43,12 @@ vi.mock('./services/paneService', async () => {
 
 type BridgeMock = {
   appBridge: AppBridge;
-  methodCall: ReturnType<typeof vi.fn>;
+  methodCall: ReturnType<typeof vi.fn<(methodName: string) => Promise<unknown>>>;
   subscribe: ReturnType<typeof vi.fn>;
 };
 
 function createAppBridgeMock(): BridgeMock {
-  const methodCall = vi.fn();
+  const methodCall = vi.fn<(methodName: string) => Promise<unknown>>();
   const expose = vi.fn();
   const subscribe = vi.fn(() => vi.fn());
 
@@ -108,9 +108,17 @@ describe('get app mode rendering', () => {
 
     renderAtPath('/setup', appBridge);
 
-    await user.click(screen.getByRole('button', { name: 'Setup App' }));
+    expect(screen.getByRole('heading', { name: 'Nutzungsbedingungen bestätigen' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Weiter' })).toBeDisabled();
+
+    await user.click(screen.getByLabelText('Ich habe die Nutzungsbedingungen gelesen und stimme ihnen zu.'));
+    await user.click(screen.getByRole('button', { name: 'Weiter' }));
+    await user.click(screen.getByRole('button', { name: 'Verbindung testen' }));
 
     expect(await screen.findByText('Tenant connected successfully.')).toBeInTheDocument();
+    expect(await screen.findByText('Die Einrichtung wurde erfolgreich an den Host übermittelt.')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Fertig' }));
+    expect(screen.getByText('Du kannst dieses Fenster jetzt manuell schließen und zur Host-Anwendung zurückkehren.')).toBeInTheDocument();
     expect(methodCall).toHaveBeenCalledWith('setupCompleted');
   });
 
@@ -123,9 +131,39 @@ describe('get app mode rendering', () => {
 
     renderAtPath('/setup', appBridge);
 
-    await user.click(screen.getByRole('button', { name: 'Setup App' }));
+    await user.click(screen.getByLabelText('Ich habe die Nutzungsbedingungen gelesen und stimme ihnen zu.'));
+    await user.click(screen.getByRole('button', { name: 'Weiter' }));
+    await user.click(screen.getByRole('button', { name: 'Verbindung testen' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Backend validation failed.');
+    expect(methodCall).not.toHaveBeenCalledWith('setupCompleted');
+  });
+
+  it('renders the support page', () => {
+    const { appBridge } = createAppBridgeMock();
+
+    renderAtPath('/support', appBridge);
+
+    expect(screen.getByRole('heading', { name: 'Hilfe und Support' })).toBeInTheDocument();
+    expect(screen.getByText(/support-team beispielhaft/i)).toBeInTheDocument();
+  });
+
+  it('renders the privacy page', () => {
+    const { appBridge } = createAppBridgeMock();
+
+    renderAtPath('/privacy', appBridge);
+
+    expect(screen.getByRole('heading', { name: 'Datenschutzhinweise' })).toBeInTheDocument();
+    expect(screen.getByText(/technische Sitzungsdaten/i)).toBeInTheDocument();
+  });
+
+  it('renders the terms-of-use page', () => {
+    const { appBridge } = createAppBridgeMock();
+
+    renderAtPath('/terms-of-use', appBridge);
+
+    expect(screen.getByRole('heading', { name: 'Allgemeine Nutzungsbedingungen' })).toBeInTheDocument();
+    expect(screen.getByText(/Test-, Evaluierungs- und Demonstrationszwecke/i)).toBeInTheDocument();
   });
 
   it('renders the ERP home page and shows the returned backend payload', async () => {
@@ -149,8 +187,8 @@ describe('get app mode rendering', () => {
 
     renderAtPath('/erp/menu/ExamplePage1', appBridge);
 
-    expect(screen.getByRole('heading', { name: 'ExamplePage1' })).toBeInTheDocument();
-    expect(screen.getByText('Hello World from the ExamplePage1 sample page.')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Dashboard' })).toBeInTheDocument();
+    expect(screen.getByText('This dashboard is the main entry point for the ERP area.')).toBeInTheDocument();
   });
 
   it('renders nested ERP menu pages from the registry', () => {
@@ -158,8 +196,8 @@ describe('get app mode rendering', () => {
 
     renderAtPath('/erp/menu/ExamplePage2', appBridge);
 
-    expect(screen.getByRole('heading', { name: 'ExamplePage2' })).toBeInTheDocument();
-    expect(screen.getByText('Hello World from the ExamplePage2 sample page.')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Customer Overview' })).toBeInTheDocument();
+    expect(screen.getByText('This page summarizes customer information for the selected context.')).toBeInTheDocument();
   });
 
   it('renders ERP tabs from the registry', () => {
@@ -167,8 +205,8 @@ describe('get app mode rendering', () => {
 
     renderAtPath('/erp/tabs/ExampleTab2', appBridge);
 
-    expect(screen.getByRole('heading', { name: 'ExampleTab2' })).toBeInTheDocument();
-    expect(screen.getByText('Hello World from the ExampleTab2 sample page.')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Customer Notes' })).toBeInTheDocument();
+    expect(screen.getByText('This tab shows customer-focused information inside the detail view.')).toBeInTheDocument();
   });
 
   it('renders an ERP-specific fallback for unknown menu items', () => {

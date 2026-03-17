@@ -2,8 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { getAppRoute } from './getAppRoute';
 
 describe('getAppRoute', () => {
-  it('returns setup and pane routes for their fixed paths', () => {
+  it('returns setup, legal and pane routes for their fixed paths', () => {
     expect(getAppRoute(new URL('http://localhost:50142/setup'))).toEqual({ kind: 'setup' });
+    expect(getAppRoute(new URL('http://localhost:50142/support'))).toEqual({ kind: 'support' });
+    expect(getAppRoute(new URL('http://localhost:50142/privacy'))).toEqual({ kind: 'privacy' });
+    expect(getAppRoute(new URL('http://localhost:50142/terms-of-use'))).toEqual({ kind: 'terms-of-use' });
     expect(getAppRoute(new URL('http://localhost:50142/pane'))).toEqual({ kind: 'pane' });
   });
 

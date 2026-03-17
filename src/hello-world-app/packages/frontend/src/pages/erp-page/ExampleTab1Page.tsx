@@ -4,9 +4,9 @@ function ExampleTab1Page() {
   return (
     <HelloWorldErpPage
       eyebrow="ERP Tab"
-      title="ExampleTab1"
-      description="Hello World from the ExampleTab1 sample page."
-      details="tabId: ExampleTab1"
+      title="Product Overview"
+      description="This tab provides product-specific information inside the detail view."
+      details="Context: Product detail"
     />
   );
 }
