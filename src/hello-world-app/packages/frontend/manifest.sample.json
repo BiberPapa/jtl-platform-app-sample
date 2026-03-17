@@ -1,0 +1,110 @@
+{
+    "manifestVersion": "1.0.0",
+    "version": "1.0.0", --> wird unter Apps / Technische Details angezeigt
+    "name": {
+        "short": "Hello World",  --> scheint nie verwendet zu werden
+      "full": "The official Hello World app for Demo" --> Wird für die App-Übersicht verwendet UND für den Eintrag im CloudWawi-Menü
+    },
+    "description": {
+        "short": "Lorem ipsum.", --> scheint nie verwendet zu werden
+      "full": "Minions ipsum gelatooo uuuhhh para tú bappleees para tú tank yuuu! Gelatooo po kass. Bappleees poopayee tulaliloo pepete belloo! Wiiiii." --> Wird unter Apps / Beschreibung angezeigt
+    },
+    "defaultLocale": "de-DE", --> unbekannt
+    "locales": { --> unbekannt
+      "de-DE": {
+            "key1": "abc"
+        },
+        "en": {
+            "key1": "abc"
+        }
+    },
+    "icon": { --> wird verwendet und ist elementar wichtig für den Setup-Prozess
+      "light": "https://i.ibb.co/RkWVbTsG/CODE-LEAP-logo-1024sq-Bach-Tung-Vu.png",
+        "dark": "https://i.ibb.co/RkWVbTsG/CODE-LEAP-logo-1024sq-Bach-Tung-Vu.png"
+    },
+    "communication": {
+        "supportUrl": "https://example.com/support-for-app-xy/__ACTIVE_LOCALE__/", --> Apps / Links & Informationen "Kontakt zum Hersteller""guideUrl": "https://example.com/guide-for-app-xy?lang=__ACTIVE_LOCALE__" --> scheint nie verwendet zu werden
+    },
+    "legal": {
+        "gdprRequestUrl": "https://example.com/gdpr/request", --> scheint nie verwendet zu werden
+      "gdprDeleteUrl": "https://example.com/gdpr/delete", --> scheint nie verwendet zu werden
+      "privacyUrl": "https://example.com/privacy",  --> Apps / Links & Informationen "Datenschutzerklärung""termsOfUseUrl": "https://example.com/terms-of-use" --> Apps / Links & Informationen "AGB"
+    },
+    "lifecycle": {
+        "setupUrl": "http://localhost:50142/setup", --> Wird beim "Pairing" der Apps aufgerufen, muss über die Bridge den Installationsstatus setzen, nur kleines Fenster
+      "connectUrl": "http://localhost:50142/lifecycle/connect", --> unbekannt
+      "disconnectUrl": "http://localhost:50142/lifecycle/disconnect" --> unbekannt
+    },
+    "capabilities": {
+        "hub": {
+            "appLauncher": {
+                "redirectUrl": "http://localhost:50142/hub", --> gute Frage
+          "closedPreviewUrl": "http://localhost:50142/closed-preview" --> kommt weg
+            }
+        },
+        "erp": {
+            "headless": {
+                "url": "http://localhost:50142/erp"
+            },
+            "menuItems": [
+                {
+                    "id": "ExamplePage1", --> interne eindeutige Id(?)
+            "name": "ExamplePage1", --> Menüeintrag
+            "url": "http://localhost:50142/erp/menu/ExamplePage1",
+                    "children": [ --> nicht unterstützt
+              {
+                            "id": "ExampleGroup1",
+                            "name": "ExampleGroup1",
+                            "children": [
+                                {
+                                    "id": "ExamplePage2",
+                                    "name": "ExamplePage2",
+                                    "url": "http://localhost:50142/erp/menu/ExamplePage2"
+                                },
+                                {
+                                    "id": "ExamplePage3",
+                                    "name": "ExamplePage3",
+                                    "url": "http://localhost:50142/erp/menu/ExamplePage3"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "tabs": [ --> nicht unterstützt?
+          {
+                    "context": "productDetail",
+                    "name": "ExampleTab1",
+                    "url": "http://localhost:50142/erp/tabs/ExampleTab1",
+                    "features": [
+                        "details:full",
+                        "pricing:write"
+                    ]
+                },
+                {
+                    "context": "customers.$customerId",
+                    "name": "ExampleTab2",
+                    "url": "http://localhost:50142/erp/tabs/ExampleTab2",
+                    "features": [
+                        "details:write",
+                        "address:read"
+                    ]
+                }
+            ],
+            "api": { --> API scopes (Wo gibt es eine Liste?)
+          "scopes": [
+                    "items.read",
+                    "items.write"
+                ]
+            },
+            "pane": [ --> nicht unterstützt?
+          {
+                    "context": "$tenantSlug.customers.overview", -- customers.$customerId (=> Kundendetails)
+                    "matchChildContext": false,
+                    "title": "<PANE TITLE>",
+                    "url": "http://localhost:50142/pane"
+                }
+            ]
+        }
+    }
+}
