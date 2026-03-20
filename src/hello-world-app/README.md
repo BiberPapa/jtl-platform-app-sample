@@ -5,13 +5,11 @@
 - Node.js 20+
 - Corepack enabled (`corepack enable`)
 - Install dependencies in this workspace with `corepack yarn install`
-- .NET 9 SDK if you want to run the ASP.NET backend alternative
 
 ## 🛠️ Development
 
-- Run `corepack yarn dev` to start the monorepo
+- Run `corepack yarn dev` to start the TypeScript backend and frontend
 - Run `corepack yarn dev:backend:ts` to start only the TypeScript backend on `http://localhost:50143`
-- Run `corepack yarn dev:backend:dotnet` to start only the ASP.NET backend on `http://localhost:50144`
 - Run `corepack yarn dev:frontend` to start only the frontend
 
 ## ✅ Code Standards
@@ -33,23 +31,11 @@ This sample is intended as onboarding code for new developers.
 - `corepack yarn build`
 - `corepack yarn run check`
 - `corepack yarn test:backend:ts`
-- `corepack yarn test:backend:dotnet`
-
-## 🔁 Backend Options
-
-The sample offers two interchangeable backends with the same HTTP contract:
-
-| Backend    | Stack             | Default URL              |
-| ---------- | ----------------- | ------------------------ |
-| TypeScript | Node.js + Express | `http://localhost:50143` |
-| ASP.NET    | ASP.NET Core / C# | `http://localhost:50144` |
-
-The frontend stays backend-agnostic and only needs `VITE_API_URL`.
 
 - Use `packages/frontend/.env.example` as the starting point for frontend configuration.
 - Keep `VITE_API_URL=http://localhost:50143` for the TypeScript backend.
-- Switch to `VITE_API_URL=http://localhost:50144` for the ASP.NET backend.
-- Both backends cache the ERP access token in-memory until shortly before it expires.
+- The frontend stays backend-agnostic and only needs `VITE_API_URL`.
+- The backend caches the ERP access token in-memory until shortly before it expires.
 - Runtime ERP requests send a fresh session token from the bridge to the backend instead of using a stored tenant mapping.
 
 ## 🔌 Ports
@@ -59,15 +45,20 @@ This is a mono-repo, both backend and frontend is expected to start from one mac
 | Port  | Protocol | Service               |
 | ----- | -------- | --------------------- |
 | 50143 | HTTP     | API Main (TypeScript) |
-| 50144 | HTTP     | API Main (ASP.NET)    |
 | 50142 | HTTPS    | React App             |
 
 ## Environment specific Secrets & Variables
 
-These are the environment variables that have to be added in `packages/backend` or `packages/backend-dotnet` for the project to start.
+These are the environment variables that have to be added in `packages/backend` for the project to start.
 
 | Name              | Description                                        | Type       |
 | ----------------- | -------------------------------------------------- | ---------- |
 | `CLIENT_ID`       | The ClientID of the Sample App                     | `Variable` |
 | `CLIENT_SECRET`   | The Client Scret of the Sample App                 | `Secret`   |
 | `API_ENVIRONMENT` | The enviroment of the API (defaults to production) | `Variable` |
+| `LOG_LEVEL` | Backend application log level (`error`, `warn`, `info`, `debug`) | `Variable` |
+| `ERP_PROXY_LOG_LEVEL` | ERP proxy log level (`off`, `basic`, `verbose`) | `Variable` |
+| `ERP_PROXY_LOG_BODY_MAX_LENGTH` | Max body length for verbose ERP proxy logs | `Variable` |
+
+For local development, prefer `ERP_PROXY_LOG_LEVEL=basic` or `ERP_PROXY_LOG_LEVEL=verbose`.
+`DEBUG_ERP_PROXY=true` is deprecated and only kept as a compatibility fallback.
