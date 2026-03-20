@@ -3,6 +3,7 @@ import express from 'express';
 import { assignRequestContext } from './middleware/requestContext.js';
 import { connectTenantHandler } from './routes/connectTenantRoute.js';
 import { erpProxyHandler } from './routes/erpProxyRoute.js';
+import { openApiHandler } from './routes/openApiRoute.js';
 
 export function createApp() {
   const app = express();
@@ -16,6 +17,7 @@ export function createApp() {
   });
 
   app.post('/connect-tenant', connectTenantHandler);
+  app.get('/openapi.json', openApiHandler);
   app.all(/^\/erp\/(.+)$/, erpProxyHandler);
 
   return app;

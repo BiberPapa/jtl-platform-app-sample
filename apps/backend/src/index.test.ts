@@ -104,6 +104,15 @@ describe('backend routes', () => {
     expect(response.body).toEqual({ error: 'The X-Session-Token header must be provided.' });
   });
 
+  it('requires a session token header for the OpenAPI route', async () => {
+    const { createApp } = await import('./index.js');
+
+    const response = await request(createApp()).get('/openapi.json');
+
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({ error: 'The X-Session-Token header must be provided.' });
+  });
+
   it('uses the validated tenant and forwards nested ERP endpoints', async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
@@ -354,7 +363,7 @@ describe('backend routes', () => {
     expect(response.headers['transfer-encoding']).toBeUndefined();
   });
 
-  it('passes forwarded ERP openapi documents through unchanged', async () => {
+  it('returns the ERP OpenAPI document with transformed description', async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       status: 200,
       headers: new Headers({
@@ -364,6 +373,10 @@ describe('backend routes', () => {
         Promise.resolve(
           JSON.stringify({
             openapi: '3.0.0',
+            info: {
+              title: 'ERP API',
+              description: 'Original description',
+            },
             paths: {
               '/customers': {
                 get: {
@@ -384,11 +397,15 @@ describe('backend routes', () => {
 
     const { createApp } = await import('./index.js');
 
-    const response = await request(createApp()).get('/erp/openapi.json').set('X-Session-Token', 'session-token');
+    const response = await request(createApp()).get('/openapi.json').set('X-Session-Token', 'session-token');
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual({
       openapi: '3.0.0',
+      info: {
+        title: 'ERP API',
+        description: 'Hallo Welt',
+      },
       paths: {
         '/customers': {
           get: {
@@ -400,6 +417,15 @@ describe('backend routes', () => {
         securitySchemes: {
           bearerAuth: { type: 'http', scheme: 'bearer' },
         },
+      },
+    });
+    expect(fetchMock).toHaveBeenCalledWith('https://api.jtl-cloud.com/erp/openapi.json', {
+      method: 'GET',
+      headers: {
+        'X-Session-Token': 'session-token',
+        'X-Tenant-ID': 'platform-tenant-id',
+        Authorization: 'Bearer access-token',
+        'Content-Type': 'application/json',
       },
     });
   });
