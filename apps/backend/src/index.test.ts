@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises';
 import request from 'supertest';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -38,6 +39,12 @@ function captureJsonLogs() {
         });
     },
   };
+}
+
+function parseOpenApiDocument(documentText: string): { info?: Record<string, unknown>; openapi?: string } {
+  const normalizedDocumentText = documentText.charCodeAt(0) === 0xfeff ? documentText.slice(1) : documentText;
+
+  return JSON.parse(normalizedDocumentText) as { info?: Record<string, unknown>; openapi?: string };
 }
 
 describe('backend routes', () => {
@@ -99,15 +106,6 @@ describe('backend routes', () => {
     const { createApp } = await import('./index.js');
 
     const response = await request(createApp()).get('/erp/customers');
-
-    expect(response.status).toBe(400);
-    expect(response.body).toEqual({ error: 'The X-Session-Token header must be provided.' });
-  });
-
-  it('requires a session token header for the OpenAPI route', async () => {
-    const { createApp } = await import('./index.js');
-
-    const response = await request(createApp()).get('/openapi.json');
 
     expect(response.status).toBe(400);
     expect(response.body).toEqual({ error: 'The X-Session-Token header must be provided.' });
@@ -363,70 +361,20 @@ describe('backend routes', () => {
     expect(response.headers['transfer-encoding']).toBeUndefined();
   });
 
-  it('returns the ERP OpenAPI document with transformed description', async () => {
-    const fetchMock = vi.fn().mockResolvedValue({
-      status: 200,
-      headers: new Headers({
-        'content-type': 'application/json',
-      }),
-      text: () =>
-        Promise.resolve(
-          JSON.stringify({
-            openapi: '3.0.0',
-            info: {
-              title: 'ERP API',
-              description: 'Original description',
-            },
-            paths: {
-              '/customers': {
-                get: {
-                  parameters: [{ name: 'X-Tenant-ID', in: 'header' }],
-                },
-              },
-            },
-            components: {
-              securitySchemes: {
-                bearerAuth: { type: 'http', scheme: 'bearer' },
-              },
-            },
-          }),
-        ),
-    });
-
-    vi.stubGlobal('fetch', fetchMock);
-
+  it('returns the local OpenAPI document with transformed description', async () => {
     const { createApp } = await import('./index.js');
+    const sourceDocumentText = await readFile(new URL('./assets/openapi.json', import.meta.url), 'utf8');
+    const sourceDocument = parseOpenApiDocument(sourceDocumentText);
 
-    const response = await request(createApp()).get('/openapi.json').set('X-Session-Token', 'session-token');
+    const response = await request(createApp()).get('/openapi.json');
+    const responseBody = response.body as { info?: Record<string, unknown>; openapi?: string };
 
     expect(response.status).toBe(200);
-    expect(response.body).toEqual({
-      openapi: '3.0.0',
-      info: {
-        title: 'ERP API',
-        description: 'Hallo Welt',
-      },
-      paths: {
-        '/customers': {
-          get: {
-            parameters: [{ name: 'X-Tenant-ID', in: 'header' }],
-          },
-        },
-      },
-      components: {
-        securitySchemes: {
-          bearerAuth: { type: 'http', scheme: 'bearer' },
-        },
-      },
-    });
-    expect(fetchMock).toHaveBeenCalledWith('https://api.jtl-cloud.com/erp/openapi.json', {
-      method: 'GET',
-      headers: {
-        'X-Session-Token': 'session-token',
-        'X-Tenant-ID': 'platform-tenant-id',
-        Authorization: 'Bearer access-token',
-        'Content-Type': 'application/json',
-      },
+    expect(response.headers['content-type']).toContain('application/json');
+    expect(responseBody.openapi).toBe(sourceDocument.openapi);
+    expect(responseBody.info).toEqual({
+      ...(sourceDocument.info ?? {}),
+      description: 'Hallo Welt',
     });
   });
 });

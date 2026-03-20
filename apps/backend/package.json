@@ -6,7 +6,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc",
+    "build": "tsc && node -e \"require('node:fs').cpSync('src/assets', 'dist/assets', { recursive: true })\"",
     "lint": "eslint --config ../../eslint.config.mjs .",
     "start": "node dist/index.js",
     "test": "vitest run src",
