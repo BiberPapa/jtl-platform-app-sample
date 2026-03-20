@@ -1,5 +1,6 @@
 import { Alert, Badge, Button, Card, CardContent, CardHeader, CardTitle, Input, Select } from '@jtl-software/platform-ui-react';
 import { useCallback, useEffect, useState } from 'react';
+import { AppPageShell } from '../../components';
 import { useAppBridgeClient } from '../../services/appBridgeContext';
 import {
   requestAuthorizationStatus,
@@ -10,7 +11,6 @@ import {
   type PlaygroundRequestMethod,
   type PlaygroundRequestResult,
 } from '../../services/erpService';
-import HelloWorldErpPage from './HelloWorldErpPage';
 import TimingBreakdownCard from './TimingBreakdownCard';
 
 type DashboardState = {
@@ -62,10 +62,10 @@ function DashboardPage() {
   }, [loadStatus]);
 
   return (
-    <HelloWorldErpPage
+    <AppPageShell
       eyebrow="ERP"
       title="Dashboard"
-      description="Overview of API availability, authorization, and response times for the demo app."
+      lead="Overview of API availability, authorization, and response times for the demo app."
       actions={
         <Button
           type="button"
@@ -77,147 +77,139 @@ function DashboardPage() {
           disabled={isLoading}
         />
       }
-      content={
-        <>
-          {isLoading ? <Alert title="Loading dashboard status..." variant="info" closable={false} /> : null}
-          {errorMessage ? (
-            <Alert title="Dashboard status could not be loaded" description={errorMessage} variant="destructive" closable={false} />
+      width="wide"
+    >
+      {isLoading ? <Alert title="Loading dashboard status..." variant="info" closable={false} /> : null}
+      {errorMessage ? <Alert title="Dashboard status could not be loaded" description={errorMessage} variant="destructive" closable={false} /> : null}
+      <Card>
+        <CardHeader>
+          <div className="app-section-header">
+            <div className="app-section-grid">
+              <CardTitle>API status</CardTitle>
+              <p className="app-muted-text">Key ERP and authorization details at a glance.</p>
+            </div>
+            <div className="app-badge-row">
+              <Badge
+                label={getApiStatusLabel(status?.erpInfo ?? null, isLoading)}
+                variant={getStatusBadgeVariant(getApiStatusBadge(status?.erpInfo ?? null, isLoading))}
+              />
+              <Badge
+                label={getAuthorizationLabel(status?.authorization ?? null, isLoading)}
+                variant={getStatusBadgeVariant(getAuthorizationBadge(status?.authorization ?? null, isLoading))}
+              />
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="app-section-grid">
+          <div className="app-metric-grid">
+            <Card className="app-metric-card">
+              <CardContent>
+                <p className="app-metric-label">Tenant Id</p>
+                <p className="app-metric-value">{status?.erpInfo.tenantId ?? (isLoading ? 'Loading...' : 'No tenant information')}</p>
+              </CardContent>
+            </Card>
+            <Card className="app-metric-card">
+              <CardContent>
+                <p className="app-metric-label">API version</p>
+                <p className="app-metric-value">{status?.erpInfo.version ?? (isLoading ? 'Loading...' : 'Unavailable')}</p>
+              </CardContent>
+            </Card>
+            <TimingBreakdownCard
+              totalTimeMs={status?.erpInfo.totalTimeMs ?? null}
+              infrastructureTimeMs={status?.erpInfo.infrastructureTimeMs ?? null}
+              erpTimeMs={status?.erpInfo.erpTimeMs ?? null}
+              frontendTimeMs={status?.erpInfo.frontendTimeMs ?? null}
+              isLoading={isLoading}
+            />
+          </div>
+          {status?.erpInfo.errorMessage ? <Alert title={status.erpInfo.errorMessage} variant="destructive" closable={false} /> : null}
+          {status?.authorization.message ? (
+            <Alert
+              title={status.authorization.message}
+              variant={
+                status.authorization.state === 'authorized' ? 'success' : status.authorization.state === 'unauthorized' ? 'warning' : 'destructive'
+              }
+              closable={false}
+            />
           ) : null}
-          <Card>
-            <CardHeader>
-              <div className="app-section-header">
-                <div className="app-section-grid">
-                  <CardTitle>API status</CardTitle>
-                  <p className="app-muted-text">Key ERP and authorization details at a glance.</p>
-                </div>
-                <div className="app-badge-row">
-                  <Badge
-                    label={getApiStatusLabel(status?.erpInfo ?? null, isLoading)}
-                    variant={getStatusBadgeVariant(getApiStatusBadge(status?.erpInfo ?? null, isLoading))}
-                  />
-                  <Badge
-                    label={getAuthorizationLabel(status?.authorization ?? null, isLoading)}
-                    variant={getStatusBadgeVariant(getAuthorizationBadge(status?.authorization ?? null, isLoading))}
-                  />
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="app-section-grid">
-              <div className="app-metric-grid">
-                <Card className="app-metric-card">
-                  <CardContent>
-                    <p className="app-metric-label">Tenant Id</p>
-                    <p className="app-metric-value">{status?.erpInfo.tenantId ?? (isLoading ? 'Loading...' : 'No tenant information')}</p>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <div className="app-section-header">
+            <div className="app-section-grid">
+              <CardTitle>API playground</CardTitle>
+              <p className="app-muted-text">Run manual requests against the ERP proxy and inspect status, duration, and response data.</p>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              label={isPlaygroundOpen ? 'Hide playground' : 'Show playground'}
+              aria-expanded={isPlaygroundOpen}
+              aria-controls="dashboard-playground-panel"
+              onClick={() => {
+                setIsPlaygroundOpen(currentValue => !currentValue);
+              }}
+            />
+          </div>
+        </CardHeader>
+        <CardContent className="app-section-grid">
+          {!isPlaygroundOpen ? <p className="app-muted-text">Open the playground to send a manual request.</p> : null}
+          {isPlaygroundOpen ? (
+            <div id="dashboard-playground-panel" className="app-section-grid">
+              <form
+                className="app-form-grid app-form-grid--playground"
+                onSubmit={event => {
+                  event.preventDefault();
+                  void handlePlaygroundRequest();
+                }}
+              >
+                <Select
+                  label="Method"
+                  value={playgroundMethod}
+                  onChange={(value: string) => setPlaygroundMethod(value as PlaygroundRequestMethod)}
+                  options={[
+                    { value: 'GET', label: 'GET' },
+                    { value: 'POST', label: 'POST' },
+                    { value: 'PUT', label: 'PUT' },
+                    { value: 'DELETE', label: 'DELETE' },
+                    { value: 'HEAD', label: 'HEAD' },
+                  ]}
+                />
+                <Input label="Route" value={playgroundRoute} onChange={(value: string) => setPlaygroundRoute(value)} placeholder="/v1/worker" />
+                <Button type="submit" label={isPlaygroundRequesting ? 'Sending...' : 'Send request'} disabled={isPlaygroundRequesting} />
+              </form>
+              {playgroundError ? <Alert title={playgroundError} variant="destructive" closable={false} /> : null}
+              {playgroundResult ? (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Response details</CardTitle>
+                  </CardHeader>
+                  <CardContent className="app-section-grid">
+                    <div className="app-section-grid app-section-grid--two">
+                      <div>
+                        <p className="app-inline-label">Response status:</p>
+                        <p className="app-metric-value">{playgroundResult.status}</p>
+                      </div>
+                      <div>
+                        <p className="app-inline-label">Response time:</p>
+                        <p className="app-metric-value">{playgroundResult.responseTimeMs} ms</p>
+                      </div>
+                    </div>
+                    <p className="app-muted-text">
+                      Request: <strong>{playgroundResult.method}</strong> <strong>{playgroundResult.route}</strong>
+                    </p>
+                    <pre className="app-code-block">{formatPlaygroundBody(playgroundResult.body)}</pre>
                   </CardContent>
                 </Card>
-                <Card className="app-metric-card">
-                  <CardContent>
-                    <p className="app-metric-label">API version</p>
-                    <p className="app-metric-value">{status?.erpInfo.version ?? (isLoading ? 'Loading...' : 'Unavailable')}</p>
-                  </CardContent>
-                </Card>
-                <TimingBreakdownCard
-                  totalTimeMs={status?.erpInfo.totalTimeMs ?? null}
-                  infrastructureTimeMs={status?.erpInfo.infrastructureTimeMs ?? null}
-                  erpTimeMs={status?.erpInfo.erpTimeMs ?? null}
-                  frontendTimeMs={status?.erpInfo.frontendTimeMs ?? null}
-                  isLoading={isLoading}
-                />
-              </div>
-              {status?.erpInfo.errorMessage ? <Alert title={status.erpInfo.errorMessage} variant="destructive" closable={false} /> : null}
-              {status?.authorization.message ? (
-                <Alert
-                  title={status.authorization.message}
-                  variant={
-                    status.authorization.state === 'authorized'
-                      ? 'success'
-                      : status.authorization.state === 'unauthorized'
-                        ? 'warning'
-                        : 'destructive'
-                  }
-                  closable={false}
-                />
-              ) : null}
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <div className="app-section-header">
-                <div className="app-section-grid">
-                  <CardTitle>API playground</CardTitle>
-                  <p className="app-muted-text">Run manual requests against the ERP proxy and inspect status, duration, and response data.</p>
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  label={isPlaygroundOpen ? 'Hide playground' : 'Show playground'}
-                  aria-expanded={isPlaygroundOpen}
-                  aria-controls="dashboard-playground-panel"
-                  onClick={() => {
-                    setIsPlaygroundOpen(currentValue => !currentValue);
-                  }}
-                />
-              </div>
-            </CardHeader>
-            <CardContent className="app-section-grid">
-              {!isPlaygroundOpen ? <p className="app-muted-text">Open the playground to send a manual request.</p> : null}
-              {isPlaygroundOpen ? (
-                <div id="dashboard-playground-panel" className="app-section-grid">
-                  <form
-                    className="app-form-grid app-form-grid--playground"
-                    onSubmit={event => {
-                      event.preventDefault();
-                      void handlePlaygroundRequest();
-                    }}
-                  >
-                    <Select
-                      label="Method"
-                      value={playgroundMethod}
-                      onChange={(value: string) => setPlaygroundMethod(value as PlaygroundRequestMethod)}
-                      options={[
-                        { value: 'GET', label: 'GET' },
-                        { value: 'POST', label: 'POST' },
-                        { value: 'PUT', label: 'PUT' },
-                        { value: 'DELETE', label: 'DELETE' },
-                        { value: 'HEAD', label: 'HEAD' },
-                      ]}
-                    />
-                    <Input label="Route" value={playgroundRoute} onChange={(value: string) => setPlaygroundRoute(value)} placeholder="/v1/worker" />
-                    <Button type="submit" label={isPlaygroundRequesting ? 'Sending...' : 'Send request'} disabled={isPlaygroundRequesting} />
-                  </form>
-                  {playgroundError ? <Alert title={playgroundError} variant="destructive" closable={false} /> : null}
-                  {playgroundResult ? (
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Response details</CardTitle>
-                      </CardHeader>
-                      <CardContent className="app-section-grid">
-                        <div className="app-section-grid app-section-grid--two">
-                          <div>
-                            <p className="app-inline-label">Response status:</p>
-                            <p className="app-metric-value">{playgroundResult.status}</p>
-                          </div>
-                          <div>
-                            <p className="app-inline-label">Response time:</p>
-                            <p className="app-metric-value">{playgroundResult.responseTimeMs} ms</p>
-                          </div>
-                        </div>
-                        <p className="app-muted-text">
-                          Request: <strong>{playgroundResult.method}</strong> <strong>{playgroundResult.route}</strong>
-                        </p>
-                        <pre className="app-code-block">{formatPlaygroundBody(playgroundResult.body)}</pre>
-                      </CardContent>
-                    </Card>
-                  ) : (
-                    <p className="app-muted-text">Enter a route and send a request to inspect the ERP response payload here.</p>
-                  )}
-                </div>
-              ) : null}
-            </CardContent>
-          </Card>
-        </>
-      }
-    />
+              ) : (
+                <p className="app-muted-text">Enter a route and send a request to inspect the ERP response payload here.</p>
+              )}
+            </div>
+          ) : null}
+        </CardContent>
+      </Card>
+    </AppPageShell>
   );
 }
 
