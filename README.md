@@ -34,7 +34,7 @@ Keep `VITE_API_URL=http://localhost:50143` for the local backend.
 | Port  | Protocol | Service               |
 | ----- | -------- | --------------------- |
 | 50143 | HTTP     | API Main (TypeScript) |
-| 50142 | HTTPS    | React App             |
+| 50142 | HTTP     | React App             |
 
 ## Environment Variables
 
