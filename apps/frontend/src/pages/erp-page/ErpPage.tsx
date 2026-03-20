@@ -1,6 +1,5 @@
-import { Suspense } from 'react';
 import type { AppRoute } from '../../routing/getAppRoute';
-import { resolveErpPage } from './erpPageRegistry';
+import DashboardPage from './DashboardPage';
 import UnknownErpPage from './UnknownErpPage';
 
 type ErpPageProps = {
@@ -8,31 +7,13 @@ type ErpPageProps = {
 };
 
 function ErpPage({ route }: ErpPageProps) {
-  const resolvedPage = resolveErpPage(route);
-
-  switch (resolvedPage.kind) {
-    case 'known': {
-      const PageComponent = resolvedPage.component;
-      return (
-        <Suspense
-          fallback={
-            <main className="app-shell">
-              <section className="app-card page-stack" aria-labelledby="erp-page-loading-title">
-                <p className="eyebrow">ERP</p>
-                <h1 id="erp-page-loading-title">Loading page</h1>
-                <p>The requested ERP page is loading.</p>
-              </section>
-            </main>
-          }
-        >
-          <PageComponent />
-        </Suspense>
-      );
-    }
-    case 'unknown-menu-item':
-      return <UnknownErpPage kind="erp-menu-item" menuItemId={resolvedPage.menuItemId} />;
-    case 'unknown-tab':
-      return <UnknownErpPage kind="erp-tab" tabId={resolvedPage.tabId} />;
+  switch (route.kind) {
+    case 'erp-home':
+      return <DashboardPage />;
+    case 'erp-menu-item':
+      return route.menuItemId === 'Dashboard' ? <DashboardPage /> : <UnknownErpPage kind="erp-menu-item" menuItemId={route.menuItemId} />;
+    case 'erp-tab':
+      return <UnknownErpPage kind="erp-tab" tabId={route.tabId} />;
   }
 }
 

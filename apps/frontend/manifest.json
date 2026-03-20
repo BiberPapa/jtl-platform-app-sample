@@ -59,22 +59,10 @@
           "url": "http://localhost:50142/erp/menu/Swagger"
         }
       ],
-      "tabs": [
-        {
-          "context": "productDetail",
-          "name": "Product Overview",
-          "url": "http://localhost:50142/erp/tabs/ExampleTab1",
-          "features": ["details:full", "pricing:write"]
-        },
-        {
-          "context": "customerDetail",
-          "name": "Customer Notes",
-          "url": "http://localhost:50142/erp/tabs/ExampleTab2",
-          "features": ["details:write", "address:read"]
-        }
-      ],
       "api": {
-        "scopes": ["items.read", "items.write"]
+        "scopes": [
+          "system.all"
+        ]
       },
       "pane": [
         {

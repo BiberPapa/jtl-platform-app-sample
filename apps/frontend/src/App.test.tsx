@@ -7,13 +7,11 @@ import App from './App';
 import type { AppBridgeClient } from './services/appBridgeClient';
 import { AppBridgeProvider } from './services/appBridgeContext';
 
-const { connectTenantMock, getCurrentCustomerIdMock, requestCustomersMock, requestErpInfoStatusMock, requestAuthorizationStatusMock, requestPlaygroundRequestMock, runApiTestsMock } = vi.hoisted(() => ({
+const { connectTenantMock, getCurrentCustomerIdMock, requestErpInfoStatusMock, requestAuthorizationStatusMock, requestPlaygroundRequestMock } = vi.hoisted(() => ({
   connectTenantMock: vi.fn<(sessionToken: string) => Promise<{ message: string }>>(),
-  requestCustomersMock: vi.fn<(appBridgeClient: AppBridgeClient) => Promise<unknown>>(),
   requestErpInfoStatusMock: vi.fn<(appBridgeClient: AppBridgeClient) => Promise<unknown>>(),
   requestAuthorizationStatusMock: vi.fn<(appBridgeClient: AppBridgeClient) => Promise<unknown>>(),
   requestPlaygroundRequestMock: vi.fn<(appBridgeClient: AppBridgeClient, request: { route: string; method: string }) => Promise<unknown>>(),
-  runApiTestsMock: vi.fn<(appBridgeClient: AppBridgeClient) => Promise<unknown>>(),
   getCurrentCustomerIdMock: vi.fn<(appBridgeClient: AppBridgeClient) => Promise<string>>(),
 }));
 
@@ -28,20 +26,14 @@ vi.mock('@jtl-software/platform-ui-react', () => ({
   Text: ({ children }: { children: ReactNode }) => <div>{children}</div>,
 }));
 
-vi.mock('swagger-ui-react', () => ({
-  default: ({ url }: { url?: string }) => <div>Swagger UI placeholder for {url ?? 'missing-url'}</div>,
-}));
-
 vi.mock('./services/setupService', () => ({
   connectTenant: connectTenantMock,
 }));
 
 vi.mock('./services/erpService', () => ({
-  requestCustomers: requestCustomersMock,
   requestErpInfoStatus: requestErpInfoStatusMock,
   requestAuthorizationStatus: requestAuthorizationStatusMock,
   requestPlaygroundRequest: requestPlaygroundRequestMock,
-  runApiTests: runApiTestsMock,
 }));
 
 vi.mock('./services/paneService', async () => {
@@ -187,20 +179,36 @@ describe('get app mode rendering', () => {
     expect(screen.getByText(/App Launcher entry point/i)).toBeInTheDocument();
   });
 
-  it('renders the ERP home page and shows the returned backend payload', async () => {
-    const user = userEvent.setup();
+  it('renders the ERP root page as the dashboard', () => {
     const { appBridge } = createAppBridgeMock();
 
-    requestCustomersMock.mockResolvedValue({
-      items: [{ id: 'customer-1' }],
+    requestErpInfoStatusMock.mockResolvedValue({
+      reachable: true,
+      tenantId: 'eazybusiness',
+      version: '2.0.0+Sha.e01a5a0',
+      totalTimeMs: 12,
+      erpTimeMs: 5.222,
+      infrastructureTimeMs: 6.778,
+      frontendTimeMs: 5.222,
+      errorMessage: null,
+    });
+    requestAuthorizationStatusMock.mockResolvedValue({
+      state: 'authorized',
+      message: null,
+    });
+    requestPlaygroundRequestMock.mockResolvedValue({
+      ok: true,
+      status: 200,
+      responseTimeMs: 14,
+      route: '/v1/worker',
+      method: 'GET',
+      body: { items: [] },
     });
 
     renderAtPath('/erp', appBridge);
 
-    await user.click(screen.getByRole('button', { name: 'Load customer data' }));
-
-    expect(await screen.findByText(/customer-1/)).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'ERP view: default' })).toBeInTheDocument();
+    expect(screen.getByText('Dashboard')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /dashboard/i })).toBeInTheDocument();
   });
 
   it('renders the root ERP menu page', () => {
@@ -471,80 +479,6 @@ describe('get app mode rendering', () => {
     renderAtPath('/erp/menu/Dashboard', appBridge);
 
     expect(await screen.findAllByText('Problematic')).toHaveLength(2);
-  });
-
-  it('renders the swagger ERP menu page from the registry', async () => {
-    const { appBridge } = createAppBridgeMock();
-
-    renderAtPath('/erp/menu/Swagger', appBridge);
-
-    expect(await screen.findByRole('heading', { name: 'API Documentation' })).toBeInTheDocument();
-    expect(await screen.findByText('Swagger UI placeholder for /erp/openapi.json')).toBeInTheDocument();
-  });
-
-  it('renders the ApiTest menu page', async () => {
-    const { appBridge } = createAppBridgeMock();
-
-    requestErpInfoStatusMock.mockResolvedValue({
-      reachable: true,
-      tenantId: 'eazybusiness',
-      version: '2.0.0+Sha.e01a5a0',
-      totalTimeMs: 12,
-      erpTimeMs: 5.222,
-      infrastructureTimeMs: 6.778,
-      frontendTimeMs: 5.222,
-      errorMessage: null,
-    });
-    runApiTestsMock.mockResolvedValue([]);
-
-    renderAtPath('/erp/menu/ApiTest', appBridge);
-
-    expect(await screen.findByRole('heading', { name: 'JTL-Wawi API Status' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Test starten' })).toBeInTheDocument();
-    expect(screen.getByText('Noch keine Ergebnisse. Starte den Testlauf, um alle Endpunkte nacheinander zu pruefen.')).toBeInTheDocument();
-  });
-
-  it('runs ApiTest checks and renders success ratio with error messages', async () => {
-    const user = userEvent.setup();
-    const { appBridge } = createAppBridgeMock();
-
-    requestErpInfoStatusMock.mockResolvedValue({
-      reachable: true,
-      tenantId: 'eazybusiness',
-      version: '2.0.0+Sha.e01a5a0',
-      errorMessage: null,
-    });
-    runApiTestsMock.mockResolvedValue([
-      { route: '/workers', statusCode: 200, state: 'success', message: 'OK' },
-      {
-        route: '/items',
-        statusCode: 500,
-        state: 'error',
-        message: 'Unable to resolve type: JTL.Wawi.Rest.Contracts.Services.Worker.IWorkerService, service name: ',
-      },
-      { route: '/warehouses', statusCode: 200, state: 'success', message: 'OK' },
-      { route: '/transactionStatuses', statusCode: 200, state: 'success', message: 'OK' },
-      { route: '/availabilities', statusCode: 500, state: 'error', message: 'Unknown API error' },
-    ]);
-
-    renderAtPath('/erp/menu/ApiTest', appBridge);
-
-    await user.click(screen.getByRole('button', { name: 'Test starten' }));
-
-    expect(runApiTestsMock).toHaveBeenCalledTimes(1);
-    expect(await screen.findByText('/workers')).toBeInTheDocument();
-    expect(screen.getByText('/items')).toBeInTheDocument();
-    expect(screen.getByText(/Unable to resolve type: JTL\.Wawi\.Rest\.Contracts\.Services\.Worker\.IWorkerService/)).toBeInTheDocument();
-    expect(screen.getByText('60% erfolgreich')).toBeInTheDocument();
-  });
-
-  it('renders ERP tabs from the registry', () => {
-    const { appBridge } = createAppBridgeMock();
-
-    renderAtPath('/erp/tabs/ExampleTab2', appBridge);
-
-    expect(screen.getByRole('heading', { name: 'Customer Notes' })).toBeInTheDocument();
-    expect(screen.getByText('This tab shows customer-focused information inside the detail view.')).toBeInTheDocument();
   });
 
   it('renders an ERP-specific fallback for unknown menu items', () => {

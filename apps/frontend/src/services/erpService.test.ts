@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AppBridgeClient } from './appBridgeClient';
-import { requestAuthorizationStatus, requestErpInfoStatus, requestPlaygroundRequest, runApiTests } from './erpService';
+import { requestAuthorizationStatus, requestErpInfoStatus, requestPlaygroundRequest } from './erpService';
 
 describe('requestErpInfoStatus', () => {
   const getSessionTokenMock = vi.fn<() => Promise<string>>();
@@ -220,64 +220,6 @@ describe('requestPlaygroundRequest', () => {
       method: 'GET',
       body: null,
     });
-  });
-});
-
-describe('runApiTests', () => {
-  const getSessionTokenMock = vi.fn<() => Promise<string>>();
-  const appBridgeClient: AppBridgeClient = {
-    getSessionToken: getSessionTokenMock,
-    setupCompleted: vi.fn<() => Promise<void>>(),
-    getCurrentCustomerId: vi.fn<() => Promise<string>>(),
-    subscribeToCustomerChanged: vi.fn(() => vi.fn()),
-  };
-
-  beforeEach(() => {
-    vi.clearAllMocks();
-    getSessionTokenMock.mockResolvedValue('session-token');
-  });
-
-  afterEach(() => {
-    vi.unstubAllGlobals();
-  });
-
-  it('runs the fixed API test routes sequentially and maps success and ErrorMessage responses', async () => {
-    const fetchMock = vi
-      .fn<typeof fetch>()
-      .mockResolvedValueOnce(createResponse({ ok: true, status: 200, text: '{"items":[]}' }))
-      .mockResolvedValueOnce(
-        createResponse({
-          ok: false,
-          status: 500,
-          text: '{"ErrorCode":"Unknown","ValidationErrors":{},"Errors":{},"ErrorMessage":"Unable to resolve type: JTL.Wawi.Rest.Contracts.Services.Worker.IWorkerService, service name: ","Stacktrace":null}',
-        }),
-      )
-      .mockResolvedValueOnce(createResponse({ ok: true, status: 200, text: '{"items":[]}' }))
-      .mockResolvedValueOnce(createResponse({ ok: true, status: 200, text: '{"items":[]}' }))
-      .mockResolvedValueOnce(createResponse({ ok: false, status: 404, text: 'Not found' }));
-
-    vi.stubGlobal('fetch', fetchMock);
-
-    await expect(runApiTests(appBridgeClient)).resolves.toEqual([
-      { route: '/workers', statusCode: 200, state: 'success', message: 'OK' },
-      {
-        route: '/items',
-        statusCode: 500,
-        state: 'error',
-        message: 'Unable to resolve type: JTL.Wawi.Rest.Contracts.Services.Worker.IWorkerService, service name: ',
-      },
-      { route: '/warehouses', statusCode: 200, state: 'success', message: 'OK' },
-      { route: '/transactionStatuses', statusCode: 200, state: 'success', message: 'OK' },
-      { route: '/availabilities', statusCode: 404, state: 'error', message: 'Not found' },
-    ]);
-
-    expect(fetchMock.mock.calls.map((call) => call[0])).toEqual([
-      'http://localhost:50143/erp/workers',
-      'http://localhost:50143/erp/items',
-      'http://localhost:50143/erp/warehouses',
-      'http://localhost:50143/erp/transactionStatuses',
-      'http://localhost:50143/erp/availabilities',
-    ]);
   });
 });
 

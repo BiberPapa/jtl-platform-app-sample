@@ -35,42 +35,6 @@ export type PlaygroundRequestResult = {
   body: unknown;
 };
 
-export type ApiTestRoute = '/workers' | '/items' | '/warehouses' | '/transactionStatuses' | '/availabilities';
-
-export type ApiTestErrorResponse = {
-  ErrorCode?: string;
-  ValidationErrors?: Record<string, unknown>;
-  Errors?: Record<string, unknown>;
-  ErrorMessage?: string;
-  Stacktrace?: string | null;
-};
-
-export type ApiTestResult = {
-  route: ApiTestRoute;
-  statusCode: number;
-  state: 'success' | 'error';
-  message: string;
-};
-
-export const apiTestRoutes: ApiTestRoute[] = ['/workers', '/items', '/warehouses', '/transactionStatuses', '/availabilities'];
-
-export async function requestCustomers(appBridgeClient: AppBridgeClient): Promise<unknown> {
-  const sessionToken = await appBridgeClient.getSessionToken();
-
-  const response = await fetch(`${apiUrl}/erp/customers`, {
-    headers: {
-      'X-Session-Token': sessionToken,
-    },
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(errorText || 'The customer data could not be loaded.');
-  }
-
-  return (await response.json()) as unknown;
-}
-
 export async function requestErpInfoStatus(appBridgeClient: AppBridgeClient): Promise<ErpInfoStatus> {
   const sessionToken = await appBridgeClient.getSessionToken();
   const v2Info = await requestInfoEndpoint('/v2/info', sessionToken);
@@ -165,17 +129,6 @@ export async function requestPlaygroundRequest(
   };
 }
 
-export async function runApiTests(appBridgeClient: AppBridgeClient): Promise<ApiTestResult[]> {
-  const sessionToken = await appBridgeClient.getSessionToken();
-  const results: ApiTestResult[] = [];
-
-  for (const route of apiTestRoutes) {
-    results.push(await requestApiTestRoute(route, sessionToken));
-  }
-
-  return results;
-}
-
 async function requestInfoEndpoint(
   endpointPath: '/v2/info',
   sessionToken: string,
@@ -226,43 +179,6 @@ async function requestInfoEndpoint(
   }
 }
 
-async function requestApiTestRoute(route: ApiTestRoute, sessionToken: string): Promise<ApiTestResult> {
-  try {
-    const response = await fetch(`${apiUrl}/erp${route}`, {
-      method: 'GET',
-      headers: {
-        'X-Session-Token': sessionToken,
-      },
-    });
-
-    if (response.status === 200) {
-      return {
-        route,
-        statusCode: 200,
-        state: 'success',
-        message: 'OK',
-      };
-    }
-
-    const responseText = await response.text();
-    const parsedError = parseApiTestErrorResponse(responseText);
-
-    return {
-      route,
-      statusCode: response.status,
-      state: 'error',
-      message: parsedError?.ErrorMessage || responseText || 'Unknown API error',
-    };
-  } catch (error) {
-    return {
-      route,
-      statusCode: 0,
-      state: 'error',
-      message: error instanceof Error ? error.message : 'Unknown API error',
-    };
-  }
-}
-
 function normalizePlaygroundRoute(route: string): string {
   const trimmedRoute = route.trim();
 
@@ -285,17 +201,6 @@ function parsePlaygroundBody(responseText: string): unknown {
   }
 }
 
-function parseApiTestErrorResponse(responseText: string): ApiTestErrorResponse | null {
-  if (!responseText) {
-    return null;
-  }
-
-  try {
-    return JSON.parse(responseText) as ApiTestErrorResponse;
-  } catch {
-    return null;
-  }
-}
 
 function parseServerTimingDurations(serverTimingHeader: string | null): {
   erpTimeMs: number | null;
