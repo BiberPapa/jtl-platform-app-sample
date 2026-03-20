@@ -1,5 +1,6 @@
 import { lazy, type ComponentType } from 'react';
 import type { AppRoute } from '../../routing/getAppRoute';
+import ApiTestPage from './ApiTestPage';
 import DashboardPage from './DashboardPage';
 import ErpHomePage from './ErpHomePage';
 import ExampleTab1Page from './ExampleTab1Page';
@@ -15,6 +16,7 @@ export type ResolvedErpPage =
 type ErpRoute = Extract<AppRoute, { kind: 'erp-home' | 'erp-menu-item' | 'erp-tab' }>;
 
 const menuPageRegistry: Record<string, ComponentType> = {
+  ApiTest: ApiTestPage,
   Dashboard: DashboardPage,
   Swagger: SwaggerPage,
 };

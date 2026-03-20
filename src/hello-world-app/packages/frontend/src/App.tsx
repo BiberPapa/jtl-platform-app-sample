@@ -29,7 +29,7 @@ function App() {
             <p className="eyebrow">Cloud App</p>
             <h1 id="unknown-mode-title">Unknown app mode</h1>
             <p>
-              Use `/setup`, `/support`, `/privacy`, `/terms-of-use`, `/hub`, `/erp`, `/erp/menu/Dashboard`, `/erp/menu/Swagger`, `/erp/tabs/...` or
+              Use `/setup`, `/support`, `/privacy`, `/terms-of-use`, `/hub`, `/erp`, `/erp/menu/Dashboard`, `/erp/menu/ApiTest`, `/erp/menu/Swagger`, `/erp/tabs/...` or
               `/pane` to open one of the documented app entry points.
             </p>
           </section>

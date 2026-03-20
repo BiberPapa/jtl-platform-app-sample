@@ -7,9 +7,13 @@ import App from './App';
 import type { AppBridgeClient } from './services/appBridgeClient';
 import { AppBridgeProvider } from './services/appBridgeContext';
 
-const { connectTenantMock, getCurrentCustomerIdMock, requestCustomersMock } = vi.hoisted(() => ({
+const { connectTenantMock, getCurrentCustomerIdMock, requestCustomersMock, requestErpInfoStatusMock, requestAuthorizationStatusMock, requestPlaygroundRequestMock, runApiTestsMock } = vi.hoisted(() => ({
   connectTenantMock: vi.fn<(sessionToken: string) => Promise<{ message: string }>>(),
   requestCustomersMock: vi.fn<(appBridgeClient: AppBridgeClient) => Promise<unknown>>(),
+  requestErpInfoStatusMock: vi.fn<(appBridgeClient: AppBridgeClient) => Promise<unknown>>(),
+  requestAuthorizationStatusMock: vi.fn<(appBridgeClient: AppBridgeClient) => Promise<unknown>>(),
+  requestPlaygroundRequestMock: vi.fn<(appBridgeClient: AppBridgeClient, request: { route: string; method: string }) => Promise<unknown>>(),
+  runApiTestsMock: vi.fn<(appBridgeClient: AppBridgeClient) => Promise<unknown>>(),
   getCurrentCustomerIdMock: vi.fn<(appBridgeClient: AppBridgeClient) => Promise<string>>(),
 }));
 
@@ -34,6 +38,10 @@ vi.mock('./services/setupService', () => ({
 
 vi.mock('./services/erpService', () => ({
   requestCustomers: requestCustomersMock,
+  requestErpInfoStatus: requestErpInfoStatusMock,
+  requestAuthorizationStatus: requestAuthorizationStatusMock,
+  requestPlaygroundRequest: requestPlaygroundRequestMock,
+  runApiTests: runApiTestsMock,
 }));
 
 vi.mock('./services/paneService', async () => {
@@ -82,7 +90,7 @@ function renderAtPath(pathname: string, appBridge: AppBridge): void {
 
 describe('get app mode rendering', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
   });
 
   it('renders the fallback for an unknown path', () => {
@@ -198,10 +206,262 @@ describe('get app mode rendering', () => {
   it('renders the root ERP menu page', () => {
     const { appBridge } = createAppBridgeMock();
 
+    requestErpInfoStatusMock.mockResolvedValue({
+      reachable: true,
+      tenantId: 'eazybusiness',
+      version: '2.0.0+Sha.e01a5a0',
+      totalTimeMs: 12,
+      erpTimeMs: 5.222,
+      infrastructureTimeMs: 6.778,
+      errorMessage: null,
+    });
+    requestAuthorizationStatusMock.mockResolvedValue({
+      state: 'authorized',
+      message: null,
+    });
+    requestPlaygroundRequestMock.mockResolvedValue({
+      ok: true,
+      status: 200,
+      responseTimeMs: 14,
+      route: '/v1/worker',
+      method: 'GET',
+      body: { items: [] },
+    });
+
     renderAtPath('/erp/menu/Dashboard', appBridge);
 
-    expect(screen.getByRole('heading', { name: 'Dashboard' })).toBeInTheDocument();
-    expect(screen.getByText('This dashboard is the main entry point for the ERP area.')).toBeInTheDocument();
+    expect(screen.getByText('Dashboard')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /dashboard/i })).toBeInTheDocument();
+  });
+
+  it('renders ERP dashboard status data and allows reloading', async () => {
+    const user = userEvent.setup();
+    const { appBridge } = createAppBridgeMock();
+
+    requestErpInfoStatusMock
+      .mockResolvedValueOnce({
+        reachable: true,
+        tenantId: 'eazybusiness',
+        version: '2.0.0+Sha.e01a5a0',
+          totalTimeMs: 12,
+        erpTimeMs: 5.222,
+        infrastructureTimeMs: 6.778,
+        errorMessage: null,
+      })
+      .mockResolvedValueOnce({
+        reachable: true,
+        tenantId: 'eazybusiness',
+        version: '2.0.1+Sha.abcdef0',
+        totalTimeMs: 134,
+        erpTimeMs: 14,
+        infrastructureTimeMs: 120,
+        errorMessage: null,
+      });
+    requestAuthorizationStatusMock
+      .mockResolvedValueOnce({
+        state: 'authorized',
+        message: null,
+      })
+      .mockResolvedValueOnce({
+        state: 'authorized',
+        message: null,
+      });
+    requestPlaygroundRequestMock.mockResolvedValue({
+      ok: true,
+      status: 200,
+      responseTimeMs: 18,
+      route: '/v1/worker',
+      method: 'GET',
+      body: { items: [] },
+    });
+
+    renderAtPath('/erp/menu/Dashboard', appBridge);
+
+    expect(await screen.findByText('eazybusiness')).toBeInTheDocument();
+    expect(screen.getByText('Reachable')).toBeInTheDocument();
+    expect(screen.getByText('Authorized')).toBeInTheDocument();
+    expect(screen.getByText('2.0.0+Sha.e01a5a0')).toBeInTheDocument();
+    expect(screen.getByText('12 ms')).toBeInTheDocument();
+    expect(screen.getByText('6.778 ms')).toBeInTheDocument();
+    expect(screen.getByText('5.222 ms')).toBeInTheDocument();
+    expect(screen.getByText('Good')).toBeInTheDocument();
+    expect(screen.getByText('Okay')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /dashboard/i }));
+
+    expect(await screen.findByText('2.0.1+Sha.abcdef0')).toBeInTheDocument();
+    expect(screen.getByText('134 ms')).toBeInTheDocument();
+    expect(screen.getAllByText('Warning')).toHaveLength(2);
+    expect(requestErpInfoStatusMock).toHaveBeenCalledTimes(2);
+    expect(requestAuthorizationStatusMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('renders an unavailable ERP dashboard status when no info endpoint succeeds', async () => {
+    const { appBridge } = createAppBridgeMock();
+
+    requestErpInfoStatusMock.mockResolvedValue({
+      reachable: false,
+      tenantId: null,
+      version: null,
+      totalTimeMs: 9,
+      erpTimeMs: 4.1,
+      infrastructureTimeMs: 4.9,
+      errorMessage: 'The /v2/info endpoint could not be loaded.',
+    });
+    requestAuthorizationStatusMock.mockResolvedValue({
+      state: 'error',
+      message: 'Authorization check could not be completed.',
+    });
+    requestPlaygroundRequestMock.mockResolvedValue({
+      ok: false,
+      status: 500,
+      responseTimeMs: 21,
+      route: '/v1/worker',
+      method: 'GET',
+      body: { error: 'failed' },
+    });
+
+    renderAtPath('/erp/menu/Dashboard', appBridge);
+
+    expect(await screen.findByText('No tenant information')).toBeInTheDocument();
+    expect(screen.getAllByText('Unavailable')).toHaveLength(2);
+    expect(screen.getByText('The /v2/info endpoint could not be loaded.')).toBeInTheDocument();
+  });
+
+  it('renders the app as not authorized when the workers check returns an authorization error', async () => {
+    const { appBridge } = createAppBridgeMock();
+
+    requestErpInfoStatusMock.mockResolvedValue({
+      reachable: true,
+      tenantId: 'eazybusiness',
+      version: '2.0.0+Sha.e01a5a0',
+      totalTimeMs: 12,
+      erpTimeMs: 5.222,
+      infrastructureTimeMs: 6.778,
+      errorMessage: null,
+    });
+    requestAuthorizationStatusMock.mockResolvedValue({
+      state: 'unauthorized',
+      message: 'Authorization error: access to workers is denied.',
+    });
+    requestPlaygroundRequestMock.mockResolvedValue({
+      ok: true,
+      status: 200,
+      responseTimeMs: 11,
+      route: '/v1/worker',
+      method: 'GET',
+      body: { items: [] },
+    });
+
+    renderAtPath('/erp/menu/Dashboard', appBridge);
+
+    expect(await screen.findByText('Not authorized')).toBeInTheDocument();
+    expect(screen.getByText('Authorization error: access to workers is denied.')).toBeInTheDocument();
+  });
+
+  it('expands the playground and shows a manual request result with response time', async () => {
+    const user = userEvent.setup();
+    const { appBridge } = createAppBridgeMock();
+
+    requestErpInfoStatusMock.mockResolvedValue({
+      reachable: true,
+      tenantId: 'eazybusiness',
+      version: '2.0.0+Sha.e01a5a0',
+      totalTimeMs: 12,
+      erpTimeMs: 5.222,
+      infrastructureTimeMs: 6.778,
+      errorMessage: null,
+    });
+    requestAuthorizationStatusMock.mockResolvedValue({
+      state: 'authorized',
+      message: null,
+    });
+    requestPlaygroundRequestMock.mockResolvedValue({
+      ok: true,
+      status: 200,
+      responseTimeMs: 37,
+      route: '/v1/worker',
+      method: 'DELETE',
+      body: { workerId: 'worker-42' },
+    });
+
+    renderAtPath('/erp/menu/Dashboard', appBridge);
+
+    await user.click(screen.getByRole('button', { name: 'Show playground' }));
+    expect(screen.getByRole('heading', { name: 'API playground' })).toBeInTheDocument();
+    await user.selectOptions(screen.getByLabelText('Method'), 'DELETE');
+    await user.clear(screen.getByLabelText('Route'));
+    await user.type(screen.getByLabelText('Route'), '/v1/worker');
+    await user.keyboard('{Enter}');
+
+    expect(requestPlaygroundRequestMock).toHaveBeenCalledWith(expect.anything(), { route: '/v1/worker', method: 'DELETE' });
+    expect(await screen.findByText('Response time:')).toBeInTheDocument();
+    expect(screen.getByText('37 ms')).toBeInTheDocument();
+    expect(screen.getByText(/worker-42/)).toBeInTheDocument();
+  });
+
+  it('shows empty playground responses explicitly', async () => {
+    const user = userEvent.setup();
+    const { appBridge } = createAppBridgeMock();
+
+    requestErpInfoStatusMock.mockResolvedValue({
+      reachable: true,
+      tenantId: 'eazybusiness',
+      version: '2.0.0+Sha.e01a5a0',
+      totalTimeMs: 12,
+      erpTimeMs: 5.222,
+      infrastructureTimeMs: 6.778,
+      errorMessage: null,
+    });
+    requestAuthorizationStatusMock.mockResolvedValue({
+      state: 'authorized',
+      message: null,
+    });
+    requestPlaygroundRequestMock.mockResolvedValue({
+      ok: true,
+      status: 204,
+      responseTimeMs: 9,
+      route: '/workers',
+      method: 'GET',
+      body: null,
+    });
+
+    renderAtPath('/erp/menu/Dashboard', appBridge);
+
+    await user.click(screen.getByRole('button', { name: 'Show playground' }));
+    await user.click(screen.getByRole('button', { name: 'Send request' }));
+
+    expect(await screen.findByText('Empty response body')).toBeInTheDocument();
+  });
+
+  it('marks slow ERP and infrastructure timings as problematic', async () => {
+    const { appBridge } = createAppBridgeMock();
+
+    requestErpInfoStatusMock.mockResolvedValue({
+      reachable: true,
+      tenantId: 'eazybusiness',
+      version: '2.0.0+Sha.e01a5a0',
+      totalTimeMs: 400,
+      erpTimeMs: 55,
+      infrastructureTimeMs: 345,
+      errorMessage: null,
+    });
+    requestAuthorizationStatusMock.mockResolvedValue({
+      state: 'authorized',
+      message: null,
+    });
+    requestPlaygroundRequestMock.mockResolvedValue({
+      ok: true,
+      status: 200,
+      responseTimeMs: 11,
+      route: '/v1/worker',
+      method: 'GET',
+      body: { items: [] },
+    });
+
+    renderAtPath('/erp/menu/Dashboard', appBridge);
+
+    expect(await screen.findAllByText('Problematic')).toHaveLength(2);
   });
 
   it('renders the swagger ERP menu page from the registry', async () => {
@@ -211,6 +471,61 @@ describe('get app mode rendering', () => {
 
     expect(await screen.findByRole('heading', { name: 'API Documentation' })).toBeInTheDocument();
     expect(await screen.findByText('Swagger UI placeholder for /erp/openapi.json')).toBeInTheDocument();
+  });
+
+  it('renders the ApiTest menu page', async () => {
+    const { appBridge } = createAppBridgeMock();
+
+    requestErpInfoStatusMock.mockResolvedValue({
+      reachable: true,
+      tenantId: 'eazybusiness',
+      version: '2.0.0+Sha.e01a5a0',
+      totalTimeMs: 12,
+      erpTimeMs: 5.222,
+      infrastructureTimeMs: 6.778,
+      errorMessage: null,
+    });
+    runApiTestsMock.mockResolvedValue([]);
+
+    renderAtPath('/erp/menu/ApiTest', appBridge);
+
+    expect(await screen.findByRole('heading', { name: 'JTL-Wawi API Status' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Test starten' })).toBeInTheDocument();
+    expect(screen.getByText('Noch keine Ergebnisse. Starte den Testlauf, um alle Endpunkte nacheinander zu pruefen.')).toBeInTheDocument();
+  });
+
+  it('runs ApiTest checks and renders success ratio with error messages', async () => {
+    const user = userEvent.setup();
+    const { appBridge } = createAppBridgeMock();
+
+    requestErpInfoStatusMock.mockResolvedValue({
+      reachable: true,
+      tenantId: 'eazybusiness',
+      version: '2.0.0+Sha.e01a5a0',
+      errorMessage: null,
+    });
+    runApiTestsMock.mockResolvedValue([
+      { route: '/workers', statusCode: 200, state: 'success', message: 'OK' },
+      {
+        route: '/items',
+        statusCode: 500,
+        state: 'error',
+        message: 'Unable to resolve type: JTL.Wawi.Rest.Contracts.Services.Worker.IWorkerService, service name: ',
+      },
+      { route: '/warehouses', statusCode: 200, state: 'success', message: 'OK' },
+      { route: '/transactionStatuses', statusCode: 200, state: 'success', message: 'OK' },
+      { route: '/availabilities', statusCode: 500, state: 'error', message: 'Unknown API error' },
+    ]);
+
+    renderAtPath('/erp/menu/ApiTest', appBridge);
+
+    await user.click(screen.getByRole('button', { name: 'Test starten' }));
+
+    expect(runApiTestsMock).toHaveBeenCalledTimes(1);
+    expect(await screen.findByText('/workers')).toBeInTheDocument();
+    expect(screen.getByText('/items')).toBeInTheDocument();
+    expect(screen.getByText(/Unable to resolve type: JTL\.Wawi\.Rest\.Contracts\.Services\.Worker\.IWorkerService/)).toBeInTheDocument();
+    expect(screen.getByText('60% erfolgreich')).toBeInTheDocument();
   });
 
   it('renders ERP tabs from the registry', () => {

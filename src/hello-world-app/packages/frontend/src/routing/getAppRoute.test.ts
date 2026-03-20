@@ -17,6 +17,10 @@ describe('getAppRoute', () => {
       kind: 'erp-menu-item',
       menuItemId: 'Dashboard',
     });
+    expect(getAppRoute(new URL('http://localhost:50142/erp/menu/ApiTest'))).toEqual({
+      kind: 'erp-menu-item',
+      menuItemId: 'ApiTest',
+    });
     expect(getAppRoute(new URL('http://localhost:50142/erp/menu/Swagger'))).toEqual({
       kind: 'erp-menu-item',
       menuItemId: 'Swagger',
