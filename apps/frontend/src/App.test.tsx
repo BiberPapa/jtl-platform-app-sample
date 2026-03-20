@@ -121,6 +121,10 @@ vi.mock('./services/erpService', () => ({
   requestPlaygroundRequest: requestPlaygroundRequestMock,
 }));
 
+vi.mock('swagger-ui-react', () => ({
+  default: ({ url }: { url: string }) => <div data-testid="swagger-ui">Swagger UI: {url}</div>,
+}));
+
 type BridgeMock = {
   appBridge: AppBridge;
   methodCall: ReturnType<typeof vi.fn<(methodName: string) => Promise<unknown>>>;
@@ -495,6 +499,77 @@ describe('get app mode rendering', () => {
     expect(await screen.findByText('Response time:')).toBeInTheDocument();
     expect(screen.getByText('37 ms')).toBeInTheDocument();
     expect(screen.getByText(/worker-42/)).toBeInTheDocument();
+  });
+
+  it('opens the API explorer as an in-page modal from the playground card', async () => {
+    const user = userEvent.setup();
+    const { appBridge } = createAppBridgeMock();
+
+    requestErpInfoStatusMock.mockResolvedValue({
+      reachable: true,
+      tenantId: 'eazybusiness',
+      version: '2.0.0+Sha.e01a5a0',
+      totalTimeMs: 12,
+      erpTimeMs: 5.222,
+      infrastructureTimeMs: 6.778,
+      frontendTimeMs: 5.222,
+      errorMessage: null,
+    });
+    requestAuthorizationStatusMock.mockResolvedValue({
+      state: 'authorized',
+      message: null,
+    });
+    requestPlaygroundRequestMock.mockResolvedValue({
+      ok: true,
+      status: 200,
+      responseTimeMs: 37,
+      route: '/v1/worker',
+      method: 'GET',
+      body: { workerId: 'worker-42' },
+    });
+
+    renderAtPath('/erp/menu/Dashboard', appBridge);
+
+    await user.click(await screen.findByRole('button', { name: 'API Explorer' }));
+
+    expect(screen.getByRole('dialog', { name: 'API Explorer' })).toBeInTheDocument();
+    expect(screen.getByTestId('swagger-ui')).toHaveTextContent('Swagger UI: https://api.example.test/openapi.json');
+  });
+
+  it('closes the API explorer modal without leaving the dashboard', async () => {
+    const user = userEvent.setup();
+    const { appBridge } = createAppBridgeMock();
+
+    requestErpInfoStatusMock.mockResolvedValue({
+      reachable: true,
+      tenantId: 'eazybusiness',
+      version: '2.0.0+Sha.e01a5a0',
+      totalTimeMs: 12,
+      erpTimeMs: 5.222,
+      infrastructureTimeMs: 6.778,
+      frontendTimeMs: 5.222,
+      errorMessage: null,
+    });
+    requestAuthorizationStatusMock.mockResolvedValue({
+      state: 'authorized',
+      message: null,
+    });
+    requestPlaygroundRequestMock.mockResolvedValue({
+      ok: true,
+      status: 200,
+      responseTimeMs: 37,
+      route: '/v1/worker',
+      method: 'GET',
+      body: { workerId: 'worker-42' },
+    });
+
+    renderAtPath('/erp/menu/Dashboard', appBridge);
+
+    await user.click(await screen.findByRole('button', { name: 'API Explorer' }));
+    await user.click(screen.getByRole('button', { name: 'Close Explorer' }));
+
+    expect(screen.queryByRole('dialog', { name: 'API Explorer' })).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'API playground' })).toBeInTheDocument();
   });
 
   it('shows empty playground responses explicitly', async () => {

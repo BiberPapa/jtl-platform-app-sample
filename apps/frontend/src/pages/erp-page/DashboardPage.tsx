@@ -11,6 +11,7 @@ import {
   type PlaygroundRequestMethod,
   type PlaygroundRequestResult,
 } from '../../services/erpService';
+import ApiExplorerModal from './ApiExplorerModal';
 import TimingBreakdownCard from './TimingBreakdownCard';
 
 type DashboardState = {
@@ -29,6 +30,7 @@ function DashboardPage() {
   const [isPlaygroundRequesting, setIsPlaygroundRequesting] = useState(false);
   const [playgroundResult, setPlaygroundResult] = useState<PlaygroundRequestResult | null>(null);
   const [playgroundError, setPlaygroundError] = useState<string | null>(null);
+  const [isApiExplorerOpen, setIsApiExplorerOpen] = useState(false);
 
   const loadStatus = useCallback(async (): Promise<void> => {
     try {
@@ -141,16 +143,19 @@ function DashboardPage() {
               <CardTitle>API playground</CardTitle>
               <p className="app-muted-text">Run manual requests against the ERP proxy and inspect status, duration, and response data.</p>
             </div>
-            <Button
-              type="button"
-              variant="outline"
-              label={isPlaygroundOpen ? 'Hide playground' : 'Show playground'}
-              aria-expanded={isPlaygroundOpen}
-              aria-controls="dashboard-playground-panel"
-              onClick={() => {
-                setIsPlaygroundOpen(currentValue => !currentValue);
-              }}
-            />
+            <div className="app-button-row">
+              <Button type="button" variant="outline" label="API Explorer" onClick={() => setIsApiExplorerOpen(true)} />
+              <Button
+                type="button"
+                variant="outline"
+                label={isPlaygroundOpen ? 'Hide playground' : 'Show playground'}
+                aria-expanded={isPlaygroundOpen}
+                aria-controls="dashboard-playground-panel"
+                onClick={() => {
+                  setIsPlaygroundOpen(currentValue => !currentValue);
+                }}
+              />
+            </div>
           </div>
         </CardHeader>
         <CardContent className="app-section-grid">
@@ -209,6 +214,7 @@ function DashboardPage() {
           ) : null}
         </CardContent>
       </Card>
+      {isApiExplorerOpen ? <ApiExplorerModal onClose={() => setIsApiExplorerOpen(false)} /> : null}
     </AppPageShell>
   );
 }
