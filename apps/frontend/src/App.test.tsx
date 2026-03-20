@@ -380,17 +380,21 @@ describe('get app mode rendering', () => {
     expect(screen.getByText('Authorized')).toBeInTheDocument();
     expect(screen.getByText('2.0.0+Sha.e01a5a0')).toBeInTheDocument();
     expect(screen.getByText('12 ms')).toBeInTheDocument();
-    expect(screen.getByText('8.75 ms')).toBeInTheDocument();
-    expect(screen.getByText('3.25 ms')).toBeInTheDocument();
-    expect(screen.getByText('5.222 ms')).toBeInTheDocument();
-    expect(screen.getAllByText('Good')).toHaveLength(2);
+    expect(screen.getAllByText('Good')).toHaveLength(3);
+
+    await user.click(screen.getByText('Show timing details'));
+
+    expect(screen.getByText('9 ms')).toBeInTheDocument();
+    expect(screen.getByText('3 ms')).toBeInTheDocument();
+    expect(screen.getByText('5 ms')).toBeInTheDocument();
+    expect(screen.getAllByText('Good')).toHaveLength(3);
     expect(screen.getByText('Okay')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: /dashboard/i }));
 
     expect(await screen.findByText('2.0.1+Sha.abcdef0')).toBeInTheDocument();
     expect(screen.getByText('134 ms')).toBeInTheDocument();
-    expect(screen.getAllByText('Warning')).toHaveLength(2);
+    expect(screen.getAllByText('Warning')).toHaveLength(3);
     expect(requestErpInfoStatusMock).toHaveBeenCalledTimes(2);
     expect(requestAuthorizationStatusMock).toHaveBeenCalledTimes(2);
   });
@@ -565,7 +569,7 @@ describe('get app mode rendering', () => {
 
     renderAtPath('/erp/menu/Dashboard', appBridge);
 
-    expect(await screen.findAllByText('Problematic')).toHaveLength(2);
+    expect(await screen.findAllByText('Problematic')).toHaveLength(3);
   });
 
   it('renders an ERP-specific fallback for unknown menu items', () => {

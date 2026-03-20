@@ -11,7 +11,7 @@ type TimingBreakdownCardProps = {
 };
 
 type TimingItem = {
-  key: 'total' | 'infrastructure' | 'erp' | 'frontend';
+  key: 'infrastructure' | 'erp' | 'frontend';
   label: string;
   value: number | null;
   tone: TimingTone;
@@ -19,33 +19,35 @@ type TimingItem = {
 };
 
 function TimingBreakdownCard({ totalTimeMs, infrastructureTimeMs, erpTimeMs, frontendTimeMs, isLoading }: TimingBreakdownCardProps) {
+  const infrastructureTone = getInfrastructureTimingStatus(infrastructureTimeMs, isLoading);
+  const erpTone = getErpTimingStatus(erpTimeMs, isLoading);
+  const frontendTone = getFrontendTimingStatus(frontendTimeMs, isLoading);
+  const overallTone = getOverallTimingStatus({
+    totalTimeMs,
+    isLoading,
+    tones: [infrastructureTone, erpTone, frontendTone],
+  });
+
   const items: TimingItem[] = [
-    {
-      key: 'total',
-      label: 'Total time',
-      value: totalTimeMs,
-      tone: isLoading ? 'loading' : totalTimeMs == null ? 'neutral' : 'success',
-      detail: null,
-    },
     {
       key: 'infrastructure',
       label: 'Infrastructure time',
       value: infrastructureTimeMs,
-      tone: getInfrastructureTimingStatus(infrastructureTimeMs, isLoading),
+      tone: infrastructureTone,
       detail: getInfrastructureTimingLabel(infrastructureTimeMs, isLoading),
     },
     {
       key: 'erp',
       label: 'ERP time',
       value: erpTimeMs,
-      tone: getErpTimingStatus(erpTimeMs, isLoading),
+      tone: erpTone,
       detail: getErpTimingLabel(erpTimeMs, isLoading),
     },
     {
       key: 'frontend',
       label: 'Frontend time',
       value: frontendTimeMs,
-      tone: getFrontendTimingStatus(frontendTimeMs, isLoading),
+      tone: frontendTone,
       detail: getFrontendTimingLabel(frontendTimeMs, isLoading),
     },
   ];
@@ -53,18 +55,30 @@ function TimingBreakdownCard({ totalTimeMs, infrastructureTimeMs, erpTimeMs, fro
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Timing breakdown</CardTitle>
+        <CardTitle>Timing</CardTitle>
       </CardHeader>
       <CardContent className="app-section-grid">
-        {items.map(item => (
-          <div key={item.key} className="app-metric-item">
-            <div className="app-metric-copy">
-              <p className="app-metric-label">{item.label}</p>
-              <p className="app-metric-value">{formatDuration(item.value, isLoading)}</p>
-            </div>
-            {item.detail ? <Badge label={item.detail} variant={getBadgeVariant(item.tone)} /> : null}
+        <div className="app-metric-item">
+          <div className="app-metric-copy">
+            <p className="app-metric-label">Total time</p>
+            <p className="app-metric-value">{formatDuration(totalTimeMs, isLoading)}</p>
           </div>
-        ))}
+          <Badge label={getOverallTimingLabel(overallTone)} variant={getBadgeVariant(overallTone)} />
+        </div>
+        <details>
+          <summary className="app-link">Show timing details</summary>
+          <div className="app-section-grid" style={{ marginTop: '0.75rem' }}>
+            {items.map(item => (
+              <div key={item.key} className="app-metric-item">
+                <div className="app-metric-copy">
+                  <p className="app-metric-label">{item.label}</p>
+                  <p className="app-metric-value">{formatDuration(item.value, isLoading)}</p>
+                </div>
+                {item.detail ? <Badge label={item.detail} variant={getBadgeVariant(item.tone)} /> : null}
+              </div>
+            ))}
+          </div>
+        </details>
       </CardContent>
     </Card>
   );
@@ -79,7 +93,55 @@ function formatDuration(durationMs: number | null, isLoading: boolean): string {
     return 'Unavailable';
   }
 
-  return `${durationMs} ms`;
+  return `${Math.round(durationMs)} ms`;
+}
+
+function getOverallTimingStatus({
+  totalTimeMs,
+  isLoading,
+  tones,
+}: {
+  totalTimeMs: number | null;
+  isLoading: boolean;
+  tones: TimingTone[];
+}): TimingTone {
+  if (isLoading) {
+    return 'loading';
+  }
+
+  if (totalTimeMs == null) {
+    return 'neutral';
+  }
+
+  if (tones.includes('error')) {
+    return 'error';
+  }
+
+  if (tones.includes('warning')) {
+    return 'warning';
+  }
+
+  return 'success';
+}
+
+function getOverallTimingLabel(tone: TimingTone): string {
+  if (tone === 'loading') {
+    return 'Loading';
+  }
+
+  if (tone === 'success') {
+    return 'Good';
+  }
+
+  if (tone === 'warning') {
+    return 'Warning';
+  }
+
+  if (tone === 'error') {
+    return 'Problematic';
+  }
+
+  return 'Unavailable';
 }
 
 function getErpTimingStatus(durationMs: number | null, isLoading: boolean): TimingTone {
