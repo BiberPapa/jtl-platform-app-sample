@@ -1,5 +1,5 @@
-import { apiUrl } from '../common/constants';
 import type { AppBridgeClient } from './appBridgeClient';
+import { getBackendErrorMessage, requestBackend } from './apiClient';
 
 export type ErpInfoResponse = {
   version: string;
@@ -36,8 +36,7 @@ export type PlaygroundRequestResult = {
 };
 
 export async function requestErpInfoStatus(appBridgeClient: AppBridgeClient): Promise<ErpInfoStatus> {
-  const sessionToken = await appBridgeClient.getSessionToken();
-  const v2Info = await requestInfoEndpoint('/v2/info', sessionToken);
+  const v2Info = await requestInfoEndpoint('/v2/info', appBridgeClient);
 
   if (v2Info.info) {
     return {
@@ -65,13 +64,10 @@ export async function requestErpInfoStatus(appBridgeClient: AppBridgeClient): Pr
 }
 
 export async function requestAuthorizationStatus(appBridgeClient: AppBridgeClient): Promise<AuthorizationStatus> {
-  const sessionToken = await appBridgeClient.getSessionToken();
-
   try {
-    const response = await fetch(`${apiUrl}/erp/workers`, {
-      headers: {
-        'X-Session-Token': sessionToken,
-      },
+    const response = await requestBackend({
+      path: '/erp/workers',
+      appBridgeClient,
     });
 
     if (response.ok) {
@@ -81,10 +77,8 @@ export async function requestAuthorizationStatus(appBridgeClient: AppBridgeClien
       };
     }
 
-    const errorText = await response.text();
-    const message = errorText || 'The authorization status could not be determined.';
-
-    if (/authorization/i.test(message)) {
+    const message = getBackendErrorMessage(response, 'The authorization status could not be determined.');
+    if (response.status === 401 || response.status === 403) {
       return {
         state: 'unauthorized',
         message,
@@ -107,17 +101,14 @@ export async function requestPlaygroundRequest(
   appBridgeClient: AppBridgeClient,
   request: { route: string; method: PlaygroundRequestMethod },
 ): Promise<PlaygroundRequestResult> {
-  const sessionToken = await appBridgeClient.getSessionToken();
   const normalizedRoute = normalizePlaygroundRoute(request.route);
   const startedAt = performance.now();
-  const response = await fetch(`${apiUrl}/erp${normalizedRoute}`, {
+  const response = await requestBackend({
+    path: `/erp${normalizedRoute}`,
     method: request.method,
-    headers: {
-      'X-Session-Token': sessionToken,
-    },
+    appBridgeClient,
   });
   const responseTimeMs = Math.round(performance.now() - startedAt);
-  const responseText = request.method === 'HEAD' || response.status === 204 ? '' : await response.text();
 
   return {
     ok: response.ok,
@@ -125,13 +116,13 @@ export async function requestPlaygroundRequest(
     responseTimeMs,
     route: normalizedRoute,
     method: request.method,
-    body: parsePlaygroundBody(responseText),
+    body: parsePlaygroundBody(response.text),
   };
 }
 
 async function requestInfoEndpoint(
   endpointPath: '/v2/info',
-  sessionToken: string,
+  appBridgeClient: AppBridgeClient,
 ): Promise<{
   info: ErpInfoResponse | null;
   totalTimeMs: number;
@@ -141,32 +132,29 @@ async function requestInfoEndpoint(
 }> {
   try {
     const startedAt = performance.now();
-    const response = await fetch(`${apiUrl}/erp${endpointPath}`, {
-      headers: {
-        'X-Session-Token': sessionToken,
-      },
+    const response = await requestBackend({
+      path: `/erp${endpointPath}`,
+      appBridgeClient,
     });
     const totalTimeMs = Math.round(performance.now() - startedAt);
     const { erpTimeMs, infrastructureTimeMs } = parseServerTimingDurations(response.headers.get('server-timing'));
 
     if (!response.ok) {
-      const errorText = await response.text();
-
       return {
         info: null,
         totalTimeMs,
         erpTimeMs,
         infrastructureTimeMs,
-        errorMessage: errorText || `The ${endpointPath} endpoint could not be loaded.`,
+        errorMessage: getBackendErrorMessage(response, `The ${endpointPath} endpoint could not be loaded.`),
       };
     }
 
     return {
-      info: (await response.json()) as ErpInfoResponse,
+      info: isErpInfoResponse(response.json) ? response.json : null,
       totalTimeMs,
       erpTimeMs,
       infrastructureTimeMs,
-      errorMessage: null,
+      errorMessage: isErpInfoResponse(response.json) ? null : `The ${endpointPath} endpoint returned an unexpected payload.`,
     };
   } catch (error) {
     return {
@@ -199,6 +187,21 @@ function parsePlaygroundBody(responseText: string): unknown {
   } catch {
     return responseText;
   }
+}
+
+function isErpInfoResponse(value: unknown): value is ErpInfoResponse {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+
+  const candidate = value as Record<string, unknown>;
+
+  return (
+    typeof candidate['version'] === 'string' &&
+    typeof candidate['timestamp'] === 'string' &&
+    typeof candidate['tenant'] === 'string' &&
+    typeof candidate['type'] === 'string'
+  );
 }
 
 function parseServerTimingDurations(serverTimingHeader: string | null): {

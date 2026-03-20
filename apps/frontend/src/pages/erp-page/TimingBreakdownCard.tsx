@@ -18,6 +18,12 @@ type TimingItem = {
   detail: string | null;
 };
 
+type TimingRule = {
+  successUpperBound: number;
+  warningUpperBound: number;
+  successLabel: string;
+};
+
 function TimingBreakdownCard({ totalTimeMs, infrastructureTimeMs, erpTimeMs, frontendTimeMs, isLoading }: TimingBreakdownCardProps) {
   const infrastructureTone = getInfrastructureTimingStatus(infrastructureTimeMs, isLoading);
   const erpTone = getErpTimingStatus(erpTimeMs, isLoading);
@@ -33,22 +39,22 @@ function TimingBreakdownCard({ totalTimeMs, infrastructureTimeMs, erpTimeMs, fro
       key: 'infrastructure',
       label: 'Infrastructure time',
       value: infrastructureTimeMs,
-      tone: infrastructureTone,
-      detail: getInfrastructureTimingLabel(infrastructureTimeMs, isLoading),
+      tone: infrastructureTone.status,
+      detail: infrastructureTone.label,
     },
     {
       key: 'erp',
       label: 'ERP time',
       value: erpTimeMs,
-      tone: erpTone,
-      detail: getErpTimingLabel(erpTimeMs, isLoading),
+      tone: erpTone.status,
+      detail: erpTone.label,
     },
     {
       key: 'frontend',
       label: 'Frontend time',
       value: frontendTimeMs,
-      tone: frontendTone,
-      detail: getFrontendTimingLabel(frontendTimeMs, isLoading),
+      tone: frontendTone.status,
+      detail: frontendTone.label,
     },
   ];
 
@@ -63,7 +69,7 @@ function TimingBreakdownCard({ totalTimeMs, infrastructureTimeMs, erpTimeMs, fro
             <p className="app-metric-label">Total time</p>
             <p className="app-metric-value">{formatDuration(totalTimeMs, isLoading)}</p>
           </div>
-          <Badge label={getOverallTimingLabel(overallTone)} variant={getBadgeVariant(overallTone)} />
+          <Badge label={overallTone.label} variant={getBadgeVariant(overallTone.status)} />
         </div>
         <details>
           <summary className="app-link">Show timing details</summary>
@@ -103,171 +109,69 @@ function getOverallTimingStatus({
 }: {
   totalTimeMs: number | null;
   isLoading: boolean;
-  tones: TimingTone[];
-}): TimingTone {
+  tones: Array<{ status: TimingTone }>;
+}): { status: TimingTone; label: string } {
   if (isLoading) {
-    return 'loading';
+    return { status: 'loading', label: 'Loading' };
   }
 
   if (totalTimeMs == null) {
-    return 'neutral';
+    return { status: 'neutral', label: 'Unavailable' };
   }
 
-  if (tones.includes('error')) {
-    return 'error';
+  if (tones.some(tone => tone.status === 'error')) {
+    return { status: 'error', label: 'Problematic' };
   }
 
-  if (tones.includes('warning')) {
-    return 'warning';
+  if (tones.some(tone => tone.status === 'warning')) {
+    return { status: 'warning', label: 'Warning' };
   }
 
-  return 'success';
+  return { status: 'success', label: 'Good' };
 }
 
-function getOverallTimingLabel(tone: TimingTone): string {
-  if (tone === 'loading') {
-    return 'Loading';
-  }
-
-  if (tone === 'success') {
-    return 'Good';
-  }
-
-  if (tone === 'warning') {
-    return 'Warning';
-  }
-
-  if (tone === 'error') {
-    return 'Problematic';
-  }
-
-  return 'Unavailable';
+function getErpTimingStatus(durationMs: number | null, isLoading: boolean): { status: TimingTone; label: string } {
+  return evaluateTiming(durationMs, isLoading, {
+    successUpperBound: 10,
+    warningUpperBound: 50,
+    successLabel: 'Okay',
+  });
 }
 
-function getErpTimingStatus(durationMs: number | null, isLoading: boolean): TimingTone {
+function getInfrastructureTimingStatus(durationMs: number | null, isLoading: boolean): { status: TimingTone; label: string } {
+  return evaluateTiming(durationMs, isLoading, {
+    successUpperBound: 100,
+    warningUpperBound: 250,
+    successLabel: 'Good',
+  });
+}
+
+function getFrontendTimingStatus(durationMs: number | null, isLoading: boolean): { status: TimingTone; label: string } {
+  return evaluateTiming(durationMs, isLoading, {
+    successUpperBound: 100,
+    warningUpperBound: 250,
+    successLabel: 'Good',
+  });
+}
+
+function evaluateTiming(durationMs: number | null, isLoading: boolean, rule: TimingRule): { status: TimingTone; label: string } {
   if (isLoading) {
-    return 'loading';
+    return { status: 'loading', label: 'Loading' };
   }
 
   if (durationMs == null) {
-    return 'neutral';
+    return { status: 'neutral', label: 'Unavailable' };
   }
 
-  if (durationMs < 10) {
-    return 'success';
+  if (durationMs < rule.successUpperBound) {
+    return { status: 'success', label: rule.successLabel };
   }
 
-  if (durationMs <= 50) {
-    return 'warning';
+  if (durationMs <= rule.warningUpperBound) {
+    return { status: 'warning', label: 'Warning' };
   }
 
-  return 'error';
-}
-
-function getErpTimingLabel(durationMs: number | null, isLoading: boolean): string {
-  const status = getErpTimingStatus(durationMs, isLoading);
-
-  if (status === 'loading') {
-    return 'Loading';
-  }
-
-  if (status === 'success') {
-    return 'Okay';
-  }
-
-  if (status === 'warning') {
-    return 'Warning';
-  }
-
-  if (status === 'error') {
-    return 'Problematic';
-  }
-
-  return 'Unavailable';
-}
-
-function getInfrastructureTimingStatus(durationMs: number | null, isLoading: boolean): TimingTone {
-  if (isLoading) {
-    return 'loading';
-  }
-
-  if (durationMs == null) {
-    return 'neutral';
-  }
-
-  if (durationMs < 100) {
-    return 'success';
-  }
-
-  if (durationMs <= 250) {
-    return 'warning';
-  }
-
-  return 'error';
-}
-
-function getInfrastructureTimingLabel(durationMs: number | null, isLoading: boolean): string {
-  const status = getInfrastructureTimingStatus(durationMs, isLoading);
-
-  if (status === 'loading') {
-    return 'Loading';
-  }
-
-  if (status === 'success') {
-    return 'Good';
-  }
-
-  if (status === 'warning') {
-    return 'Warning';
-  }
-
-  if (status === 'error') {
-    return 'Problematic';
-  }
-
-  return 'Unavailable';
-}
-
-function getFrontendTimingStatus(durationMs: number | null, isLoading: boolean): TimingTone {
-  if (isLoading) {
-    return 'loading';
-  }
-
-  if (durationMs == null) {
-    return 'neutral';
-  }
-
-  if (durationMs < 100) {
-    return 'success';
-  }
-
-  if (durationMs <= 250) {
-    return 'warning';
-  }
-
-  return 'error';
-}
-
-function getFrontendTimingLabel(durationMs: number | null, isLoading: boolean): string {
-  const status = getFrontendTimingStatus(durationMs, isLoading);
-
-  if (status === 'loading') {
-    return 'Loading';
-  }
-
-  if (status === 'success') {
-    return 'Good';
-  }
-
-  if (status === 'warning') {
-    return 'Warning';
-  }
-
-  if (status === 'error') {
-    return 'Problematic';
-  }
-
-  return 'Unavailable';
+  return { status: 'error', label: 'Problematic' };
 }
 
 function getBadgeVariant(tone: TimingTone): 'default' | 'success' | 'warning' | 'destructive' {

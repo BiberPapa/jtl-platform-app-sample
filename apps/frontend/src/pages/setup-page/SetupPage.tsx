@@ -54,8 +54,7 @@ function SetupPage() {
       setConnectionState('submitting');
       setConnectionMessage('Please wait while the connection to JTL-Wawi is being checked.');
       setShowManualCloseHint(false);
-      const sessionToken = await appBridgeClient.getSessionToken();
-      const { message } = await connectTenant(sessionToken);
+      const { message } = await connectTenant(appBridgeClient);
       setConnectionState('success');
       setConnectionMessage(message);
       setCompletionState('idle');

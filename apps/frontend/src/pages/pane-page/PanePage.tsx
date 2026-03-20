@@ -2,7 +2,6 @@ import { Alert, Button, Card, CardContent, Input } from '@jtl-software/platform-
 import { useCallback, useEffect, useState } from 'react';
 import { AppPageShell } from '../../components';
 import { useAppBridgeClient } from '../../services/appBridgeContext';
-import { getCurrentCustomerId } from '../../services/paneService';
 
 function PanePage() {
   const [customer, setCustomer] = useState('');
@@ -22,7 +21,7 @@ function PanePage() {
 
   const handleGetCurrentCustomer = useCallback(async (): Promise<void> => {
     try {
-      const customerId = await getCurrentCustomerId(appBridgeClient);
+      const customerId = await appBridgeClient.getCurrentCustomerId();
       setCustomer(customerId);
       setStatusMessage('Customer was loaded on demand.');
     } catch (error) {

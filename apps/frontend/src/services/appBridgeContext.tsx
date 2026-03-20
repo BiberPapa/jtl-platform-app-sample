@@ -1,5 +1,5 @@
 import type { AppBridge } from '@jtl-software/cloud-apps-core';
-import { createContext, type ReactNode, useContext } from 'react';
+import { createContext, type ReactNode, useContext, useMemo } from 'react';
 import { createAppBridgeClient, type AppBridgeClient } from './appBridgeClient';
 
 type AppBridgeContextValue = {
@@ -15,20 +15,16 @@ type AppBridgeProviderProps = {
 };
 
 export function AppBridgeProvider({ appBridge, children }: AppBridgeProviderProps) {
-  return (
-    <AppBridgeContext.Provider
-      value={{
-        appBridge,
-        appBridgeClient: createAppBridgeClient(appBridge),
-      }}
-    >
-      {children}
-    </AppBridgeContext.Provider>
+  const appBridgeClient = useMemo(() => createAppBridgeClient(appBridge), [appBridge]);
+  const contextValue = useMemo(
+    () => ({
+      appBridge,
+      appBridgeClient,
+    }),
+    [appBridge, appBridgeClient],
   );
-}
 
-export function useAppBridge(): AppBridge {
-  return getAppBridgeContextValue().appBridge;
+  return <AppBridgeContext.Provider value={contextValue}>{children}</AppBridgeContext.Provider>;
 }
 
 export function useAppBridgeClient(): AppBridgeClient {

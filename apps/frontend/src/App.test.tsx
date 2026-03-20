@@ -9,11 +9,11 @@ import { AppBridgeProvider } from './services/appBridgeContext';
 
 const { connectTenantMock, getCurrentCustomerIdMock, requestErpInfoStatusMock, requestAuthorizationStatusMock, requestPlaygroundRequestMock } =
   vi.hoisted(() => ({
-    connectTenantMock: vi.fn<(sessionToken: string) => Promise<{ message: string }>>(),
+    connectTenantMock: vi.fn<(appBridgeClient: AppBridgeClient) => Promise<{ message: string }>>(),
     requestErpInfoStatusMock: vi.fn<(appBridgeClient: AppBridgeClient) => Promise<unknown>>(),
     requestAuthorizationStatusMock: vi.fn<(appBridgeClient: AppBridgeClient) => Promise<unknown>>(),
     requestPlaygroundRequestMock: vi.fn<(appBridgeClient: AppBridgeClient, request: { route: string; method: string }) => Promise<unknown>>(),
-    getCurrentCustomerIdMock: vi.fn<(appBridgeClient: AppBridgeClient) => Promise<string>>(),
+    getCurrentCustomerIdMock: vi.fn<() => Promise<string>>(),
   }));
 
 vi.mock('@jtl-software/platform-ui-react', () => ({
@@ -120,15 +120,6 @@ vi.mock('./services/erpService', () => ({
   requestAuthorizationStatus: requestAuthorizationStatusMock,
   requestPlaygroundRequest: requestPlaygroundRequestMock,
 }));
-
-vi.mock('./services/paneService', async () => {
-  const actual = await vi.importActual<typeof import('./services/paneService')>('./services/paneService');
-
-  return {
-    ...actual,
-    getCurrentCustomerId: getCurrentCustomerIdMock,
-  };
-});
 
 type BridgeMock = {
   appBridge: AppBridge;
@@ -592,9 +583,16 @@ describe('get app mode rendering', () => {
 
   it('renders the pane page, reacts to bridge events and loads the current customer on demand', async () => {
     const user = userEvent.setup();
-    const { appBridge, subscribe } = createAppBridgeMock();
+    const { appBridge, methodCall, subscribe } = createAppBridgeMock();
 
     getCurrentCustomerIdMock.mockResolvedValue('customer-from-call');
+    methodCall.mockImplementation((methodName: string) => {
+      if (methodName === 'getCurrentCustomerId') {
+        return getCurrentCustomerIdMock();
+      }
+
+      throw new Error(`Unexpected bridge method: ${methodName}`);
+    });
 
     renderAtPath('/pane', appBridge);
 

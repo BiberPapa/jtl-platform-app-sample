@@ -27,12 +27,7 @@ describe('requestErpInfoStatus', () => {
         headers: new Headers({
           'server-timing': 'erpapi-total;dur=5.222, backend-total;dur=8.75',
         }),
-        json: {
-          version: '2.0.0+Sha.e01a5a0',
-          timestamp: '2026-03-19T13:16:15.8903775+01:00',
-          tenant: 'eazybusiness',
-          type: 'WAWI-Api',
-        },
+        text: '{"version":"2.0.0+Sha.e01a5a0","timestamp":"2026-03-19T13:16:15.8903775+01:00","tenant":"eazybusiness","type":"WAWI-Api"}',
       }),
     );
 
@@ -51,10 +46,11 @@ describe('requestErpInfoStatus', () => {
     });
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
-    expect(fetchMock).toHaveBeenCalledWith('http://localhost:50143/erp/v2/info', {
+    expect(fetchMock).toHaveBeenCalledWith('https://api.example.test/erp/v2/info', {
       headers: {
         'X-Session-Token': 'session-token',
       },
+      method: 'GET',
     });
   });
 
@@ -118,11 +114,12 @@ describe('requestAuthorizationStatus', () => {
     });
   });
 
-  it('reports the app as unauthorized when the response mentions authorization', async () => {
+  it('reports the app as unauthorized when the backend returns 401', async () => {
     const fetchMock = vi.fn<typeof fetch>().mockResolvedValueOnce(
       createResponse({
         ok: false,
-        text: 'Authorization error: access denied.',
+        status: 401,
+        text: 'Access denied.',
       }),
     );
 
@@ -130,7 +127,7 @@ describe('requestAuthorizationStatus', () => {
 
     await expect(requestAuthorizationStatus(appBridgeClient)).resolves.toEqual({
       state: 'unauthorized',
-      message: 'Authorization error: access denied.',
+      message: 'Access denied.',
     });
   });
 
@@ -192,7 +189,7 @@ describe('requestPlaygroundRequest', () => {
       },
     });
 
-    expect(fetchMock).toHaveBeenCalledWith('http://localhost:50143/erp/v1/worker', {
+    expect(fetchMock).toHaveBeenCalledWith('https://api.example.test/erp/v1/worker', {
       method: 'DELETE',
       headers: {
         'X-Session-Token': 'session-token',
@@ -223,24 +220,11 @@ describe('requestPlaygroundRequest', () => {
   });
 });
 
-function createResponse({
-  ok,
-  status,
-  headers,
-  json,
-  text,
-}: {
-  ok: boolean;
-  status?: number;
-  headers?: Headers;
-  json?: unknown;
-  text?: string;
-}): Response {
+function createResponse({ ok, status, headers, text }: { ok: boolean; status?: number; headers?: Headers; text?: string }): Response {
   return {
     ok,
     status: status ?? (ok ? 200 : 500),
     headers: headers ?? new Headers(),
-    json: vi.fn(() => Promise.resolve(json)),
     text: vi.fn(() => Promise.resolve(text ?? '')),
   } as unknown as Response;
 }

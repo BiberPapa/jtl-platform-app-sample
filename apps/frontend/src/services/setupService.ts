@@ -1,35 +1,24 @@
-import { apiUrl } from '../common/constants';
+import type { AppBridgeClient } from './appBridgeClient';
+import { getBackendErrorMessage, requestBackend } from './apiClient';
 
 export type ConnectTenantResult = {
   message: string;
 };
 
-export async function connectTenant(sessionToken: string): Promise<ConnectTenantResult> {
-  const response = await fetch(`${apiUrl}/connect-tenant`, {
+export async function connectTenant(appBridgeClient: AppBridgeClient): Promise<ConnectTenantResult> {
+  const response = await requestBackend({
+    path: '/connect-tenant',
     method: 'POST',
-    headers: {
-      'X-Session-Token': sessionToken,
-    },
+    appBridgeClient,
   });
 
-  const responseText = await response.text();
-  const payload = parseJsonResponse(responseText);
-
   if (!response.ok) {
-    throw new Error(payload?.error || payload?.message || 'The backend rejected the tenant connection request.');
+    throw new Error(getBackendErrorMessage(response, 'The backend rejected the tenant connection request.'));
   }
 
-  return { message: payload?.message ?? 'Tenant connected successfully.' };
-}
-
-function parseJsonResponse(responseText: string): { error?: string; message?: string } | null {
-  if (responseText.length === 0) {
-    return null;
+  if (response.json && typeof response.json === 'object' && typeof (response.json as { message?: unknown }).message === 'string') {
+    return { message: (response.json as { message: string }).message };
   }
 
-  try {
-    return JSON.parse(responseText) as { error?: string; message?: string };
-  } catch {
-    return null;
-  }
+  return { message: 'Tenant connected successfully.' };
 }
