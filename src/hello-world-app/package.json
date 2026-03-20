@@ -8,7 +8,7 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "turbo dev",
+    "dev": "turbo run dev --filter=hello-world-app-backend --filter=hello-world-app-frontend",
     "build": "turbo build",
     "dev:backend:ts": "yarn workspace hello-world-app-backend dev",
     "dev:frontend": "yarn workspace hello-world-app-frontend dev",
