@@ -1,8 +1,10 @@
-import react from '@vitejs/plugin-react-swc';
+import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { fileURLToPath } from 'node:url';
-import { defineConfig } from 'vite';
+import { defineConfig, type PluginOption } from 'vite';
+
 const platformUiAssetsDirectory = fileURLToPath(new URL('../../node_modules/@jtl-software/platform-ui-react/dist/assets/', import.meta.url));
+const plugins: PluginOption[] = [tailwindcss(), react()];
 
 export default defineConfig({
   resolve: {
@@ -16,5 +18,5 @@ export default defineConfig({
   server: {
     port: 50142,
   },
-  plugins: [tailwindcss(), react()],
+  plugins,
 });
