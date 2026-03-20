@@ -180,7 +180,7 @@ describe('get app mode rendering', () => {
     expect(screen.getByText(/App Launcher entry point/i)).toBeInTheDocument();
   });
 
-  it('renders the ERP root page as the dashboard', () => {
+  it('renders the ERP root page as the dashboard', async () => {
     const { appBridge } = createAppBridgeMock();
 
     requestErpInfoStatusMock.mockResolvedValue({
@@ -208,11 +208,12 @@ describe('get app mode rendering', () => {
 
     renderAtPath('/erp', appBridge);
 
+    expect(await screen.findByText('eazybusiness')).toBeInTheDocument();
     expect(screen.getByText('Dashboard')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /dashboard/i })).toBeInTheDocument();
   });
 
-  it('renders the root ERP menu page', () => {
+  it('renders the root ERP menu page', async () => {
     const { appBridge } = createAppBridgeMock();
 
     requestErpInfoStatusMock.mockResolvedValue({
@@ -240,6 +241,7 @@ describe('get app mode rendering', () => {
 
     renderAtPath('/erp/menu/Dashboard', appBridge);
 
+    expect(await screen.findByText('eazybusiness')).toBeInTheDocument();
     expect(screen.getByText('Dashboard')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /dashboard/i })).toBeInTheDocument();
   });
