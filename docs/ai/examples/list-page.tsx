@@ -1,39 +1,28 @@
-import * as React from "react";
+import * as React from 'react';
 
 // Replace these imports with the actual components exported by your UI kit.
-import {
-  Button,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Input,
-} from "@jtl-software/platform-ui-react";
+import { Button, Card, CardContent, CardHeader, CardTitle, Input } from '@jtl-software/platform-ui-react';
 
 type Customer = {
   id: string;
   name: string;
   email: string;
-  status: "active" | "inactive";
+  status: 'active' | 'inactive';
 };
 
 const mockRows: Customer[] = [
-  { id: "1", name: "Acme GmbH", email: "team@acme.example", status: "active" },
-  { id: "2", name: "Muster AG", email: "office@muster.example", status: "inactive" },
+  { id: '1', name: 'Acme GmbH', email: 'team@acme.example', status: 'active' },
+  { id: '2', name: 'Muster AG', email: 'office@muster.example', status: 'inactive' },
 ];
 
 export function CustomerListPage(): React.JSX.Element {
-  const [query, setQuery] = React.useState("");
+  const [query, setQuery] = React.useState('');
   const [isLoading] = React.useState(false);
 
   const rows = React.useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return mockRows;
-    return mockRows.filter(
-      (row) =>
-        row.name.toLowerCase().includes(q) ||
-        row.email.toLowerCase().includes(q),
-    );
+    return mockRows.filter(row => row.name.toLowerCase().includes(q) || row.email.toLowerCase().includes(q));
   }, [query]);
 
   return (
@@ -41,9 +30,7 @@ export function CustomerListPage(): React.JSX.Element {
       <header className="flex items-start justify-between gap-4">
         <div className="space-y-1">
           <h1 className="text-2xl font-semibold">Customers</h1>
-          <p className="text-sm text-muted-foreground">
-            Manage customer accounts and inspect their current status.
-          </p>
+          <p className="text-sm text-muted-foreground">Manage customer accounts and inspect their current status.</p>
         </div>
 
         <Button type="button">Create customer</Button>
@@ -62,9 +49,7 @@ export function CustomerListPage(): React.JSX.Element {
             <Input
               id="customer-search"
               value={query}
-              onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-                setQuery(event.target.value)
-              }
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) => setQuery(event.target.value)}
               placeholder="Search by name or email"
             />
           </div>
@@ -72,9 +57,7 @@ export function CustomerListPage(): React.JSX.Element {
           {isLoading ? (
             <div className="text-sm">Loading customers…</div>
           ) : rows.length === 0 ? (
-            <div className="rounded-md border p-6 text-sm">
-              No customers found. Adjust the filter or create a new customer.
-            </div>
+            <div className="rounded-md border p-6 text-sm">No customers found. Adjust the filter or create a new customer.</div>
           ) : (
             <div className="overflow-x-auto rounded-md border">
               <table className="min-w-full text-sm">
@@ -87,7 +70,7 @@ export function CustomerListPage(): React.JSX.Element {
                   </tr>
                 </thead>
                 <tbody>
-                  {rows.map((row) => (
+                  {rows.map(row => (
                     <tr key={row.id} className="border-b last:border-b-0">
                       <td className="px-4 py-3">{row.name}</td>
                       <td className="px-4 py-3">{row.email}</td>

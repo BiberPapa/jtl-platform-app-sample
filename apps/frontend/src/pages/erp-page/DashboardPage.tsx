@@ -33,10 +33,7 @@ function DashboardPage() {
     try {
       setIsLoading(true);
       setErrorMessage(null);
-      const [erpInfo, authorization] = await Promise.all([
-        requestErpInfoStatus(appBridgeClient),
-        requestAuthorizationStatus(appBridgeClient),
-      ]);
+      const [erpInfo, authorization] = await Promise.all([requestErpInfoStatus(appBridgeClient), requestAuthorizationStatus(appBridgeClient)]);
       setStatus({ erpInfo, authorization });
     } catch (error) {
       setStatus(null);
@@ -163,14 +160,14 @@ function DashboardPage() {
                 </div>
                 <form
                   className="dashboard-playground-form"
-                  onSubmit={(event) => {
+                  onSubmit={event => {
                     event.preventDefault();
                     void handlePlaygroundRequest();
                   }}
                 >
                   <label className="dashboard-field">
                     <span className="dashboard-field-label">Method</span>
-                    <select value={playgroundMethod} onChange={(event) => setPlaygroundMethod(event.target.value as PlaygroundRequestMethod)}>
+                    <select value={playgroundMethod} onChange={event => setPlaygroundMethod(event.target.value as PlaygroundRequestMethod)}>
                       <option value="GET">GET</option>
                       <option value="POST">POST</option>
                       <option value="PUT">PUT</option>
@@ -180,13 +177,9 @@ function DashboardPage() {
                   </label>
                   <label className="dashboard-field dashboard-field--route">
                     <span className="dashboard-field-label">Route</span>
-                    <input type="text" value={playgroundRoute} onChange={(event) => setPlaygroundRoute(event.target.value)} placeholder="/v1/worker" />
+                    <input type="text" value={playgroundRoute} onChange={event => setPlaygroundRoute(event.target.value)} placeholder="/v1/worker" />
                   </label>
-                  <button
-                    type="submit"
-                    className="dashboard-playground-submit"
-                    disabled={isPlaygroundRequesting}
-                  >
+                  <button type="submit" className="dashboard-playground-submit" disabled={isPlaygroundRequesting}>
                     {isPlaygroundRequesting ? 'Sending...' : 'Send request'}
                   </button>
                 </form>
@@ -221,7 +214,7 @@ function DashboardPage() {
               aria-expanded={isPlaygroundOpen}
               aria-controls="dashboard-playground-panel"
               onClick={() => {
-                setIsPlaygroundOpen((currentValue) => !currentValue);
+                setIsPlaygroundOpen(currentValue => !currentValue);
               }}
             >
               {isPlaygroundOpen ? 'Hide playground' : 'Show playground'}

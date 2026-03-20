@@ -201,7 +201,6 @@ function parsePlaygroundBody(responseText: string): unknown {
   }
 }
 
-
 function parseServerTimingDurations(serverTimingHeader: string | null): {
   erpTimeMs: number | null;
   infrastructureTimeMs: number | null;

@@ -18,8 +18,7 @@
   width: min(100%, 72rem);
   padding: 2.25rem;
   border-radius: 28px;
-  background:
-    radial-gradient(circle at top right, rgba(20, 184, 166, 0.12), transparent 32%),
+  background: radial-gradient(circle at top right, rgba(20, 184, 166, 0.12), transparent 32%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.96));
 }
 
@@ -629,8 +628,7 @@ html[data-color-scheme='dark'] .app-card {
 }
 
 html[data-color-scheme='dark'] .app-card--dashboard {
-  background:
-    radial-gradient(circle at top right, rgba(45, 212, 191, 0.16), transparent 30%),
+  background: radial-gradient(circle at top right, rgba(45, 212, 191, 0.16), transparent 30%),
     linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.92));
 }
 

@@ -54,7 +54,7 @@ function TimingBreakdownCard({ totalTimeMs, infrastructureTimeMs, erpTimeMs, fro
         <span className="dashboard-metric-label">Timing breakdown</span>
       </div>
       <div className="dashboard-timing-list">
-        {items.map((item) => (
+        {items.map(item => (
           <div key={item.key} className="dashboard-timing-item">
             <div className="dashboard-timing-icon" data-tone={item.tone} aria-hidden="true">
               {renderTimingIcon(item.key)}

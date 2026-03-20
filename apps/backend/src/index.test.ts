@@ -26,10 +26,10 @@ function captureJsonLogs() {
   return {
     getLogs(): Array<Record<string, unknown>> {
       return chunks
-        .flatMap((chunk) => chunk.split('\n'))
-        .map((line) => line.trim())
-        .filter((line) => line.length > 0)
-        .flatMap((line) => {
+        .flatMap(chunk => chunk.split('\n'))
+        .map(line => line.trim())
+        .filter(line => line.length > 0)
+        .flatMap(line => {
           try {
             return [JSON.parse(line) as Record<string, unknown>];
           } catch {
@@ -151,7 +151,7 @@ describe('backend routes', () => {
 
     await request(createApp()).get('/erp/customers').set('X-Session-Token', 'session-token');
 
-    expect(logs.getLogs().filter((entry) => String(entry.event).startsWith('erp_'))).toEqual([]);
+    expect(logs.getLogs().filter(entry => String(entry.event).startsWith('erp_'))).toEqual([]);
   });
 
   it('emits structured basic ERP logs with masked headers and timing', async () => {
@@ -173,9 +173,9 @@ describe('backend routes', () => {
 
     await request(createApp()).get('/erp/customers').set('X-Session-Token', 'session-token');
 
-    const erpLogs = logs.getLogs().filter((entry) => String(entry.event).startsWith('erp_'));
-    const requestLog = erpLogs.find((entry) => entry.event === 'erp_request');
-    const responseLog = erpLogs.find((entry) => entry.event === 'erp_response');
+    const erpLogs = logs.getLogs().filter(entry => String(entry.event).startsWith('erp_'));
+    const requestLog = erpLogs.find(entry => entry.event === 'erp_request');
+    const responseLog = erpLogs.find(entry => entry.event === 'erp_response');
 
     expect(erpLogs).toHaveLength(2);
     expect(requestLog).toBeDefined();
@@ -221,9 +221,9 @@ describe('backend routes', () => {
 
     await request(createApp()).get('/erp/customers').set('X-Session-Token', 'session-token');
 
-    const erpLogs = logs.getLogs().filter((entry) => String(entry.event).startsWith('erp_'));
+    const erpLogs = logs.getLogs().filter(entry => String(entry.event).startsWith('erp_'));
 
-    expect(erpLogs.map((entry) => entry.event)).toEqual(['erp_request', 'erp_response']);
+    expect(erpLogs.map(entry => entry.event)).toEqual(['erp_request', 'erp_response']);
   });
 
   it('emits verbose ERP logs with truncated bodies', async () => {
@@ -245,9 +245,9 @@ describe('backend routes', () => {
 
     await request(createApp()).post('/erp/customers').set('X-Session-Token', 'session-token').send({ message: 'request-payload' });
 
-    const erpLogs = logs.getLogs().filter((entry) => String(entry.event).startsWith('erp_'));
-    const requestLog = erpLogs.find((entry) => entry.event === 'erp_request');
-    const responseLog = erpLogs.find((entry) => entry.event === 'erp_response');
+    const erpLogs = logs.getLogs().filter(entry => String(entry.event).startsWith('erp_'));
+    const requestLog = erpLogs.find(entry => entry.event === 'erp_request');
+    const responseLog = erpLogs.find(entry => entry.event === 'erp_response');
 
     expect(erpLogs).toHaveLength(2);
     expect(requestLog).toBeDefined();
@@ -284,7 +284,7 @@ describe('backend routes', () => {
 
     expect(response.status).toBe(500);
 
-    const errorLog = logs.getLogs().find((entry) => entry.event === 'erp_error');
+    const errorLog = logs.getLogs().find(entry => entry.event === 'erp_error');
 
     expect(errorLog).toBeDefined();
     expect(errorLog?.requestId).toEqual(expect.any(String));

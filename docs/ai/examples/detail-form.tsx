@@ -1,14 +1,7 @@
-import * as React from "react";
+import * as React from 'react';
 
 // Replace these imports with the actual components exported by your UI kit.
-import {
-  Button,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Input,
-} from "@jtl-software/platform-ui-react";
+import { Button, Card, CardContent, CardHeader, CardTitle, Input } from '@jtl-software/platform-ui-react';
 
 type CustomerFormValues = {
   name: string;
@@ -17,28 +10,25 @@ type CustomerFormValues = {
 
 export function CustomerDetailForm(): React.JSX.Element {
   const [values, setValues] = React.useState<CustomerFormValues>({
-    name: "",
-    email: "",
+    name: '',
+    email: '',
   });
   const [errors, setErrors] = React.useState<Partial<CustomerFormValues>>({});
   const [isSaving, setIsSaving] = React.useState(false);
 
-  function updateField<K extends keyof CustomerFormValues>(
-    key: K,
-    value: CustomerFormValues[K],
-  ): void {
-    setValues((current) => ({ ...current, [key]: value }));
+  function updateField<K extends keyof CustomerFormValues>(key: K, value: CustomerFormValues[K]): void {
+    setValues(current => ({ ...current, [key]: value }));
   }
 
   function validate(): boolean {
     const nextErrors: Partial<CustomerFormValues> = {};
 
     if (!values.name.trim()) {
-      nextErrors.name = "Name is required.";
+      nextErrors.name = 'Name is required.';
     }
 
     if (!values.email.trim()) {
-      nextErrors.email = "Email is required.";
+      nextErrors.email = 'Email is required.';
     }
 
     setErrors(nextErrors);
@@ -74,17 +64,13 @@ export function CustomerDetailForm(): React.JSX.Element {
               <Input
                 id="customer-name"
                 value={values.name}
-                onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-                  updateField("name", event.target.value)
-                }
+                onChange={(event: React.ChangeEvent<HTMLInputElement>) => updateField('name', event.target.value)}
                 aria-invalid={Boolean(errors.name)}
               />
               {errors.name ? (
                 <p className="text-sm text-destructive">{errors.name}</p>
               ) : (
-                <p className="text-sm text-muted-foreground">
-                  Enter the customer display name.
-                </p>
+                <p className="text-sm text-muted-foreground">Enter the customer display name.</p>
               )}
             </div>
 
@@ -96,17 +82,13 @@ export function CustomerDetailForm(): React.JSX.Element {
                 id="customer-email"
                 type="email"
                 value={values.email}
-                onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-                  updateField("email", event.target.value)
-                }
+                onChange={(event: React.ChangeEvent<HTMLInputElement>) => updateField('email', event.target.value)}
                 aria-invalid={Boolean(errors.email)}
               />
               {errors.email ? (
                 <p className="text-sm text-destructive">{errors.email}</p>
               ) : (
-                <p className="text-sm text-muted-foreground">
-                  This address is used for customer communication.
-                </p>
+                <p className="text-sm text-muted-foreground">This address is used for customer communication.</p>
               )}
             </div>
 
@@ -115,7 +97,7 @@ export function CustomerDetailForm(): React.JSX.Element {
                 Cancel
               </Button>
               <Button type="submit" disabled={isSaving}>
-                {isSaving ? "Saving…" : "Save"}
+                {isSaving ? 'Saving…' : 'Save'}
               </Button>
             </div>
           </form>

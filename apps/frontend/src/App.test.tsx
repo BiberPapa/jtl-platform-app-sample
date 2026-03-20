@@ -7,13 +7,14 @@ import App from './App';
 import type { AppBridgeClient } from './services/appBridgeClient';
 import { AppBridgeProvider } from './services/appBridgeContext';
 
-const { connectTenantMock, getCurrentCustomerIdMock, requestErpInfoStatusMock, requestAuthorizationStatusMock, requestPlaygroundRequestMock } = vi.hoisted(() => ({
-  connectTenantMock: vi.fn<(sessionToken: string) => Promise<{ message: string }>>(),
-  requestErpInfoStatusMock: vi.fn<(appBridgeClient: AppBridgeClient) => Promise<unknown>>(),
-  requestAuthorizationStatusMock: vi.fn<(appBridgeClient: AppBridgeClient) => Promise<unknown>>(),
-  requestPlaygroundRequestMock: vi.fn<(appBridgeClient: AppBridgeClient, request: { route: string; method: string }) => Promise<unknown>>(),
-  getCurrentCustomerIdMock: vi.fn<(appBridgeClient: AppBridgeClient) => Promise<string>>(),
-}));
+const { connectTenantMock, getCurrentCustomerIdMock, requestErpInfoStatusMock, requestAuthorizationStatusMock, requestPlaygroundRequestMock } =
+  vi.hoisted(() => ({
+    connectTenantMock: vi.fn<(sessionToken: string) => Promise<{ message: string }>>(),
+    requestErpInfoStatusMock: vi.fn<(appBridgeClient: AppBridgeClient) => Promise<unknown>>(),
+    requestAuthorizationStatusMock: vi.fn<(appBridgeClient: AppBridgeClient) => Promise<unknown>>(),
+    requestPlaygroundRequestMock: vi.fn<(appBridgeClient: AppBridgeClient, request: { route: string; method: string }) => Promise<unknown>>(),
+    getCurrentCustomerIdMock: vi.fn<(appBridgeClient: AppBridgeClient) => Promise<string>>(),
+  }));
 
 vi.mock('@jtl-software/platform-ui-react', () => ({
   Button: ({ label, onClick, disabled }: { label: string; onClick?: () => void; disabled?: boolean }) => (

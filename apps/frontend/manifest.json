@@ -60,9 +60,7 @@
         }
       ],
       "api": {
-        "scopes": [
-          "system.all"
-        ]
+        "scopes": ["system.all"]
       },
       "pane": [
         {

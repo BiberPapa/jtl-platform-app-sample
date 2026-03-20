@@ -1,40 +1,17 @@
 #!/usr/bin/env node
 
-import fs from "node:fs";
-import path from "node:path";
-import process from "node:process";
+import fs from 'node:fs';
+import path from 'node:path';
+import process from 'node:process';
 
-const DEFAULT_TERMINOLOGY_PATH = "docs/terminology/terminology.json";
-const DEFAULT_SCAN_DIRS = ["apps/frontend/src"];
+const DEFAULT_TERMINOLOGY_PATH = 'docs/terminology/terminology.json';
+const DEFAULT_SCAN_DIRS = ['apps/frontend/src'];
 
-const SCAN_EXTENSIONS = new Set([
-  ".ts",
-  ".tsx",
-  ".js",
-  ".jsx",
-  ".mjs",
-  ".cjs",
-  ".json",
-  ".jsonc",
-  ".md",
-  ".mdx",
-  ".yml",
-  ".yaml",
-]);
+const SCAN_EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs', '.json', '.jsonc', '.md', '.mdx', '.yml', '.yaml']);
 
 const IGNORE_FILE_PATTERNS = [/\.test\./i, /\.spec\./i, /\.d\.ts$/i];
 
-const IGNORE_DIRS = new Set([
-  ".git",
-  "node_modules",
-  "dist",
-  "build",
-  "coverage",
-  ".next",
-  ".turbo",
-  ".cache",
-  "storybook-static",
-]);
+const IGNORE_DIRS = new Set(['.git', 'node_modules', 'dist', 'build', 'coverage', '.next', '.turbo', '.cache', 'storybook-static']);
 
 function parseArgs(argv) {
   const args = {
@@ -47,49 +24,49 @@ function parseArgs(argv) {
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
 
-    if (arg === "--terminology" && argv[i + 1]) {
+    if (arg === '--terminology' && argv[i + 1]) {
       args.terminologyPath = argv[i + 1];
       i += 1;
       continue;
     }
 
-    if (arg === "--dir" && argv[i + 1]) {
+    if (arg === '--dir' && argv[i + 1]) {
       args.scanDirs.push(argv[i + 1]);
       i += 1;
       continue;
     }
 
-    if (arg === "--de-only") {
+    if (arg === '--de-only') {
       args.includeEnglish = false;
       continue;
     }
 
-    if (arg === "--en-only") {
+    if (arg === '--en-only') {
       args.includeGerman = false;
       continue;
     }
   }
 
   if (args.scanDirs.length === 0) {
-    args.scanDirs = DEFAULT_SCAN_DIRS.filter((dir) => fs.existsSync(dir));
+    args.scanDirs = DEFAULT_SCAN_DIRS.filter(dir => fs.existsSync(dir));
   }
 
   return args;
 }
 
 function loadJson(filePath) {
-  const raw = fs.readFileSync(filePath, "utf8");
+  const raw = fs.readFileSync(filePath, 'utf8');
   return JSON.parse(raw);
 }
 
 function normalizeEntries(data) {
   if (Array.isArray(data)) return data;
   if (Array.isArray(data.entries)) return data.entries;
-  throw new Error("Unsupported terminology JSON shape. Expected array or { entries: [...] }.");
+  throw new Error('Unsupported terminology JSON shape. Expected array or { entries: [...] }.');
 }
 
 function escapeRegExp(value) {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 function shouldUseWordBoundaries(term) {
@@ -99,9 +76,9 @@ function shouldUseWordBoundaries(term) {
 function makeRegex(term) {
   const escaped = escapeRegExp(term);
   if (shouldUseWordBoundaries(term)) {
-    return new RegExp(`(?<![\\p{L}\\p{N}_])${escaped}(?![\\p{L}\\p{N}_])`, "giu");
+    return new RegExp(`(?<![\\p{L}\\p{N}_])${escaped}(?![\\p{L}\\p{N}_])`, 'giu');
   }
-  return new RegExp(escaped, "giu");
+  return new RegExp(escaped, 'giu');
 }
 
 function buildForbiddenIndex(entries, { includeGerman, includeEnglish }) {
@@ -110,9 +87,9 @@ function buildForbiddenIndex(entries, { includeGerman, includeEnglish }) {
   for (const entry of entries) {
     if (includeGerman && entry?.de?.forbidden_synonyms?.length) {
       for (const forbidden of entry.de.forbidden_synonyms) {
-        if (!forbidden || typeof forbidden !== "string") continue;
+        if (!forbidden || typeof forbidden !== 'string') continue;
         result.push({
-          language: "de",
+          language: 'de',
           forbidden,
           canonical: entry?.de?.term ?? null,
           english: entry?.en?.term ?? null,
@@ -127,9 +104,9 @@ function buildForbiddenIndex(entries, { includeGerman, includeEnglish }) {
 
     if (includeEnglish && entry?.en?.forbidden_synonyms?.length) {
       for (const forbidden of entry.en.forbidden_synonyms) {
-        if (!forbidden || typeof forbidden !== "string") continue;
+        if (!forbidden || typeof forbidden !== 'string') continue;
         result.push({
-          language: "en",
+          language: 'en',
           forbidden,
           canonical: entry?.en?.term ?? null,
           german: entry?.de?.term ?? null,
@@ -176,18 +153,18 @@ function walkFiles(rootDir, out = []) {
 }
 
 function shouldIgnoreFile(filePath) {
-  const normalizedPath = filePath.replace(/\\/g, "/");
+  const normalizedPath = filePath.replace(/\\/g, '/');
 
   if (normalizedPath === DEFAULT_TERMINOLOGY_PATH) {
     return true;
   }
 
-  return IGNORE_FILE_PATTERNS.some((pattern) => pattern.test(normalizedPath));
+  return IGNORE_FILE_PATTERNS.some(pattern => pattern.test(normalizedPath));
 }
 
 function getLineAndColumn(text, index) {
   const before = text.slice(0, index);
-  const lines = before.split("\n");
+  const lines = before.split('\n');
   const line = lines.length;
   const column = lines[lines.length - 1].length + 1;
   return { line, column };
@@ -213,17 +190,11 @@ function isLikelyUserVisibleText(value) {
 }
 
 function decodeLiteral(raw, quote) {
-  if (quote === "`" && raw.includes("${")) {
+  if (quote === '`' && raw.includes('${')) {
     return null;
   }
 
-  return raw
-    .replace(/\\n/g, "\n")
-    .replace(/\\r/g, "\r")
-    .replace(/\\t/g, "\t")
-    .replace(/\\"/g, '"')
-    .replace(/\\'/g, "'")
-    .replace(/\\\\/g, "\\");
+  return raw.replace(/\\n/g, '\n').replace(/\\r/g, '\r').replace(/\\t/g, '\t').replace(/\\"/g, '"').replace(/\\'/g, "'").replace(/\\\\/g, '\\');
 }
 
 function extractStringFragments(content) {
@@ -259,7 +230,7 @@ function extractJsxTextFragments(content) {
 
   while ((match = jsxTextRegex.exec(content)) !== null) {
     const rawValue = match[1];
-    const value = rawValue.replace(/\s+/g, " ").trim();
+    const value = rawValue.replace(/\s+/g, ' ').trim();
     if (!isLikelyUserVisibleText(value)) {
       continue;
     }
@@ -278,7 +249,7 @@ function extractJsxTextFragments(content) {
 function extractCandidateText(content, filePath) {
   const extension = path.extname(filePath).toLowerCase();
 
-  if ([".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"].includes(extension)) {
+  if (['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs'].includes(extension)) {
     return [...extractStringFragments(content), ...extractJsxTextFragments(content)];
   }
 
@@ -286,7 +257,7 @@ function extractCandidateText(content, filePath) {
 }
 
 function scanFile(filePath, forbiddenIndex) {
-  const content = fs.readFileSync(filePath, "utf8");
+  const content = fs.readFileSync(filePath, 'utf8');
   const candidates = extractCandidateText(content, filePath);
   const findings = [];
 
@@ -328,10 +299,7 @@ function printFinding(finding) {
   if (finding.module) contextParts.push(`module=${finding.module}`);
   if (finding.uiPath) contextParts.push(`ui="${finding.uiPath}"`);
 
-  const suggestion =
-    finding.language === "de"
-      ? `Bevorzugt: "${finding.canonical ?? "N/A"}"`
-      : `Preferred: "${finding.canonical ?? "N/A"}"`;
+  const suggestion = finding.language === 'de' ? `Bevorzugt: "${finding.canonical ?? 'N/A'}"` : `Preferred: "${finding.canonical ?? 'N/A'}"`;
 
   console.error(
     [
@@ -339,10 +307,10 @@ function printFinding(finding) {
       `forbidden term "${finding.matchText}"`,
       suggestion,
       finding.entryId ? `entry=${finding.entryId}` : null,
-      contextParts.length > 0 ? `[${contextParts.join(", ")}]` : null,
+      contextParts.length > 0 ? `[${contextParts.join(', ')}]` : null,
     ]
       .filter(Boolean)
-      .join("  "),
+      .join('  '),
   );
 }
 
@@ -358,11 +326,11 @@ function main() {
   const entries = normalizeEntries(data);
   const forbiddenIndex = buildForbiddenIndex(entries, args);
 
-  const files = args.scanDirs.flatMap((dir) => walkFiles(dir)).filter((filePath) => !shouldIgnoreFile(filePath));
-  const allFindings = files.flatMap((filePath) => scanFile(filePath, forbiddenIndex));
+  const files = args.scanDirs.flatMap(dir => walkFiles(dir)).filter(filePath => !shouldIgnoreFile(filePath));
+  const allFindings = files.flatMap(filePath => scanFile(filePath, forbiddenIndex));
 
   if (allFindings.length === 0) {
-    console.log("No forbidden terminology found.");
+    console.log('No forbidden terminology found.');
     process.exit(0);
   }
 

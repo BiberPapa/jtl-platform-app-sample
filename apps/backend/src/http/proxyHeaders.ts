@@ -1,14 +1,16 @@
 import type { Response } from 'express';
 
-const forwardedResponseHeaders = new Set([
-  'api-supported-versions',
-  'content-language',
-  'content-type',
-  'date',
-  'server-timing',
-]);
+const forwardedResponseHeaders = new Set(['api-supported-versions', 'content-language', 'content-type', 'date', 'server-timing']);
 
-const corsSafelistedResponseHeaders = new Set(['cache-control', 'content-language', 'content-length', 'content-type', 'expires', 'last-modified', 'pragma']);
+const corsSafelistedResponseHeaders = new Set([
+  'cache-control',
+  'content-language',
+  'content-length',
+  'content-type',
+  'expires',
+  'last-modified',
+  'pragma',
+]);
 
 export function copyProxyResponseHeaders(headers: Headers, response: Response, backendDurationMs?: number): void {
   const exposedHeaders = new Set<string>();
