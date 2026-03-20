@@ -203,8 +203,8 @@ describe('backend routes', () => {
     expect(responseLog.body).toBeUndefined();
   });
 
-  it('defaults to basic ERP logging in development without explicit log level', async () => {
-    process.env.NODE_ENV = 'development';
+  it('defaults to basic ERP logging outside production without explicit log level', async () => {
+    delete process.env.NODE_ENV;
     const logs = captureJsonLogs();
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,

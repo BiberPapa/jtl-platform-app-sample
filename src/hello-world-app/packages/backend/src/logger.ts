@@ -45,7 +45,7 @@ export function getProxyLogLevel(value: string | undefined, legacyValue: string 
     return 'basic';
   }
 
-  if (nodeEnv === 'development') {
+  if (nodeEnv !== 'production') {
     return 'basic';
   }
 

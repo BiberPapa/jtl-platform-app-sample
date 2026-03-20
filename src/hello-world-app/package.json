@@ -8,20 +8,18 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "turbo run dev --filter=hello-world-app-backend --filter=hello-world-app-frontend",
-    "build": "turbo build",
+    "dev": "node ./node_modules/turbo/bin/turbo run dev --filter=hello-world-app-backend --filter=hello-world-app-frontend",
+    "build": "node ./node_modules/turbo/bin/turbo build",
     "dev:backend:ts": "yarn workspace hello-world-app-backend dev",
     "dev:frontend": "yarn workspace hello-world-app-frontend dev",
-    "lint": "turbo lint",
-    "test": "turbo test",
+    "lint": "node ./node_modules/turbo/bin/turbo lint",
+    "test": "node ./node_modules/turbo/bin/turbo test",
     "test:backend:ts": "yarn workspace hello-world-app-backend test",
-    "typecheck": "turbo typecheck",
-    "check": "turbo lint typecheck test build"
+    "typecheck": "node ./node_modules/turbo/bin/turbo typecheck",
+    "check": "node ./node_modules/turbo/bin/turbo lint typecheck test build"
   },
   "license": "MIT",
   "devDependencies": {
-    "turbo": "^2.8.17",
-    "vite": "^8.0.0",
-    "vitest": "^4.1.0"
+    "turbo": "^2.8.20"
   }
 }
