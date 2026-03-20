@@ -1,4 +1,4 @@
-# ![JTL logo](https://avatars.githubusercontent.com/u/31404730?s=25&v=4) JTL Hello World App
+# ![JTL logo](https://avatars.githubusercontent.com/u/31404730?s=25&v=4) JTL Cloud App
 
 ## Prerequisites
 

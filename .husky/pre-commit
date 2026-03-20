@@ -2,7 +2,7 @@ pnpm format:check
 
 # Run focused workspace checks only when the app changed.
 if git diff --cached --name-only | grep -qE '^(apps/|package.json|turbo.json|eslint.config.mjs|README.md)'; then
-  echo "Running hello-world-app quality checks..."
+  echo "Running cloud-app quality checks..."
   pnpm lint
   pnpm typecheck
   pnpm test

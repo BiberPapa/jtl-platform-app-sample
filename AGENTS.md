@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This repository contains a single Hello World application with:
+This repository contains a single Cloud App application with:
 
 - `apps/backend` for the TypeScript backend proxy
 - `apps/frontend` for the React frontend
