@@ -5,7 +5,7 @@
   "private": true,
   "packageManager": "yarn@1.22.22",
   "workspaces": [
-    "packages/*"
+    "apps/*"
   ],
   "scripts": {
     "dev": "node ./node_modules/turbo/bin/turbo run dev --filter=hello-world-app-backend --filter=hello-world-app-frontend",

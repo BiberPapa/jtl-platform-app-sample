@@ -32,7 +32,7 @@ export default tseslint.config(
   },
   ...tseslint.configs.recommendedTypeChecked,
   {
-    files: ['packages/frontend/**/*.{ts,tsx}'],
+    files: ['apps/frontend/**/*.{ts,tsx}'],
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: 'module',
@@ -51,7 +51,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ['packages/backend/**/*.ts'],
+    files: ['apps/backend/**/*.ts'],
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: 'module',

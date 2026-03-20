@@ -32,7 +32,7 @@ This sample is intended as onboarding code for new developers.
 - `corepack yarn run check`
 - `corepack yarn test:backend:ts`
 
-- Use `packages/frontend/.env.example` as the starting point for frontend configuration.
+- Use `apps/frontend/.env.example` as the starting point for frontend configuration.
 - Keep `VITE_API_URL=http://localhost:50143` for the TypeScript backend.
 - The frontend stays backend-agnostic and only needs `VITE_API_URL`.
 - The backend caches the ERP access token in-memory until shortly before it expires.
@@ -49,7 +49,7 @@ This is a mono-repo, both backend and frontend is expected to start from one mac
 
 ## Environment specific Secrets & Variables
 
-These are the environment variables that have to be added in `packages/backend` for the project to start.
+These are the environment variables that have to be added in `apps/backend` for the project to start.
 
 | Name              | Description                                        | Type       |
 | ----------------- | -------------------------------------------------- | ---------- |
