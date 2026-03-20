@@ -197,17 +197,17 @@ describe('get app mode rendering', () => {
 
     renderAtPath('/setup', appBridge);
 
-    expect(screen.getByRole('heading', { name: 'Nutzungsbedingungen bestätigen' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Weiter' })).toBeDisabled();
+    expect(screen.getByRole('heading', { name: 'Confirm terms and conditions' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Continue' })).toBeDisabled();
 
-    await user.click(screen.getByLabelText('Ich habe die Nutzungsbedingungen gelesen und stimme ihnen zu.'));
-    await user.click(screen.getByRole('button', { name: 'Weiter' }));
-    await user.click(screen.getByRole('button', { name: 'Verbindung testen' }));
+    await user.click(screen.getByLabelText('I have read and agree to the terms and conditions.'));
+    await user.click(screen.getByRole('button', { name: 'Continue' }));
+    await user.click(screen.getByRole('button', { name: 'Test connection' }));
 
     expect(await screen.findByText('Tenant connected successfully.')).toBeInTheDocument();
-    expect(await screen.findByText('Die Einrichtung wurde erfolgreich an den Host übermittelt.')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Fertig' }));
-    expect(screen.getByText('Du kannst dieses Fenster jetzt manuell schließen und zur Host-Anwendung zurückkehren.')).toBeInTheDocument();
+    expect(await screen.findByText('Setup was successfully submitted to the host.')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Done' }));
+    expect(screen.getByText('You can now close this window manually and return to the host application.')).toBeInTheDocument();
     expect(methodCall).toHaveBeenCalledWith('setupCompleted');
   });
 
@@ -220,9 +220,9 @@ describe('get app mode rendering', () => {
 
     renderAtPath('/setup', appBridge);
 
-    await user.click(screen.getByLabelText('Ich habe die Nutzungsbedingungen gelesen und stimme ihnen zu.'));
-    await user.click(screen.getByRole('button', { name: 'Weiter' }));
-    await user.click(screen.getByRole('button', { name: 'Verbindung testen' }));
+    await user.click(screen.getByLabelText('I have read and agree to the terms and conditions.'));
+    await user.click(screen.getByRole('button', { name: 'Continue' }));
+    await user.click(screen.getByRole('button', { name: 'Test connection' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Backend validation failed.');
     expect(methodCall).not.toHaveBeenCalledWith('setupCompleted');
@@ -233,8 +233,8 @@ describe('get app mode rendering', () => {
 
     renderAtPath('/support', appBridge);
 
-    expect(screen.getByRole('heading', { name: 'Hilfe und Support' })).toBeInTheDocument();
-    expect(screen.getByText(/support-team beispielhaft/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Help and support' })).toBeInTheDocument();
+    expect(screen.getByText(/support team at support@example.com/i)).toBeInTheDocument();
   });
 
   it('renders the privacy page', () => {
@@ -242,8 +242,8 @@ describe('get app mode rendering', () => {
 
     renderAtPath('/privacy', appBridge);
 
-    expect(screen.getByRole('heading', { name: 'Datenschutzhinweise' })).toBeInTheDocument();
-    expect(screen.getByText(/technische Sitzungsdaten/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Privacy notice' })).toBeInTheDocument();
+    expect(screen.getByText(/technical session data/i)).toBeInTheDocument();
   });
 
   it('renders the terms-of-use page', () => {
@@ -251,8 +251,8 @@ describe('get app mode rendering', () => {
 
     renderAtPath('/terms-of-use', appBridge);
 
-    expect(screen.getByRole('heading', { name: 'Allgemeine Nutzungsbedingungen' })).toBeInTheDocument();
-    expect(screen.getByText(/Test-, Evaluierungs- und Demonstrationszwecke/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'General terms and conditions' })).toBeInTheDocument();
+    expect(screen.getByText(/testing, evaluation, and demonstration purposes/i)).toBeInTheDocument();
   });
 
   it('renders the hub page', () => {

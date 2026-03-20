@@ -3,21 +3,21 @@ import InfoPageLayout from './InfoPageLayout';
 function PrivacyPage() {
   return (
     <InfoPageLayout
-      eyebrow="Datenschutz"
-      title="Datenschutzhinweise"
-      lead="Diese kompakte Beispielseite beschreibt in vereinfachter Form, welche Daten in der Demo-App verarbeitet werden können."
+      eyebrow="Privacy"
+      title="Privacy notice"
+      lead="This compact sample page explains in simplified form which data may be processed in the demo app."
       sections={[
         {
-          title: 'Verarbeitete Daten',
-          body: 'Im Rahmen der Demo können technische Sitzungsdaten, Tenant-Bezüge und angeforderte ERP-Daten verarbeitet werden, soweit dies für die Funktion der App erforderlich ist.',
+          title: 'Processed data',
+          body: 'As part of the demo, technical session data, tenant references, and requested ERP data may be processed where required for the app to function.',
         },
         {
-          title: 'Zweck der Verarbeitung',
-          body: 'Die Verarbeitung dient ausschließlich dazu, die App zu initialisieren, die Verbindung zur JTL-Wawi zu prüfen und Inhalte in den vorgesehenen App-Bereichen anzuzeigen.',
+          title: 'Purpose of processing',
+          body: 'Processing is carried out solely to initialize the app, check the connection to JTL-Wawi, and display content in the intended app areas.',
         },
         {
-          title: 'Kontakt zum Datenschutz',
-          body: 'Für datenschutzbezogene Rückfragen kann beispielhaft die Adresse privacy@example.com verwendet werden.',
+          title: 'Privacy contact',
+          body: 'For privacy-related questions, the sample contact address privacy@example.com can be used.',
         },
       ]}
     />

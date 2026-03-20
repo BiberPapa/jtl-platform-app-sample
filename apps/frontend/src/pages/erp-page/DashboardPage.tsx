@@ -65,7 +65,7 @@ function DashboardPage() {
     <HelloWorldErpPage
       eyebrow="ERP"
       title="Dashboard"
-      description="Übersicht über API-Erreichbarkeit, Autorisierung und Antwortzeiten für die Demo-App."
+      description="Overview of API availability, authorization, and response times for the demo app."
       actions={
         <Button
           type="button"
@@ -88,7 +88,7 @@ function DashboardPage() {
               <div className="app-section-header">
                 <div className="app-section-grid">
                   <CardTitle>API status</CardTitle>
-                  <p className="app-muted-text">Die wichtigsten ERP- und Autorisierungsdaten auf einen Blick.</p>
+                  <p className="app-muted-text">Key ERP and authorization details at a glance.</p>
                 </div>
                 <div className="app-badge-row">
                   <Badge
@@ -145,7 +145,7 @@ function DashboardPage() {
               <div className="app-section-header">
                 <div className="app-section-grid">
                   <CardTitle>API playground</CardTitle>
-                  <p className="app-muted-text">Führe manuelle Requests gegen den ERP-Proxy aus und prüfe Status, Dauer und Antwortdaten.</p>
+                  <p className="app-muted-text">Run manual requests against the ERP proxy and inspect status, duration, and response data.</p>
                 </div>
                 <Button
                   type="button"
@@ -160,7 +160,7 @@ function DashboardPage() {
               </div>
             </CardHeader>
             <CardContent className="app-section-grid">
-              {!isPlaygroundOpen ? <p className="app-muted-text">Öffne den Playground, um einen manuellen Request abzusetzen.</p> : null}
+              {!isPlaygroundOpen ? <p className="app-muted-text">Open the playground to send a manual request.</p> : null}
               {isPlaygroundOpen ? (
                 <div id="dashboard-playground-panel" className="app-section-grid">
                   <form

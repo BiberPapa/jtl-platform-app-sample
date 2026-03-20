@@ -4,20 +4,20 @@ function SupportPage() {
   return (
     <InfoPageLayout
       eyebrow="Support"
-      title="Hilfe und Support"
-      lead="Diese Beispielseite zeigt, wie du Support-Informationen innerhalb der App bereitstellen kannst."
+      title="Help and support"
+      lead="This sample page shows how to provide support information within the app."
       sections={[
         {
-          title: 'Kontakt',
-          body: 'Bei Fragen zur Demo-App erreichst du das Support-Team beispielhaft per E-Mail unter support@example.com oder werktags zwischen 9:00 und 17:00 Uhr.',
+          title: 'Contact',
+          body: 'If you have questions about the demo app, you can reach the support team at support@example.com or on business days between 9:00 a.m. and 5:00 p.m.',
         },
         {
-          title: 'Typische Anliegen',
-          body: 'Support-Anfragen betreffen häufig die Einrichtung der App, die Verbindung zur JTL-Wawi sowie Rückfragen zu ERP- und Pane-Einstiegspunkten.',
+          title: 'Typical requests',
+          body: 'Support requests often relate to app setup, the connection to JTL-Wawi, and questions about ERP and pane entry points.',
         },
         {
-          title: 'Nächste Schritte',
-          body: 'Bitte halte für Rückfragen die betroffene Tenant-Umgebung, den Zeitpunkt des Fehlers und eine kurze Beschreibung des Problems bereit.',
+          title: 'Next steps',
+          body: 'Please have the affected tenant environment, the time of the error, and a short description of the problem ready for any follow-up questions.',
         },
       ]}
     />

@@ -31,11 +31,11 @@ function SetupPage() {
 
         if (!cancelled) {
           setCompletionState('done');
-          setCompletionMessage('Die Einrichtung wurde erfolgreich an den Host übermittelt.');
+          setCompletionMessage('Setup was successfully submitted to the host.');
         }
       } catch (error) {
         if (!cancelled) {
-          const message = error instanceof Error ? error.message : 'Der Setup-Abschluss konnte nicht an den Host gemeldet werden.';
+          const message = error instanceof Error ? error.message : 'Setup completion could not be reported to the host.';
           setCompletionState('error');
           setCompletionMessage(message);
         }
@@ -52,7 +52,7 @@ function SetupPage() {
   const handleConnectionTest = useCallback(async (): Promise<void> => {
     try {
       setConnectionState('submitting');
-      setConnectionMessage('Bitte warten, während die Verbindung zur JTL-Wawi geprüft wird.');
+      setConnectionMessage('Please wait while the connection to JTL-Wawi is being checked.');
       setShowManualCloseHint(false);
       const sessionToken = await appBridgeClient.getSessionToken();
       const { message } = await connectTenant(sessionToken);
@@ -62,7 +62,7 @@ function SetupPage() {
       setCompletionMessage(null);
       setCurrentStep('success');
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Beim Verbindungstest ist ein unerwarteter Fehler aufgetreten.';
+      const message = error instanceof Error ? error.message : 'An unexpected error occurred while testing the connection.';
       setConnectionState('error');
       setConnectionMessage(message);
     }
@@ -83,19 +83,15 @@ function SetupPage() {
   }, []);
 
   const isBusy = connectionState === 'submitting' || completionState === 'submitting';
-  const stepLabel = currentStep === 'terms' ? 'Schritt 1 von 3' : currentStep === 'connection' ? 'Schritt 2 von 3' : 'Schritt 3 von 3';
+  const stepLabel = currentStep === 'terms' ? 'Step 1 of 3' : currentStep === 'connection' ? 'Step 2 of 3' : 'Step 3 of 3';
   const stepTitle =
-    currentStep === 'terms'
-      ? 'Nutzungsbedingungen bestätigen'
-      : currentStep === 'connection'
-        ? 'Verbindung zur JTL-Wawi testen'
-        : 'Einrichtung erfolgreich';
+    currentStep === 'terms' ? 'Confirm terms and conditions' : currentStep === 'connection' ? 'Test connection to JTL-Wawi' : 'Setup completed';
   const leadText =
     currentStep === 'terms'
-      ? 'Bitte öffne die Nutzungsbedingungen in einem neuen Fenster und bestätige anschließend deine Zustimmung.'
+      ? 'Please open the terms and conditions in a new window and then confirm your consent.'
       : currentStep === 'connection'
-        ? 'Starte den Verbindungstest manuell, damit die App die Tenant-Anbindung prüfen kann.'
-        : 'Die Tenant-Verbindung wurde erfolgreich vorbereitet und der Host wurde über den Abschluss informiert.';
+        ? 'Start the connection test manually so the app can verify the tenant connection.'
+        : 'The tenant connection has been prepared successfully and the host has been informed that setup is complete.';
 
   return (
     <AppPageShell eyebrow="Setup" title={stepTitle} lead={leadText} width="compact">
@@ -103,34 +99,32 @@ function SetupPage() {
         <CardContent className="app-section-grid">
           <div className="app-section-header" aria-label={stepLabel}>
             <p className="app-muted-text">{stepLabel}</p>
-            <p className="app-muted-text">
-              {currentStep === 'terms' ? 'Zustimmung' : currentStep === 'connection' ? 'Verbindungstest' : 'Abschluss'}
-            </p>
+            <p className="app-muted-text">{currentStep === 'terms' ? 'Consent' : currentStep === 'connection' ? 'Connection test' : 'Completion'}</p>
           </div>
           {currentStep === 'terms' ? (
             <>
               <div className="app-section-grid">
                 <a className="app-link" href="/terms-of-use" target="_blank" rel="noreferrer noopener">
-                  Nutzungsbedingungen in neuem Fenster öffnen
+                  Open terms and conditions in a new window
                 </a>
                 <Checkbox
-                  label="Ich habe die Nutzungsbedingungen gelesen und stimme ihnen zu."
+                  label="I have read and agree to the terms and conditions."
                   value={hasAcceptedTerms}
                   onChange={checked => {
                     setHasAcceptedTerms(Boolean(checked));
                   }}
                 />
               </div>
-              <Alert title="Ohne aktive Zustimmung ist kein Wechsel in den Verbindungstest möglich." variant="info" closable={false} />
+              <Alert title="You cannot continue to the connection test without active consent." variant="info" closable={false} />
               <div className="app-page-actions">
-                <Button onClick={handleOpenConnectionStep} label="Weiter" disabled={!hasAcceptedTerms} />
+                <Button onClick={handleOpenConnectionStep} label="Continue" disabled={!hasAcceptedTerms} />
               </div>
             </>
           ) : null}
           {currentStep === 'connection' ? (
             <>
               <Alert
-                title={connectionMessage ?? 'Der Test wird erst nach deinem Klick gestartet.'}
+                title={connectionMessage ?? 'The test will start after you click the button.'}
                 variant={connectionState === 'error' ? 'destructive' : connectionState === 'success' ? 'success' : 'info'}
                 closable={false}
               />
@@ -139,7 +133,7 @@ function SetupPage() {
                   onClick={() => {
                     void handleConnectionTest();
                   }}
-                  label={connectionState === 'submitting' ? 'Verbindung wird geprüft...' : 'Verbindung testen'}
+                  label={connectionState === 'submitting' ? 'Checking connection...' : 'Test connection'}
                   disabled={isBusy}
                 />
               </div>
@@ -150,20 +144,20 @@ function SetupPage() {
               <Alert
                 title={
                   completionState === 'error'
-                    ? (completionMessage ?? 'Der Setup-Abschluss konnte nicht an den Host gemeldet werden.')
+                    ? (completionMessage ?? 'Setup completion could not be reported to the host.')
                     : completionState === 'submitting'
-                      ? 'Der Host wird über den erfolgreichen Abschluss informiert.'
-                      : (connectionMessage ?? 'Die Tenant-Verbindung wurde erfolgreich vorbereitet.')
+                      ? 'The host is being informed that setup completed successfully.'
+                      : (connectionMessage ?? 'The tenant connection has been prepared successfully.')
                 }
                 variant={completionState === 'error' ? 'destructive' : 'success'}
                 closable={false}
               />
               {completionMessage && completionState !== 'submitting' ? <p className="app-muted-text">{completionMessage}</p> : null}
               {showManualCloseHint ? (
-                <p className="app-muted-text">Du kannst dieses Fenster jetzt manuell schließen und zur Host-Anwendung zurückkehren.</p>
+                <p className="app-muted-text">You can now close this window manually and return to the host application.</p>
               ) : null}
               <div className="app-page-actions">
-                <Button onClick={handleShowManualCloseHint} label="Fertig" disabled={completionState === 'submitting'} />
+                <Button onClick={handleShowManualCloseHint} label="Done" disabled={completionState === 'submitting'} />
               </div>
             </>
           ) : null}

@@ -3,21 +3,21 @@ import InfoPageLayout from './InfoPageLayout';
 function TermsOfUsePage() {
   return (
     <InfoPageLayout
-      eyebrow="Nutzungsbedingungen"
-      title="Allgemeine Nutzungsbedingungen"
-      lead="Diese Beispielseite veranschaulicht, wie Nutzungsbedingungen in einer kompakten App-Ansicht verlinkt werden können."
+      eyebrow="Terms and conditions"
+      title="General terms and conditions"
+      lead="This sample page illustrates how terms and conditions can be linked in a compact app view."
       sections={[
         {
-          title: 'Nutzung der Anwendung',
-          body: 'Die Demo-App darf ausschließlich für Test-, Evaluierungs- und Demonstrationszwecke verwendet werden. Ein produktiver Einsatz ist nur mit angepassten Inhalten und Prozessen vorgesehen.',
+          title: 'Use of the application',
+          body: 'The demo app may only be used for testing, evaluation, and demonstration purposes. Productive use is only intended with adapted content and processes.',
         },
         {
-          title: 'Haftung',
-          body: 'Die bereitgestellten Inhalte dienen als Beispiel und erfolgen ohne Gewähr für Vollständigkeit, Verfügbarkeit oder rechtliche Belastbarkeit.',
+          title: 'Liability',
+          body: 'The provided content serves as an example and is supplied without any guarantee of completeness, availability, or legal reliability.',
         },
         {
-          title: 'Änderungen',
-          body: 'Funktionalität, Texte und Beispielinhalte können jederzeit angepasst, erweitert oder entfernt werden, wenn dies für die Weiterentwicklung der App erforderlich ist.',
+          title: 'Changes',
+          body: 'Functionality, texts, and sample content may be adjusted, expanded, or removed at any time if required for the further development of the app.',
         },
       ]}
     />
