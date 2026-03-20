@@ -84,17 +84,13 @@ jobs:
         run: corepack enable
 
       - name: Install dependencies
-        working-directory: src/hello-world-app
         run: corepack yarn install
 
       - name: Run lint
-        working-directory: src/hello-world-app
         run: corepack yarn lint
 
       - name: Run typecheck
-        working-directory: src/hello-world-app
         run: corepack yarn typecheck
 
       - name: Run tests
-        working-directory: src/hello-world-app
         run: corepack yarn test

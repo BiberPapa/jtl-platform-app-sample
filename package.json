@@ -1,19 +1,32 @@
 {
+  "name": "hello-world-app",
+  "version": "1.0.0",
+  "private": true,
   "packageManager": "yarn@1.22.22",
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "node ./node_modules/turbo/bin/turbo run dev --filter=hello-world-app-backend --filter=hello-world-app-frontend",
+    "build": "node ./node_modules/turbo/bin/turbo build",
+    "dev:backend:ts": "yarn workspace hello-world-app-backend dev",
+    "dev:frontend": "yarn workspace hello-world-app-frontend dev",
+    "lint": "node ./node_modules/turbo/bin/turbo lint",
+    "test": "node ./node_modules/turbo/bin/turbo test",
+    "test:backend:ts": "yarn workspace hello-world-app-backend test",
+    "typecheck": "node ./node_modules/turbo/bin/turbo typecheck",
+    "check": "node ./node_modules/turbo/bin/turbo lint typecheck test build",
+    "prepare": "husky",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "commitlint": "commitlint"
+  },
+  "license": "MIT",
   "devDependencies": {
     "@commitlint/cli": "^19.7.1",
     "@commitlint/config-conventional": "^19.7.1",
     "husky": "^9.1.7",
-    "prettier": "^3.4.2"
-  },
-  "scripts": {
-    "build": "corepack yarn --cwd src/hello-world-app build",
-    "check": "corepack yarn format:check && corepack yarn lint && corepack yarn typecheck && corepack yarn test",
-    "lint": "corepack yarn --cwd src/hello-world-app lint",
-    "test": "corepack yarn --cwd src/hello-world-app test",
-    "typecheck": "corepack yarn --cwd src/hello-world-app typecheck",
-    "prepare": "husky",
-    "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "prettier": "^3.4.2",
+    "turbo": "^2.8.20"
   }
 }
