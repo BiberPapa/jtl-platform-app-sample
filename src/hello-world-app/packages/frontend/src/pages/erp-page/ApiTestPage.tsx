@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAppBridgeClient } from '../../services/appBridgeContext';
 import { requestErpInfoStatus, runApiTests, type ApiTestResult, type ErpInfoStatus } from '../../services/erpService';
 import HelloWorldErpPage from './HelloWorldErpPage';
+import TimingBreakdownCard from './TimingBreakdownCard';
 
 function ApiTestPage() {
   const appBridgeClient = useAppBridgeClient();
@@ -94,18 +95,13 @@ function ApiTestPage() {
                 <span className="dashboard-metric-label">API Version</span>
                 <strong className="dashboard-metric-value">{overview?.version ?? (isLoadingOverview ? 'Loading...' : 'Unavailable')}</strong>
               </article>
-              <article className="dashboard-metric">
-                <span className="dashboard-metric-label">Total time</span>
-                <strong className="dashboard-metric-value">{formatDuration(overview?.totalTimeMs ?? null, isLoadingOverview)}</strong>
-              </article>
-              <article className="dashboard-metric">
-                <span className="dashboard-metric-label">Infrastructure time</span>
-                <strong className="dashboard-metric-value">{formatDuration(overview?.infrastructureTimeMs ?? null, isLoadingOverview)}</strong>
-              </article>
-              <article className="dashboard-metric">
-                <span className="dashboard-metric-label">ERP time</span>
-                <strong className="dashboard-metric-value">{formatDuration(overview?.erpTimeMs ?? null, isLoadingOverview)}</strong>
-              </article>
+              <TimingBreakdownCard
+                totalTimeMs={overview?.totalTimeMs ?? null}
+                infrastructureTimeMs={overview?.infrastructureTimeMs ?? null}
+                erpTimeMs={overview?.erpTimeMs ?? null}
+                frontendTimeMs={overview?.frontendTimeMs ?? null}
+                isLoading={isLoadingOverview}
+              />
             </div>
           </section>
           <section className="dashboard-status-card api-test-section" aria-labelledby="api-test-routes-title">
@@ -170,18 +166,6 @@ function ApiTestPage() {
       }
     />
   );
-}
-
-function formatDuration(durationMs: number | null, isLoading: boolean): string {
-  if (isLoading) {
-    return 'Loading...';
-  }
-
-  if (durationMs == null) {
-    return 'Unavailable';
-  }
-
-  return `${durationMs} ms`;
 }
 
 export default ApiTestPage;

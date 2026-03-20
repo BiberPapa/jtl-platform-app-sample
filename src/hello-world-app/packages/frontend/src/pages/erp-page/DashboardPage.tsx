@@ -10,6 +10,7 @@ import {
   type PlaygroundRequestResult,
 } from '../../services/erpService';
 import HelloWorldErpPage from './HelloWorldErpPage';
+import TimingBreakdownCard from './TimingBreakdownCard';
 
 type DashboardState = {
   erpInfo: ErpInfoStatus;
@@ -129,34 +130,13 @@ function DashboardPage() {
                 <span className="dashboard-metric-label">API version</span>
                 <strong className="dashboard-metric-value">{status?.erpInfo.version ?? (isLoading ? 'Loading...' : 'Unavailable')}</strong>
               </article>
-              <article className="dashboard-metric">
-                <span className="dashboard-metric-label">Total time</span>
-                <strong className="dashboard-metric-value">{formatDuration(status?.erpInfo.totalTimeMs ?? null, isLoading)}</strong>
-              </article>
-              <article className="dashboard-metric">
-                <span className="dashboard-metric-label">Infrastructure time</span>
-                <strong
-                  className="dashboard-metric-value"
-                  data-status={getInfrastructureTimingStatus(status?.erpInfo.infrastructureTimeMs ?? null, isLoading)}
-                >
-                  {formatDuration(status?.erpInfo.infrastructureTimeMs ?? null, isLoading)}
-                </strong>
-                <span
-                  className="dashboard-metric-status"
-                  data-status={getInfrastructureTimingStatus(status?.erpInfo.infrastructureTimeMs ?? null, isLoading)}
-                >
-                  {getInfrastructureTimingLabel(status?.erpInfo.infrastructureTimeMs ?? null, isLoading)}
-                </span>
-              </article>
-              <article className="dashboard-metric">
-                <span className="dashboard-metric-label">ERP time</span>
-                <strong className="dashboard-metric-value" data-status={getErpTimingStatus(status?.erpInfo.erpTimeMs ?? null, isLoading)}>
-                  {formatDuration(status?.erpInfo.erpTimeMs ?? null, isLoading)}
-                </strong>
-                <span className="dashboard-metric-status" data-status={getErpTimingStatus(status?.erpInfo.erpTimeMs ?? null, isLoading)}>
-                  {getErpTimingLabel(status?.erpInfo.erpTimeMs ?? null, isLoading)}
-                </span>
-              </article>
+              <TimingBreakdownCard
+                totalTimeMs={status?.erpInfo.totalTimeMs ?? null}
+                infrastructureTimeMs={status?.erpInfo.infrastructureTimeMs ?? null}
+                erpTimeMs={status?.erpInfo.erpTimeMs ?? null}
+                frontendTimeMs={status?.erpInfo.frontendTimeMs ?? null}
+                isLoading={isLoading}
+              />
             </div>
             <div className="dashboard-summary-details">
               {status?.erpInfo.errorMessage ? (
@@ -295,102 +275,6 @@ function getAuthorizationLabel(status: AuthorizationStatus | null, isLoading: bo
 
 function getAuthorizationTextStatus(status: AuthorizationStatus): 'success' | 'error' {
   return status.state === 'authorized' ? 'success' : 'error';
-}
-
-function formatDuration(durationMs: number | null, isLoading: boolean): string {
-  if (isLoading) {
-    return 'Loading...';
-  }
-
-  if (durationMs == null) {
-    return 'Unavailable';
-  }
-
-  return `${durationMs} ms`;
-}
-
-function getErpTimingStatus(durationMs: number | null, isLoading: boolean): 'loading' | 'success' | 'warning' | 'error' | 'neutral' {
-  if (isLoading) {
-    return 'loading';
-  }
-
-  if (durationMs == null) {
-    return 'neutral';
-  }
-
-  if (durationMs < 10) {
-    return 'success';
-  }
-
-  if (durationMs <= 50) {
-    return 'warning';
-  }
-
-  return 'error';
-}
-
-function getErpTimingLabel(durationMs: number | null, isLoading: boolean): string {
-  const status = getErpTimingStatus(durationMs, isLoading);
-
-  if (status === 'loading') {
-    return 'Loading';
-  }
-
-  if (status === 'success') {
-    return 'Okay';
-  }
-
-  if (status === 'warning') {
-    return 'Warning';
-  }
-
-  if (status === 'error') {
-    return 'Problematic';
-  }
-
-  return 'Unavailable';
-}
-
-function getInfrastructureTimingStatus(durationMs: number | null, isLoading: boolean): 'loading' | 'success' | 'warning' | 'error' | 'neutral' {
-  if (isLoading) {
-    return 'loading';
-  }
-
-  if (durationMs == null) {
-    return 'neutral';
-  }
-
-  if (durationMs < 100) {
-    return 'success';
-  }
-
-  if (durationMs <= 250) {
-    return 'warning';
-  }
-
-  return 'error';
-}
-
-function getInfrastructureTimingLabel(durationMs: number | null, isLoading: boolean): string {
-  const status = getInfrastructureTimingStatus(durationMs, isLoading);
-
-  if (status === 'loading') {
-    return 'Loading';
-  }
-
-  if (status === 'success') {
-    return 'Good';
-  }
-
-  if (status === 'warning') {
-    return 'Warning';
-  }
-
-  if (status === 'error') {
-    return 'Problematic';
-  }
-
-  return 'Unavailable';
 }
 
 function formatPlaygroundBody(body: unknown): string {

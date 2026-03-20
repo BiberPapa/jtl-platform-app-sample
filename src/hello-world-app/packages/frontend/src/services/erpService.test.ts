@@ -25,7 +25,7 @@ describe('requestErpInfoStatus', () => {
       createResponse({
         ok: true,
         headers: new Headers({
-          'server-timing': 'erpapi-total;dur=5.222',
+          'server-timing': 'erpapi-total;dur=5.222, backend-total;dur=8.75',
         }),
         json: {
           version: '2.0.0+Sha.e01a5a0',
@@ -45,7 +45,8 @@ describe('requestErpInfoStatus', () => {
       version: '2.0.0+Sha.e01a5a0',
       totalTimeMs: 12,
       erpTimeMs: 5.222,
-      infrastructureTimeMs: 6.778,
+      infrastructureTimeMs: 8.75,
+      frontendTimeMs: 3.25,
       errorMessage: null,
     });
 
@@ -62,7 +63,7 @@ describe('requestErpInfoStatus', () => {
       createResponse({
         ok: false,
         headers: new Headers({
-          'server-timing': 'erpapi-total;dur=3.5',
+          'server-timing': 'erpapi-total;dur=3.5, backend-total;dur=6.25',
         }),
         text: 'V2 info unavailable',
       }),
@@ -77,7 +78,8 @@ describe('requestErpInfoStatus', () => {
       version: null,
       totalTimeMs: 10,
       erpTimeMs: 3.5,
-      infrastructureTimeMs: 6.5,
+      infrastructureTimeMs: 6.25,
+      frontendTimeMs: 3.75,
       errorMessage: 'V2 info unavailable',
     });
   });

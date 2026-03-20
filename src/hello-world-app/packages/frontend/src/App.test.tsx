@@ -213,6 +213,7 @@ describe('get app mode rendering', () => {
       totalTimeMs: 12,
       erpTimeMs: 5.222,
       infrastructureTimeMs: 6.778,
+      frontendTimeMs: 5.222,
       errorMessage: null,
     });
     requestAuthorizationStatusMock.mockResolvedValue({
@@ -243,9 +244,10 @@ describe('get app mode rendering', () => {
         reachable: true,
         tenantId: 'eazybusiness',
         version: '2.0.0+Sha.e01a5a0',
-          totalTimeMs: 12,
+        totalTimeMs: 12,
         erpTimeMs: 5.222,
-        infrastructureTimeMs: 6.778,
+        infrastructureTimeMs: 8.75,
+        frontendTimeMs: 3.25,
         errorMessage: null,
       })
       .mockResolvedValueOnce({
@@ -255,6 +257,7 @@ describe('get app mode rendering', () => {
         totalTimeMs: 134,
         erpTimeMs: 14,
         infrastructureTimeMs: 120,
+        frontendTimeMs: 14,
         errorMessage: null,
       });
     requestAuthorizationStatusMock
@@ -282,9 +285,10 @@ describe('get app mode rendering', () => {
     expect(screen.getByText('Authorized')).toBeInTheDocument();
     expect(screen.getByText('2.0.0+Sha.e01a5a0')).toBeInTheDocument();
     expect(screen.getByText('12 ms')).toBeInTheDocument();
-    expect(screen.getByText('6.778 ms')).toBeInTheDocument();
+    expect(screen.getByText('8.75 ms')).toBeInTheDocument();
+    expect(screen.getByText('3.25 ms')).toBeInTheDocument();
     expect(screen.getByText('5.222 ms')).toBeInTheDocument();
-    expect(screen.getByText('Good')).toBeInTheDocument();
+    expect(screen.getAllByText('Good')).toHaveLength(2);
     expect(screen.getByText('Okay')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: /dashboard/i }));
@@ -306,6 +310,7 @@ describe('get app mode rendering', () => {
       totalTimeMs: 9,
       erpTimeMs: 4.1,
       infrastructureTimeMs: 4.9,
+      frontendTimeMs: 4.1,
       errorMessage: 'The /v2/info endpoint could not be loaded.',
     });
     requestAuthorizationStatusMock.mockResolvedValue({
@@ -338,6 +343,7 @@ describe('get app mode rendering', () => {
       totalTimeMs: 12,
       erpTimeMs: 5.222,
       infrastructureTimeMs: 6.778,
+      frontendTimeMs: 5.222,
       errorMessage: null,
     });
     requestAuthorizationStatusMock.mockResolvedValue({
@@ -370,6 +376,7 @@ describe('get app mode rendering', () => {
       totalTimeMs: 12,
       erpTimeMs: 5.222,
       infrastructureTimeMs: 6.778,
+      frontendTimeMs: 5.222,
       errorMessage: null,
     });
     requestAuthorizationStatusMock.mockResolvedValue({
@@ -411,6 +418,7 @@ describe('get app mode rendering', () => {
       totalTimeMs: 12,
       erpTimeMs: 5.222,
       infrastructureTimeMs: 6.778,
+      frontendTimeMs: 5.222,
       errorMessage: null,
     });
     requestAuthorizationStatusMock.mockResolvedValue({
@@ -444,6 +452,7 @@ describe('get app mode rendering', () => {
       totalTimeMs: 400,
       erpTimeMs: 55,
       infrastructureTimeMs: 345,
+      frontendTimeMs: 55,
       errorMessage: null,
     });
     requestAuthorizationStatusMock.mockResolvedValue({
@@ -483,6 +492,7 @@ describe('get app mode rendering', () => {
       totalTimeMs: 12,
       erpTimeMs: 5.222,
       infrastructureTimeMs: 6.778,
+      frontendTimeMs: 5.222,
       errorMessage: null,
     });
     runApiTestsMock.mockResolvedValue([]);

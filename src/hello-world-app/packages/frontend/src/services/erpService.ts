@@ -15,6 +15,7 @@ export type ErpInfoStatus = {
   totalTimeMs: number | null;
   erpTimeMs: number | null;
   infrastructureTimeMs: number | null;
+  frontendTimeMs: number | null;
   errorMessage: string | null;
 };
 
@@ -74,7 +75,6 @@ export async function requestErpInfoStatus(appBridgeClient: AppBridgeClient): Pr
   const sessionToken = await appBridgeClient.getSessionToken();
   const v2Info = await requestInfoEndpoint('/v2/info', sessionToken);
 
-
   if (v2Info.info) {
     return {
       reachable: true,
@@ -82,7 +82,8 @@ export async function requestErpInfoStatus(appBridgeClient: AppBridgeClient): Pr
       version: v2Info.info.version,
       totalTimeMs: v2Info.totalTimeMs,
       erpTimeMs: v2Info.erpTimeMs,
-      infrastructureTimeMs: calculateInfrastructureTime(v2Info.totalTimeMs, v2Info.erpTimeMs),
+      infrastructureTimeMs: v2Info.infrastructureTimeMs,
+      frontendTimeMs: calculateFrontendTime(v2Info.totalTimeMs, v2Info.infrastructureTimeMs),
       errorMessage: null,
     };
   }
@@ -93,7 +94,8 @@ export async function requestErpInfoStatus(appBridgeClient: AppBridgeClient): Pr
     version: null,
     totalTimeMs: v2Info.totalTimeMs,
     erpTimeMs: v2Info.erpTimeMs,
-    infrastructureTimeMs: calculateInfrastructureTime(v2Info.totalTimeMs, v2Info.erpTimeMs),
+    infrastructureTimeMs: v2Info.infrastructureTimeMs,
+    frontendTimeMs: calculateFrontendTime(v2Info.totalTimeMs, v2Info.infrastructureTimeMs),
     errorMessage: v2Info.errorMessage || 'The /v2/info endpoint could not be loaded.',
   };
 }
@@ -177,7 +179,13 @@ export async function runApiTests(appBridgeClient: AppBridgeClient): Promise<Api
 async function requestInfoEndpoint(
   endpointPath: '/v2/info',
   sessionToken: string,
-): Promise<{ info: ErpInfoResponse | null; totalTimeMs: number; erpTimeMs: number | null; errorMessage: string | null }> {
+): Promise<{
+  info: ErpInfoResponse | null;
+  totalTimeMs: number;
+  erpTimeMs: number | null;
+  infrastructureTimeMs: number | null;
+  errorMessage: string | null;
+}> {
   try {
     const startedAt = performance.now();
     const response = await fetch(`${apiUrl}/erp${endpointPath}`, {
@@ -185,9 +193,8 @@ async function requestInfoEndpoint(
         'X-Session-Token': sessionToken,
       },
     });
-    console.log(response.headers);
     const totalTimeMs = Math.round(performance.now() - startedAt);
-    const erpTimeMs = parseServerTimingDuration(response.headers.get('server-timing'));
+    const { erpTimeMs, infrastructureTimeMs } = parseServerTimingDurations(response.headers.get('server-timing'));
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -196,6 +203,7 @@ async function requestInfoEndpoint(
         info: null,
         totalTimeMs,
         erpTimeMs,
+        infrastructureTimeMs,
         errorMessage: errorText || `The ${endpointPath} endpoint could not be loaded.`,
       };
     }
@@ -204,6 +212,7 @@ async function requestInfoEndpoint(
       info: (await response.json()) as ErpInfoResponse,
       totalTimeMs,
       erpTimeMs,
+      infrastructureTimeMs,
       errorMessage: null,
     };
   } catch (error) {
@@ -211,6 +220,7 @@ async function requestInfoEndpoint(
       info: null,
       totalTimeMs: 0,
       erpTimeMs: null,
+      infrastructureTimeMs: null,
       errorMessage: error instanceof Error ? error.message : `The ${endpointPath} endpoint could not be loaded.`,
     };
   }
@@ -287,27 +297,39 @@ function parseApiTestErrorResponse(responseText: string): ApiTestErrorResponse |
   }
 }
 
-function parseServerTimingDuration(serverTimingHeader: string | null): number | null {
-  console.log(serverTimingHeader);
+function parseServerTimingDurations(serverTimingHeader: string | null): {
+  erpTimeMs: number | null;
+  infrastructureTimeMs: number | null;
+} {
   if (!serverTimingHeader) {
-    return null;
+    return {
+      erpTimeMs: null,
+      infrastructureTimeMs: null,
+    };
   }
 
-  const durationMatch = /(?:^|,)\s*erpapi-total\s*;\s*dur=([0-9.]+)/i.exec(serverTimingHeader);
-  console.log(durationMatch);
+  return {
+    erpTimeMs: parseServerTimingMetric(serverTimingHeader, 'erpapi-total'),
+    infrastructureTimeMs: parseServerTimingMetric(serverTimingHeader, 'backend-total'),
+  };
+}
+
+function parseServerTimingMetric(serverTimingHeader: string, metricName: string): number | null {
+  const durationMatch = new RegExp(`(?:^|,)\\s*${metricName}\\s*;\\s*dur=([0-9.]+)`, 'i').exec(serverTimingHeader);
+
   if (!durationMatch) {
     return null;
   }
 
   const duration = Number(durationMatch[1]);
-  console.log(duration);
+
   return Number.isFinite(duration) ? duration : null;
 }
 
-function calculateInfrastructureTime(totalTimeMs: number | null, erpTimeMs: number | null): number | null {
-  if (totalTimeMs == null || erpTimeMs == null) {
+function calculateFrontendTime(totalTimeMs: number | null, infrastructureTimeMs: number | null): number | null {
+  if (totalTimeMs == null || infrastructureTimeMs == null) {
     return null;
   }
 
-  return Math.max(0, Number((totalTimeMs - erpTimeMs).toFixed(3)));
+  return Math.max(0, Number((totalTimeMs - infrastructureTimeMs).toFixed(3)));
 }
