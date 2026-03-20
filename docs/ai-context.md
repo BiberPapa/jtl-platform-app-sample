@@ -10,10 +10,10 @@
 
 ## Typical Verification
 
-- `corepack yarn lint`
-- `corepack yarn typecheck`
-- `corepack yarn test`
-- `corepack yarn build`
+- `pnpm lint`
+- `pnpm typecheck`
+- `pnpm test`
+- `pnpm build`
 
 ## Change Hints
 

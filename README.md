@@ -4,22 +4,22 @@
 
 - Node.js 20+
 - Corepack enabled (`corepack enable`)
-- Install dependencies from the repository root with `corepack yarn install`
+- Install dependencies from the repository root with `pnpm install`
 
 ## Development
 
-- Run `corepack yarn dev` to start the TypeScript backend and frontend
-- Run `corepack yarn dev:backend:ts` to start only the backend on `http://localhost:50143`
-- Run `corepack yarn dev:frontend` to start only the frontend
+- Run `pnpm dev` to start the TypeScript backend and frontend
+- Run `pnpm dev:backend:ts` to start only the backend on `http://localhost:50143`
+- Run `pnpm dev:frontend` to start only the frontend
 
 ## Commands
 
-- `corepack yarn lint`
-- `corepack yarn typecheck`
-- `corepack yarn test`
-- `corepack yarn build`
-- `corepack yarn run check`
-- `corepack yarn test:backend:ts`
+- `pnpm lint`
+- `pnpm typecheck`
+- `pnpm test`
+- `pnpm build`
+- `pnpm check`
+- `pnpm test:backend:ts`
 
 ## Structure
 
@@ -28,6 +28,7 @@
 
 Use `apps/frontend/.env.example` as the starting point for frontend configuration.
 Keep `VITE_API_URL=http://localhost:50143` for the local backend.
+The existing `apps/frontend/Dockerfile` is a legacy path and remains outside this pnpm migration; it references `src/sdk/js-core`, which does not exist in this repository and should be cleaned up separately.
 
 ## Ports
 

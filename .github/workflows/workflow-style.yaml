@@ -16,7 +16,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'yarn'
+          cache: 'pnpm'
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -27,15 +27,15 @@ jobs:
         run: corepack enable
 
       - name: Install dependencies
-        run: corepack yarn install
+        run: pnpm install --frozen-lockfile
 
       - name: Validate current commit (last commit) with commitlint
         if: github.event_name == 'push'
-        run: corepack yarn commitlint --last --verbose
+        run: pnpm commitlint --last --verbose
 
       - name: Validate PR commits with commitlint
         if: github.event_name == 'pull_request'
-        run: corepack yarn commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
+        run: pnpm commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
 
   prettier:
     runs-on: ubuntu-22.04
@@ -47,7 +47,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'yarn'
+          cache: 'pnpm'
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -58,10 +58,10 @@ jobs:
         run: corepack enable
 
       - name: Install dependencies
-        run: corepack yarn install
+        run: pnpm install --frozen-lockfile
 
       - name: Run prettier
-        run: corepack yarn format:check
+        run: pnpm format:check
 
   quality-hello-world-app:
     runs-on: ubuntu-22.04
@@ -73,7 +73,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'yarn'
+          cache: 'pnpm'
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -84,13 +84,13 @@ jobs:
         run: corepack enable
 
       - name: Install dependencies
-        run: corepack yarn install
+        run: pnpm install --frozen-lockfile
 
       - name: Run lint
-        run: corepack yarn lint
+        run: pnpm lint
 
       - name: Run typecheck
-        run: corepack yarn typecheck
+        run: pnpm typecheck
 
       - name: Run tests
-        run: corepack yarn test
+        run: pnpm test

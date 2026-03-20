@@ -54,5 +54,5 @@ function isCustomerChangedEvent(value: unknown): value is CustomerChangedEvent {
 
   const candidate = value as Record<string, unknown>;
 
-  return typeof candidate.customerId === 'string';
+  return typeof candidate['customerId'] === 'string';
 }

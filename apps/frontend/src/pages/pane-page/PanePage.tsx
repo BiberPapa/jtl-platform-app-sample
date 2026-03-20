@@ -1,5 +1,6 @@
-import { Button, Input, Stack, Text } from '@jtl-software/platform-ui-react';
+import { Alert, Button, Card, CardContent, Input } from '@jtl-software/platform-ui-react';
 import { useCallback, useEffect, useState } from 'react';
+import { AppPageShell } from '../../components';
 import { useAppBridgeClient } from '../../services/appBridgeContext';
 import { getCurrentCustomerId } from '../../services/paneService';
 
@@ -31,19 +32,17 @@ function PanePage() {
   }, [appBridgeClient]);
 
   return (
-    <main className="app-shell">
-      <section className="app-card">
-        <Stack spacing="4" direction="column">
-          <p className="eyebrow">Pane</p>
-          <Text align="center" type="h2">
-            Customer context
-          </Text>
-          <Text align="center">The pane listens to bridge events and can also request the current customer explicitly.</Text>
+    <AppPageShell
+      eyebrow="Pane"
+      title="Customer context"
+      lead="The pane listens to bridge events and can also request the current customer explicitly."
+      width="compact"
+    >
+      <Card>
+        <CardContent className="app-section-grid">
           <Input aria-label="Current customer" disabled value={customer} />
           {statusMessage ? (
-            <p className="status-text" data-status={statusMessage.includes('could not') ? 'error' : 'success'}>
-              {statusMessage}
-            </p>
+            <Alert title={statusMessage} variant={statusMessage.includes('could not') ? 'destructive' : 'success'} closable={false} />
           ) : null}
           <Button
             variant="outline"
@@ -52,9 +51,9 @@ function PanePage() {
             }}
             label="Get Current Customer"
           />
-        </Stack>
-      </section>
-    </main>
+        </CardContent>
+      </Card>
+    </AppPageShell>
   );
 }
 

@@ -1,4 +1,6 @@
 import './App.css';
+import { Card, CardContent } from '@jtl-software/platform-ui-react';
+import { AppPageShell } from './components';
 import { ErpPage, HubPage, PanePage, PrivacyPage, SetupPage, SupportPage, TermsOfUsePage } from './pages';
 import { getAppRoute } from './routing/getAppRoute';
 
@@ -24,16 +26,17 @@ function App() {
       return <PanePage />;
     default:
       return (
-        <main className="app-shell">
-          <section className="app-card page-stack" aria-labelledby="unknown-mode-title">
-            <p className="eyebrow">Cloud App</p>
-            <h1 id="unknown-mode-title">Unknown app mode</h1>
-            <p>
-              Use `/setup`, `/support`, `/privacy`, `/terms-of-use`, `/hub`, `/erp`, `/erp/menu/Dashboard`, `/erp/tabs/...` or `/pane` to open one of
-              the documented app entry points.
-            </p>
-          </section>
-        </main>
+        <AppPageShell
+          eyebrow="Cloud App"
+          title="Unknown app mode"
+          lead="Use `/setup`, `/support`, `/privacy`, `/terms-of-use`, `/hub`, `/erp`, `/erp/menu/Dashboard`, `/erp/tabs/...` or `/pane` to open one of the documented app entry points."
+        >
+          <Card>
+            <CardContent>
+              <p className="app-muted-text">Open one of the documented frontend entry points to continue.</p>
+            </CardContent>
+          </Card>
+        </AppPageShell>
       );
   }
 }

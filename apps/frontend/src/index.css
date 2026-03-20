@@ -3,48 +3,20 @@
 @source '../node_modules/@jtl-software/platform-ui-react/dist';
 
 :root {
-  --app-text-color: #0f172a;
-  --app-background: radial-gradient(circle at top, rgba(45, 212, 191, 0.28), transparent 32%), linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-
-  font-family: 'Segoe UI', sans-serif;
+  --app-font-sans: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  --typography-font-family-font-sans: var(--app-font-sans);
+  --font-inter: var(--app-font-sans);
   line-height: 1.5;
   font-weight: 400;
-  color: var(--app-text-color);
-  background: var(--app-background);
-  color-scheme: light;
-
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-html[data-color-scheme='dark'] {
-  --app-text-color: #e2e8f0;
-  --app-background: radial-gradient(circle at top, rgba(20, 184, 166, 0.2), transparent 30%), linear-gradient(135deg, #0f172a 0%, #111827 100%);
-  color-scheme: dark;
-}
-
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  color: inherit;
-  background: inherit;
-}
-
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.65em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  font-family: var(--app-font-sans);
 }

@@ -2,18 +2,15 @@
   "name": "hello-world-app",
   "version": "1.0.0",
   "private": true,
-  "packageManager": "yarn@1.22.22",
-  "workspaces": [
-    "apps/*"
-  ],
+  "packageManager": "pnpm@10.28.2",
   "scripts": {
     "dev": "node ./node_modules/turbo/bin/turbo run dev --filter=hello-world-app-backend --filter=hello-world-app-frontend",
     "build": "node ./node_modules/turbo/bin/turbo build",
-    "dev:backend:ts": "yarn workspace hello-world-app-backend dev",
-    "dev:frontend": "yarn workspace hello-world-app-frontend dev",
+    "dev:backend:ts": "pnpm --filter hello-world-app-backend dev",
+    "dev:frontend": "pnpm --filter hello-world-app-frontend dev",
     "lint": "node ./node_modules/turbo/bin/turbo lint",
     "test": "node ./node_modules/turbo/bin/turbo test",
-    "test:backend:ts": "yarn workspace hello-world-app-backend test",
+    "test:backend:ts": "pnpm --filter hello-world-app-backend test",
     "typecheck": "node ./node_modules/turbo/bin/turbo typecheck",
     "terminology:check": "node ./scripts/check-terminology.mjs",
     "check": "node ./node_modules/turbo/bin/turbo lint typecheck test build",

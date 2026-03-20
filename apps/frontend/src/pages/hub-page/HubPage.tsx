@@ -1,13 +1,19 @@
+import { Card, CardContent } from '@jtl-software/platform-ui-react';
+import { AppPageShell } from '../../components';
+
 function HubPage() {
   return (
-    <main className="app-shell">
-      <section className="app-card page-stack" aria-labelledby="hub-page-title">
-        <p className="eyebrow">Hub</p>
-        <h1 id="hub-page-title">Cloud App Launcher</h1>
-        <p>This is the App Launcher entry point defined in the manifest for the hub capability.</p>
-        <p>Use this page as the central landing page when the app is opened from the hub integration.</p>
-      </section>
-    </main>
+    <AppPageShell
+      eyebrow="Hub"
+      title="Cloud App Launcher"
+      lead="This is the App Launcher entry point defined in the manifest for the hub capability."
+    >
+      <Card>
+        <CardContent>
+          <p className="app-muted-text">Use this page as the central landing page when the app is opened from the hub integration.</p>
+        </CardContent>
+      </Card>
+    </AppPageShell>
   );
 }
 

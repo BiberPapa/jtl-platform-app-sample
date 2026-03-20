@@ -32,6 +32,26 @@ Within this app, existing feature code is the primary source of truth for:
 - Do not introduce a second set of primitives for buttons, inputs, dialogs, or tables.
 - Avoid one-off styling that makes a screen look detached from the rest of the app.
 
+## TypeScript coding rules
+
+- These rules apply to TypeScript source files (`.ts` / `.tsx`) in this app.
+- Always write TypeScript for application code; do not add plain JavaScript modules.
+- Never use `any`.
+- Prefer `unknown` over `any`, then narrow explicitly.
+- Add explicit types when inference is unclear or public APIs are involved.
+- All exported functions, public methods, DTOs, and domain models must be fully typed.
+- Avoid `as` casts unless unavoidable. Prefer type guards, schema validation, or proper control flow narrowing.
+- Do not use non-null assertions (`!`) unless there is a documented reason.
+- Prefer discriminated unions over boolean flag combinations.
+- Prefer `interface` for object-shaped contracts where possible.
+- Use `type` for unions, mapped types, and utility type composition.
+- Handle `undefined` and `null` explicitly.
+- For async code, return `Promise<T>` with concrete `T`.
+- For external input (API, localStorage, forms, env), validate at runtime before trusting types.
+- When changing code, keep or improve type safety.
+- Do not silence lint or type errors unless explicitly requested.
+- Generated frontend code must pass `pnpm typecheck` and `pnpm lint`.
+
 ## When building new screens
 
 Unless told otherwise, follow this order:

@@ -18,11 +18,11 @@ This repository contains a single Hello World application with:
 
 ## Verification
 
-- `corepack yarn dev`
-- `corepack yarn lint`
-- `corepack yarn typecheck`
-- `corepack yarn test`
-- `corepack yarn build`
+- `pnpm dev`
+- `pnpm lint`
+- `pnpm typecheck`
+- `pnpm test`
+- `pnpm build`
 
 ## Documentation
 

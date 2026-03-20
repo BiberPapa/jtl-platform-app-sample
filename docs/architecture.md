@@ -22,6 +22,6 @@ The repository contains one application with two deployable parts:
 
 ## Cross-Cutting Concerns
 
-- Shared orchestration happens at repository root through Yarn workspaces and Turbo
+- Shared orchestration happens at repository root through pnpm workspaces and Turbo
 - TypeScript is used in both apps
 - CI runs lint, typecheck, build, and test from repository root

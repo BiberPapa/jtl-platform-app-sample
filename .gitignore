@@ -7,6 +7,10 @@ coverage
 **/coverage/
 TestResults/
 **/TestResults/
+.playwright-profile/
+playwright-*.har
+playwright-*.png
+playwright-*.json
 
 # production
 build

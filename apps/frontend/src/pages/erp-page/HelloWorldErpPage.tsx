@@ -1,25 +1,22 @@
 import type { ReactNode } from 'react';
+import { AppPageShell } from '../../components';
 
 type HelloWorldErpPageProps = {
   eyebrow?: string;
-  title?: string;
+  title: string;
   description?: string;
   details?: string;
   content?: ReactNode;
-  cardClassName?: string;
+  actions?: ReactNode;
+  width?: 'compact' | 'default' | 'wide';
 };
 
-function HelloWorldErpPage({ eyebrow, title, description, details, content, cardClassName }: HelloWorldErpPageProps) {
+function HelloWorldErpPage({ eyebrow, title, description, details, content, actions, width = 'wide' }: HelloWorldErpPageProps) {
   return (
-    <main className="app-shell">
-      <section className={`app-card page-stack${cardClassName ? ` ${cardClassName}` : ''}`} aria-labelledby={title ? 'erp-page-title' : undefined}>
-        {eyebrow ? <p className="eyebrow">{eyebrow}</p> : null}
-        {title ? <h1 id="erp-page-title">{title}</h1> : null}
-        {description ? <p>{description}</p> : null}
-        {details ? <pre className="value-box">{details}</pre> : null}
-        {content}
-      </section>
-    </main>
+    <AppPageShell eyebrow={eyebrow} title={title} lead={description} actions={actions} width={width}>
+      {details ? <pre className="app-code-block">{details}</pre> : null}
+      {content}
+    </AppPageShell>
   );
 }
 

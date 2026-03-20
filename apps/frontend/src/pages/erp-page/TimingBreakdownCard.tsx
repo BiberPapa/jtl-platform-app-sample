@@ -1,3 +1,5 @@
+import { Badge, Card, CardContent, CardHeader, CardTitle } from '@jtl-software/platform-ui-react';
+
 type TimingTone = 'loading' | 'success' | 'warning' | 'error' | 'neutral';
 
 type TimingBreakdownCardProps = {
@@ -49,69 +51,22 @@ function TimingBreakdownCard({ totalTimeMs, infrastructureTimeMs, erpTimeMs, fro
   ];
 
   return (
-    <article className="dashboard-metric dashboard-metric--timing">
-      <div className="dashboard-metric-timing-header">
-        <span className="dashboard-metric-label">Timing breakdown</span>
-      </div>
-      <div className="dashboard-timing-list">
+    <Card>
+      <CardHeader>
+        <CardTitle>Timing breakdown</CardTitle>
+      </CardHeader>
+      <CardContent className="app-section-grid">
         {items.map(item => (
-          <div key={item.key} className="dashboard-timing-item">
-            <div className="dashboard-timing-icon" data-tone={item.tone} aria-hidden="true">
-              {renderTimingIcon(item.key)}
+          <div key={item.key} className="app-metric-item">
+            <div className="app-metric-copy">
+              <p className="app-metric-label">{item.label}</p>
+              <p className="app-metric-value">{formatDuration(item.value, isLoading)}</p>
             </div>
-            <div className="dashboard-timing-copy">
-              <span className="dashboard-timing-label">{item.label}</span>
-              <strong className="dashboard-metric-value" data-status={item.tone}>
-                {formatDuration(item.value, isLoading)}
-              </strong>
-            </div>
-            {item.detail ? (
-              <span className="dashboard-metric-status" data-status={item.tone}>
-                {item.detail}
-              </span>
-            ) : null}
+            {item.detail ? <Badge label={item.detail} variant={getBadgeVariant(item.tone)} /> : null}
           </div>
         ))}
-      </div>
-    </article>
-  );
-}
-
-function renderTimingIcon(key: TimingItem['key']) {
-  if (key === 'total') {
-    return (
-      <svg viewBox="0 0 24 24" focusable="false">
-        <circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" strokeWidth="1.7" />
-        <path d="M12 7v5l3 2" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    );
-  }
-
-  if (key === 'infrastructure') {
-    return (
-      <svg viewBox="0 0 24 24" focusable="false">
-        <rect x="4.5" y="5.5" width="15" height="4.5" rx="1.2" fill="none" stroke="currentColor" strokeWidth="1.7" />
-        <rect x="4.5" y="13.5" width="15" height="4.5" rx="1.2" fill="none" stroke="currentColor" strokeWidth="1.7" />
-        <path d="M8 8h.01M8 16h.01" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
-      </svg>
-    );
-  }
-
-  if (key === 'erp') {
-    return (
-      <svg viewBox="0 0 24 24" focusable="false">
-        <path d="M6 7.5h12v9H6z" fill="none" stroke="currentColor" strokeWidth="1.7" />
-        <path d="M9 10.5h6M9 13.5h4" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
-      </svg>
-    );
-  }
-
-  return (
-    <svg viewBox="0 0 24 24" focusable="false">
-      <path d="M5.5 12a6.5 6.5 0 0 1 13 0" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
-      <path d="M12 5.5v13" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
-      <path d="M8.5 16.5h7" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
-    </svg>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -251,6 +206,22 @@ function getFrontendTimingLabel(durationMs: number | null, isLoading: boolean): 
   }
 
   return 'Unavailable';
+}
+
+function getBadgeVariant(tone: TimingTone): 'default' | 'success' | 'warning' | 'destructive' {
+  if (tone === 'success') {
+    return 'success';
+  }
+
+  if (tone === 'warning') {
+    return 'warning';
+  }
+
+  if (tone === 'error') {
+    return 'destructive';
+  }
+
+  return 'default';
 }
 
 export default TimingBreakdownCard;

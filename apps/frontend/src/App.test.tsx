@@ -17,12 +17,96 @@ const { connectTenantMock, getCurrentCustomerIdMock, requestErpInfoStatusMock, r
   }));
 
 vi.mock('@jtl-software/platform-ui-react', () => ({
-  Button: ({ label, onClick, disabled }: { label: string; onClick?: () => void; disabled?: boolean }) => (
-    <button type="button" onClick={onClick} disabled={disabled}>
+  Alert: ({ title, description, variant }: { title?: ReactNode; description?: ReactNode; variant?: string }) => (
+    <div role={variant === 'destructive' ? 'alert' : undefined}>
+      {title}
+      {description}
+    </div>
+  ),
+  Badge: ({ label }: { label: string }) => <span>{label}</span>,
+  Button: ({
+    label,
+    onClick,
+    disabled,
+    type,
+  }: {
+    label?: string;
+    onClick?: () => void;
+    disabled?: boolean;
+    type?: 'button' | 'submit' | 'reset';
+  }) => (
+    <button type={type ?? 'button'} onClick={onClick} disabled={disabled}>
       {label}
     </button>
   ),
-  Input: ({ value }: { value?: string }) => <input readOnly value={value ?? ''} />,
+  Card: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  CardContent: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  CardHeader: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  CardTitle: ({ children }: { children: ReactNode }) => <h2>{children}</h2>,
+  Checkbox: ({ label, value, onChange }: { label?: ReactNode; value?: boolean; onChange?: (checked: boolean) => void }) => (
+    <label>
+      <input
+        type="checkbox"
+        checked={Boolean(value)}
+        onChange={event => {
+          onChange?.(event.target.checked);
+        }}
+      />
+      {label}
+    </label>
+  ),
+  Input: ({
+    value,
+    label,
+    onChange,
+    ...props
+  }: {
+    value?: string;
+    label?: string;
+    onChange?: (value: string) => void;
+    disabled?: boolean;
+    'aria-label'?: string;
+    placeholder?: string;
+  }) => (
+    <label>
+      {label ?? props['aria-label']}
+      <input
+        {...props}
+        value={value ?? ''}
+        onChange={event => {
+          onChange?.(event.target.value);
+        }}
+      />
+    </label>
+  ),
+  Select: ({
+    label,
+    value,
+    onChange,
+    options,
+  }: {
+    label?: string;
+    value?: string;
+    onChange?: (value: string) => void;
+    options?: Array<{ value?: string; label?: string }>;
+  }) => (
+    <label>
+      {label}
+      <select
+        aria-label={label}
+        value={value}
+        onChange={event => {
+          onChange?.(event.target.value);
+        }}
+      >
+        {options?.map(option => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </label>
+  ),
   Stack: ({ children }: { children: ReactNode }) => <div>{children}</div>,
   Text: ({ children }: { children: ReactNode }) => <div>{children}</div>,
 }));

@@ -1,5 +1,6 @@
-import { Button } from '@jtl-software/platform-ui-react';
+import { Alert, Button, Card, CardContent, Checkbox } from '@jtl-software/platform-ui-react';
 import { useCallback, useEffect, useState } from 'react';
+import { AppPageShell } from '../../components';
 import { useAppBridgeClient } from '../../services/appBridgeContext';
 import { connectTenant } from '../../services/setupService';
 
@@ -97,89 +98,78 @@ function SetupPage() {
         : 'Die Tenant-Verbindung wurde erfolgreich vorbereitet und der Host wurde über den Abschluss informiert.';
 
   return (
-    <main className="app-shell app-shell--setup">
-      <section className="app-card app-card--setup page-stack" aria-labelledby="setup-title">
-        <header className="setup-header">
-          <p className="eyebrow">Setup</p>
-          <div className="setup-step-meta" aria-label={stepLabel}>
-            <span>{stepLabel}</span>
-            <span>{currentStep === 'terms' ? 'Zustimmung' : currentStep === 'connection' ? 'Verbindungstest' : 'Abschluss'}</span>
+    <AppPageShell eyebrow="Setup" title={stepTitle} lead={leadText} width="compact">
+      <Card>
+        <CardContent className="app-section-grid">
+          <div className="app-section-header" aria-label={stepLabel}>
+            <p className="app-muted-text">{stepLabel}</p>
+            <p className="app-muted-text">
+              {currentStep === 'terms' ? 'Zustimmung' : currentStep === 'connection' ? 'Verbindungstest' : 'Abschluss'}
+            </p>
           </div>
-          <h1 id="setup-title">{stepTitle}</h1>
-        </header>
-        <p className="setup-lead">{leadText}</p>
-        {currentStep === 'terms' ? (
-          <>
-            <div className="setup-checklist">
-              <a className="setup-link" href="/terms-of-use" target="_blank" rel="noreferrer noopener">
-                Nutzungsbedingungen in neuem Fenster öffnen
-              </a>
-              <div className="setup-checkbox">
-                <input
-                  id="terms-consent"
-                  type="checkbox"
-                  checked={hasAcceptedTerms}
-                  onChange={event => {
-                    setHasAcceptedTerms(event.target.checked);
+          {currentStep === 'terms' ? (
+            <>
+              <div className="app-section-grid">
+                <a className="app-link" href="/terms-of-use" target="_blank" rel="noreferrer noopener">
+                  Nutzungsbedingungen in neuem Fenster öffnen
+                </a>
+                <Checkbox
+                  label="Ich habe die Nutzungsbedingungen gelesen und stimme ihnen zu."
+                  value={hasAcceptedTerms}
+                  onChange={checked => {
+                    setHasAcceptedTerms(Boolean(checked));
                   }}
                 />
-                <label htmlFor="terms-consent">Ich habe die Nutzungsbedingungen gelesen und stimme ihnen zu.</label>
               </div>
-            </div>
-            <p className="setup-status status-text" aria-live="polite">
-              Ohne aktive Zustimmung ist kein Wechsel in den Verbindungstest möglich.
-            </p>
-            <div className="setup-actions">
-              <Button onClick={handleOpenConnectionStep} label="Weiter" disabled={!hasAcceptedTerms} />
-            </div>
-          </>
-        ) : null}
-        {currentStep === 'connection' ? (
-          <>
-            <p
-              className="setup-status status-text"
-              data-status={connectionState === 'error' ? 'error' : connectionState === 'success' ? 'success' : undefined}
-              aria-live={connectionState === 'idle' ? undefined : 'polite'}
-              role={connectionState === 'error' ? 'alert' : undefined}
-            >
-              {connectionMessage ?? 'Der Test wird erst nach deinem Klick gestartet.'}
-            </p>
-            <div className="setup-actions">
-              <Button
-                onClick={() => {
-                  void handleConnectionTest();
-                }}
-                label={connectionState === 'submitting' ? 'Verbindung wird geprüft…' : 'Verbindung testen'}
-                disabled={isBusy}
+              <Alert title="Ohne aktive Zustimmung ist kein Wechsel in den Verbindungstest möglich." variant="info" closable={false} />
+              <div className="app-page-actions">
+                <Button onClick={handleOpenConnectionStep} label="Weiter" disabled={!hasAcceptedTerms} />
+              </div>
+            </>
+          ) : null}
+          {currentStep === 'connection' ? (
+            <>
+              <Alert
+                title={connectionMessage ?? 'Der Test wird erst nach deinem Klick gestartet.'}
+                variant={connectionState === 'error' ? 'destructive' : connectionState === 'success' ? 'success' : 'info'}
+                closable={false}
               />
-            </div>
-          </>
-        ) : null}
-        {currentStep === 'success' ? (
-          <>
-            <p
-              className="setup-status status-text"
-              data-status={completionState === 'error' ? 'error' : 'success'}
-              aria-live="polite"
-              role={completionState === 'error' ? 'alert' : undefined}
-            >
-              {completionState === 'error'
-                ? completionMessage
-                : completionState === 'submitting'
-                  ? 'Der Host wird über den erfolgreichen Abschluss informiert.'
-                  : connectionMessage}
-            </p>
-            {completionMessage && completionState !== 'submitting' ? <p className="setup-lead">{completionMessage}</p> : null}
-            {showManualCloseHint ? (
-              <p className="setup-lead">Du kannst dieses Fenster jetzt manuell schließen und zur Host-Anwendung zurückkehren.</p>
-            ) : null}
-            <div className="setup-actions">
-              <Button onClick={handleShowManualCloseHint} label="Fertig" disabled={completionState === 'submitting'} />
-            </div>
-          </>
-        ) : null}
-      </section>
-    </main>
+              <div className="app-page-actions">
+                <Button
+                  onClick={() => {
+                    void handleConnectionTest();
+                  }}
+                  label={connectionState === 'submitting' ? 'Verbindung wird geprüft...' : 'Verbindung testen'}
+                  disabled={isBusy}
+                />
+              </div>
+            </>
+          ) : null}
+          {currentStep === 'success' ? (
+            <>
+              <Alert
+                title={
+                  completionState === 'error'
+                    ? (completionMessage ?? 'Der Setup-Abschluss konnte nicht an den Host gemeldet werden.')
+                    : completionState === 'submitting'
+                      ? 'Der Host wird über den erfolgreichen Abschluss informiert.'
+                      : (connectionMessage ?? 'Die Tenant-Verbindung wurde erfolgreich vorbereitet.')
+                }
+                variant={completionState === 'error' ? 'destructive' : 'success'}
+                closable={false}
+              />
+              {completionMessage && completionState !== 'submitting' ? <p className="app-muted-text">{completionMessage}</p> : null}
+              {showManualCloseHint ? (
+                <p className="app-muted-text">Du kannst dieses Fenster jetzt manuell schließen und zur Host-Anwendung zurückkehren.</p>
+              ) : null}
+              <div className="app-page-actions">
+                <Button onClick={handleShowManualCloseHint} label="Fertig" disabled={completionState === 'submitting'} />
+              </div>
+            </>
+          ) : null}
+        </CardContent>
+      </Card>
+    </AppPageShell>
   );
 }
 
