@@ -1,22 +1,3 @@
 @import '@jtl-software/platform-ui-react/dist/main.css';
 @import 'tailwindcss';
 @source '../node_modules/@jtl-software/platform-ui-react/dist';
-
-:root {
-  --app-font-sans: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
-  --typography-font-family-font-sans: var(--app-font-sans);
-  --font-inter: var(--app-font-sans);
-  line-height: 1.5;
-  font-weight: 400;
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-body {
-  margin: 0;
-  min-width: 320px;
-  min-height: 100vh;
-  font-family: var(--app-font-sans);
-}
