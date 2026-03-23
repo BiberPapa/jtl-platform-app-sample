@@ -1,8 +1,10 @@
 import type { Request } from 'express';
 import { getAccessToken } from '../accessToken.js';
 import { getGraphQlEndpoint } from '../config.js';
+import type { ProxyResponse } from '../http/proxyResponse.js';
 import { getConfiguredProxyLogLevel, logger, sanitizeHeaders, serializeLoggedBody } from '../logger.js';
 import type { TenantContext } from '../tenantContext.js';
+import { AppError } from '../errors/appError.js';
 
 export type GraphQlProxyRequestContext = {
   requestId: string;
@@ -10,17 +12,7 @@ export type GraphQlProxyRequestContext = {
   inboundPath: string;
 };
 
-export type GraphQlProxyResponse = {
-  status: number;
-  headers: Headers;
-  body: string;
-};
-
-export async function proxyGraphQlRequest(
-  req: Request,
-  tenantContext: TenantContext,
-  context: GraphQlProxyRequestContext,
-): Promise<GraphQlProxyResponse> {
+export async function proxyGraphQlRequest(req: Request, tenantContext: TenantContext, context: GraphQlProxyRequestContext): Promise<ProxyResponse> {
   const accessToken = await getAccessToken();
   const targetUrl = getGraphQlEndpoint();
   const requestBody = JSON.stringify(req.body ?? {});
@@ -63,6 +55,16 @@ export async function proxyGraphQlRequest(
       body: responseText,
     };
   } catch (error) {
+    const proxyError =
+      error instanceof AppError
+        ? error
+        : new AppError(error instanceof Error ? error.message : 'GraphQL proxy request failed.', {
+            cause: error,
+            code: 'graphql_proxy_failed',
+            publicMessage: 'The GraphQL request could not be completed.',
+            statusCode: 502,
+          });
+
     logger.error(
       {
         event: 'graphql_error',
@@ -72,12 +74,12 @@ export async function proxyGraphQlRequest(
         graphqlMethod: req.method,
         targetUrl,
         durationMs: Date.now() - startedAt,
-        err: error,
+        err: proxyError,
       },
       'GraphQL proxy request failed.',
     );
 
-    throw error;
+    throw proxyError;
   }
 }
 

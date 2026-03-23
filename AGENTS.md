@@ -16,6 +16,20 @@ This repository contains a single Cloud App application with:
 - Preserve existing behavior unless a change explicitly requires it.
 - Verify changes from repository root whenever possible.
 
+## Backend Guardrails
+
+- Preserve upstream payload semantics in proxy code; do not coerce binary/file responses into text or JSON.
+- Map request, auth, and validation failures to explicit non-500 HTTP responses instead of defaulting to internal server errors.
+- Keep route handlers thin by centralizing shared error mapping and proxy response handling.
+- Split production files before they turn into mixed logic-and-policy hotspots; use separate modules for large static rule tables.
+- When backend behavior changes, add or update edge-case tests for proxy payload handling, environment normalization, and HTTP error semantics.
+
+## AI Notes
+
+- Prefer typed/domain errors over generic `Error` for backend request flows.
+- When touching proxy behavior, verify both success and failure cases from the repository root with the documented commands.
+- Treat large declarative transformations as data-first modules so future AI edits stay targeted and reviewable.
+
 ## Verification
 
 - `pnpm dev`

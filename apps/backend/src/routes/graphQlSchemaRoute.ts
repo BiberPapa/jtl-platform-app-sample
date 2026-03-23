@@ -1,17 +1,13 @@
-import type { RequestHandler } from 'express';
 import { transformGraphQlSchema } from '../services/graphQlSchemaDocument.js';
 import { readGraphQlSchemaDocument } from '../services/graphQlSchemaFile.js';
+import { createRouteHandler } from './routeHandler.js';
 
-export const graphQlSchemaHandler: RequestHandler = async (_req, res) => {
-  try {
+export const graphQlSchemaHandler = createRouteHandler(
+  { errorMessage: 'Failed to read GraphQL schema', route: '/graphql/schema.graphql' },
+  async (_req, res) => {
     const schemaText = await readGraphQlSchemaDocument();
     const transformedSchema = transformGraphQlSchema(schemaText);
 
     res.type('text/plain').status(200).send(transformedSchema);
-  } catch (error) {
-    res.status(500).json({
-      error: 'Failed to read GraphQL schema',
-      message: error instanceof Error ? error.message : String(error),
-    });
-  }
-};
+  },
+);

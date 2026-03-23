@@ -1,4 +1,5 @@
 import { getSessionContextFromToken } from './sessionToken.js';
+import { AppError } from './errors/appError.js';
 
 export type TenantContext = {
   sessionToken: string | null;
@@ -11,7 +12,22 @@ const NOHUB_TENANT_ENV_NAME = 'NOHUB_TENANT_ID';
 
 export async function resolveTenantContext(sessionToken: string | null): Promise<TenantContext> {
   if (sessionToken) {
-    const sessionContext = await getSessionContextFromToken(sessionToken);
+    let sessionContext;
+
+    try {
+      sessionContext = await getSessionContextFromToken(sessionToken);
+    } catch (error) {
+      if (error instanceof AppError) {
+        throw error;
+      }
+
+      throw new AppError(error instanceof Error ? error.message : 'The session token is invalid.', {
+        cause: error,
+        code: 'invalid_session_token',
+        publicMessage: 'The session token is invalid.',
+        statusCode: 401,
+      });
+    }
 
     return {
       sessionToken,
@@ -24,7 +40,11 @@ export async function resolveTenantContext(sessionToken: string | null): Promise
   const fallbackTenantId = getNohubTenantId();
 
   if (!fallbackTenantId) {
-    throw new Error(`Either the X-Session-Token header or ${NOHUB_TENANT_ENV_NAME} must be provided.`);
+    throw new AppError(`Either the X-Session-Token header or ${NOHUB_TENANT_ENV_NAME} must be provided.`, {
+      code: 'missing_tenant_context',
+      publicMessage: 'A tenant context is required.',
+      statusCode: 400,
+    });
   }
 
   return {

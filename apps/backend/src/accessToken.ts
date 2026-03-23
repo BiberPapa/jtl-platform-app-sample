@@ -1,4 +1,5 @@
 import { getAuthEndpoint } from './config.js';
+import { AppError } from './errors/appError.js';
 
 type AccessTokenResponse = {
   access_token?: string;
@@ -22,7 +23,11 @@ function getRequiredEnv(name: 'CLIENT_ID' | 'CLIENT_SECRET'): string {
   const value = process.env[name];
 
   if (!value) {
-    throw new Error(`${name} must be defined in the backend environment.`);
+    throw new AppError(`${name} must be defined in the backend environment.`, {
+      code: 'missing_backend_env',
+      publicMessage: 'The backend is missing required configuration.',
+      statusCode: 500,
+    });
   }
 
   return value;
@@ -123,7 +128,11 @@ async function fetchAccessToken(): Promise<string> {
   const data = (await response.json()) as AccessTokenResponse;
 
   if (!response.ok || !data.access_token) {
-    throw new Error(`Failed to fetch access token (${response.status}): ${data.error ?? 'unknown error'}`);
+    throw new AppError(`Failed to fetch access token (${response.status}): ${data.error ?? 'unknown error'}`, {
+      code: 'access_token_fetch_failed',
+      publicMessage: 'The backend could not authenticate with the upstream platform.',
+      statusCode: 502,
+    });
   }
 
   const expiresAtEpochMs = calculateAccessTokenExpiryEpochMs(data.access_token, data.expires_in);

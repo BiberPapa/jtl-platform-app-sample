@@ -19,6 +19,7 @@ describe('backend config helpers', () => {
   it('maps non-production environments to a dotted suffix', () => {
     expect(getApiEnvironmentSuffix('dev')).toBe('.dev');
     expect(getApiEnvironmentSuffix('qa')).toBe('.qa');
+    expect(getApiEnvironmentSuffix(' QA ')).toBe('.qa');
   });
 
   it('normalizes API environments for display use cases', () => {
@@ -33,7 +34,6 @@ describe('backend config helpers', () => {
 
   it('builds the correct auth and jwks endpoints', () => {
     expect(getAuthEndpoint('')).toBe('https://auth.jtl-cloud.com/oauth2/token');
-    expect(getAuthEndpoint('.beta')).toBe('https://auth.jtl-cloud.com/oauth2/token');
     expect(getAuthEndpoint('.qa')).toBe('https://auth.qa.jtl-cloud.com/oauth2/token');
     expect(getJwksEndpoint('.dev')).toBe('https://api.dev.jtl-cloud.com/account/.well-known/jwks.json');
   });

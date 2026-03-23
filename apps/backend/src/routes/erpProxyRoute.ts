@@ -1,38 +1,35 @@
-import type { RequestHandler } from 'express';
 import { copyProxyResponseHeaders } from '../http/proxyHeaders.js';
+import { sendProxyResponse } from '../http/proxyResponse.js';
 import { getSessionTokenFromHeaders } from '../http/sessionTokenHeader.js';
+import { AppError } from '../errors/appError.js';
 import { getRequestId } from '../middleware/requestContext.js';
 import { proxyErpRequest } from '../services/erpProxy.js';
 import { resolveTenantContext } from '../tenantContext.js';
+import { createRouteHandler } from './routeHandler.js';
 
-export const erpProxyHandler: RequestHandler = async (req, res) => {
-  const requestId = getRequestId(res);
+export const erpProxyHandler = createRouteHandler({ errorMessage: 'Failed to fetch ERP info', route: '/erp/*' }, async (req, res) => {
   const sessionToken = getSessionTokenFromHeaders(req.headers);
 
   const endpoint = req.params[0];
 
   if (typeof endpoint !== 'string' || endpoint.length === 0) {
-    res.status(400).json({ error: 'An ERP endpoint path must be provided.' });
-    return;
+    throw new AppError('An ERP endpoint path must be provided.', {
+      code: 'missing_erp_endpoint',
+      publicMessage: 'An ERP endpoint path must be provided.',
+      statusCode: 400,
+    });
   }
 
+  const requestId = getRequestId(res);
   const startedAt = performance.now();
+  const tenantContext = await resolveTenantContext(sessionToken);
+  const erpResponse = await proxyErpRequest(req, tenantContext, {
+    requestId,
+    inboundMethod: req.method,
+    inboundPath: req.originalUrl,
+    endpoint,
+  });
 
-  try {
-    const tenantContext = await resolveTenantContext(sessionToken);
-    const erpResponse = await proxyErpRequest(req, tenantContext, {
-      requestId,
-      inboundMethod: req.method,
-      inboundPath: req.originalUrl,
-      endpoint,
-    });
-
-    copyProxyResponseHeaders(erpResponse.headers, res, performance.now() - startedAt);
-    res.status(erpResponse.status).send(erpResponse.body);
-  } catch (error) {
-    res.status(500).json({
-      error: 'Failed to fetch ERP info',
-      message: error instanceof Error ? error.message : String(error),
-    });
-  }
-};
+  copyProxyResponseHeaders(erpResponse.headers, res, performance.now() - startedAt);
+  sendProxyResponse(erpResponse, res);
+});

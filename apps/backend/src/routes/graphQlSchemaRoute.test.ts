@@ -31,6 +31,7 @@ describe('graphQlSchemaHandler', () => {
 
 function createResponseMock(): Pick<Response, 'json' | 'send' | 'status' | 'type'> {
   const response = {
+    locals: {},
     status: vi.fn(),
     type: vi.fn(),
     send: vi.fn(),

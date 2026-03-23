@@ -1,5 +1,11 @@
-export function getNormalizedApiEnvironment(apiEnvironment: string | undefined): 'dev' | 'qa' | 'prod' {
-  const normalizedEnvironment = (apiEnvironment?.trim() || 'prod').toLowerCase();
+export type ApiEnvironment = 'dev' | 'qa' | 'prod';
+
+function normalizeApiEnvironmentInput(apiEnvironment: string | undefined): string {
+  return (apiEnvironment?.trim() || 'prod').toLowerCase();
+}
+
+export function getNormalizedApiEnvironment(apiEnvironment: string | undefined): ApiEnvironment {
+  const normalizedEnvironment = normalizeApiEnvironmentInput(apiEnvironment);
 
   if (normalizedEnvironment === 'dev') {
     return 'dev';
@@ -13,7 +19,7 @@ export function getNormalizedApiEnvironment(apiEnvironment: string | undefined):
 }
 
 export function getApiEnvironmentSuffix(apiEnvironment: string | undefined): string {
-  const normalizedEnvironment = apiEnvironment?.trim() || 'prod';
+  const normalizedEnvironment = getNormalizedApiEnvironment(apiEnvironment);
 
   return normalizedEnvironment === 'prod' ? '' : `.${normalizedEnvironment}`;
 }
@@ -33,7 +39,7 @@ export function getCloudErpUrl(apiEnvironmentSuffix = environmentSuffix): string
 }
 
 export function getAuthEndpoint(apiEnvironmentSuffix = environmentSuffix): string {
-  if (apiEnvironmentSuffix === '' || apiEnvironmentSuffix === '.beta') {
+  if (apiEnvironmentSuffix === '') {
     return 'https://auth.jtl-cloud.com/oauth2/token';
   }
 

@@ -7,5 +7,5 @@ export const assignRequestContext: RequestHandler = (_req, res, next) => {
 };
 
 export function getRequestId(res: Response): string {
-  return typeof res.locals.requestId === 'string' ? res.locals.requestId : 'unknown-request-id';
+  return typeof res.locals?.requestId === 'string' ? res.locals.requestId : 'unknown-request-id';
 }

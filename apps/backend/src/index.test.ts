@@ -95,7 +95,7 @@ describe('backend routes', () => {
 
     const response = await request(createApp()).post('/connect-tenant');
 
-    expect(response.status).toBe(500);
+    expect(response.status).toBe(400);
     expect(response.body).toEqual({
       error: 'Failed to connect tenant',
       message: 'Either the X-Session-Token header or NOHUB_TENANT_ID must be provided.',
@@ -178,7 +178,7 @@ describe('backend routes', () => {
 
     const response = await request(createApp()).post('/connect-tenant').set('X-Session-Token', 'session-token');
 
-    expect(response.status).toBe(500);
+    expect(response.status).toBe(401);
     expect(response.body).toEqual({
       error: 'Failed to connect tenant',
       message: 'Session token validation failed.',
@@ -191,7 +191,7 @@ describe('backend routes', () => {
 
     const response = await request(createApp()).get('/erp/customers');
 
-    expect(response.status).toBe(500);
+    expect(response.status).toBe(400);
     expect(response.body).toEqual({
       error: 'Failed to fetch ERP info',
       message: 'Either the X-Session-Token header or NOHUB_TENANT_ID must be provided.',
@@ -348,7 +348,7 @@ describe('backend routes', () => {
       query: '{ viewer { id } }',
     });
 
-    expect(response.status).toBe(500);
+    expect(response.status).toBe(400);
     expect(response.body).toEqual({
       error: 'Failed to execute GraphQL request',
       message: 'Either the X-Session-Token header or NOHUB_TENANT_ID must be provided.',
@@ -502,7 +502,7 @@ describe('backend routes', () => {
 
     const response = await request(createApp()).get('/erp/customers').set('X-Session-Token', 'session-token');
 
-    expect(response.status).toBe(500);
+    expect(response.status).toBe(502);
 
     const errorLog = logs.getLogs().find(entry => entry.event === 'erp_error');
 
@@ -528,6 +528,28 @@ describe('backend routes', () => {
 
     expect(response.status).toBe(204);
     expect(response.text).toBe('');
+  });
+
+  it('preserves binary ERP responses without text coercion', async () => {
+    const pdfBytes = Buffer.from([0x25, 0x50, 0x44, 0x46, 0x2d]);
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      headers: new Headers({
+        'content-type': 'application/pdf',
+      }),
+      arrayBuffer: () => Promise.resolve(pdfBytes.buffer.slice(pdfBytes.byteOffset, pdfBytes.byteOffset + pdfBytes.byteLength)),
+    });
+
+    vi.stubGlobal('fetch', fetchMock);
+
+    const { createApp } = await import('./index.js');
+
+    const response = await request(createApp()).get('/erp/shipment/label/123').set('X-Session-Token', 'session-token');
+
+    expect(response.status).toBe(200);
+    expect(response.headers['content-type']).toContain('application/pdf');
+    expect(Buffer.compare(response.body as Buffer, pdfBytes)).toBe(0);
   });
 
   it('forwards only whitelisted ERP response headers', async () => {

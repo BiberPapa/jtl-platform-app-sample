@@ -1,5 +1,6 @@
 import { importJWK, jwtVerify } from 'jose';
 import { getJwksEndpoint } from './config.js';
+import { AppError } from './errors/appError.js';
 import { getAccessToken } from './accessToken.js';
 
 export type SessionContext = {
@@ -29,7 +30,11 @@ export async function getSessionContextFromToken(sessionToken: string): Promise<
       const { payload } = await jwtVerify(sessionToken, publicKey);
 
       if (typeof payload.userId !== 'string' || typeof payload.tenantId !== 'string') {
-        throw new Error('The session token payload is missing required claims.');
+        throw new AppError('The session token payload is missing required claims.', {
+          code: 'invalid_session_token',
+          publicMessage: 'The session token is invalid.',
+          statusCode: 401,
+        });
       }
 
       return {
@@ -41,7 +46,16 @@ export async function getSessionContextFromToken(sessionToken: string): Promise<
     }
   }
 
-  throw lastVerificationError instanceof Error ? lastVerificationError : new Error('The session token could not be validated.');
+  if (lastVerificationError instanceof AppError) {
+    throw lastVerificationError;
+  }
+
+  throw new AppError(lastVerificationError instanceof Error ? lastVerificationError.message : 'The session token could not be validated.', {
+    cause: lastVerificationError,
+    code: 'invalid_session_token',
+    publicMessage: 'The session token is invalid.',
+    statusCode: 401,
+  });
 }
 
 export function resetSessionTokenKeyCacheForTests(): void {
@@ -55,6 +69,14 @@ async function fetchJwks(accessToken: string): Promise<JwkSetResponse> {
     },
   });
 
+  if (!response.ok) {
+    throw new AppError(`Failed to fetch JWKS (${response.status}).`, {
+      code: 'jwks_fetch_failed',
+      publicMessage: 'The backend could not validate the session token.',
+      statusCode: 502,
+    });
+  }
+
   return (await response.json()) as JwkSetResponse;
 }
 
@@ -64,7 +86,11 @@ async function importPublicKeys(): Promise<Array<Awaited<ReturnType<typeof impor
   const keys = jwks.keys ?? [];
 
   if (keys.length === 0) {
-    throw new Error('The JWKS endpoint did not return a signing key.');
+    throw new AppError('The JWKS endpoint did not return a signing key.', {
+      code: 'jwks_missing_keys',
+      publicMessage: 'The backend could not validate the session token.',
+      statusCode: 502,
+    });
   }
 
   return await Promise.all(keys.map(async key => await importJWK(key, 'EdDSA')));

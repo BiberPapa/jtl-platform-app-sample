@@ -14,6 +14,8 @@ vi.mock('jose', () => ({
 
 type MockFetchResponse = {
   json: () => Promise<{ keys: Array<JsonWebKey & { kid?: string }> }>;
+  ok: boolean;
+  status: number;
 };
 
 describe('session token verification', () => {
@@ -30,6 +32,8 @@ describe('session token verification', () => {
 
   it('reuses the imported public key for repeated requests with the same kid', async () => {
     const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
       json: () =>
         Promise.resolve({
           keys: [{ kid: 'key-1' }],
@@ -55,6 +59,8 @@ describe('session token verification', () => {
 
   it('tries the next jwks key when verification with the first key fails', async () => {
     const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
       json: () =>
         Promise.resolve({
           keys: [{ kid: 'other-key' }, { kid: 'target-key' }],

@@ -1,8 +1,10 @@
 import type { Request } from 'express';
 import { getAccessToken } from '../accessToken.js';
 import { getErpEndpoint } from '../config.js';
+import type { ProxyResponse } from '../http/proxyResponse.js';
 import { getConfiguredProxyLogLevel, logger, sanitizeHeaders, serializeLoggedBody } from '../logger.js';
 import type { TenantContext } from '../tenantContext.js';
+import { AppError } from '../errors/appError.js';
 
 export type ErpProxyRequestContext = {
   requestId: string;
@@ -11,13 +13,7 @@ export type ErpProxyRequestContext = {
   endpoint: string;
 };
 
-export type ErpProxyResponse = {
-  status: number;
-  headers: Headers;
-  body: string;
-};
-
-export async function proxyErpRequest(req: Request, tenantContext: TenantContext, context: ErpProxyRequestContext): Promise<ErpProxyResponse> {
+export async function proxyErpRequest(req: Request, tenantContext: TenantContext, context: ErpProxyRequestContext): Promise<ProxyResponse> {
   const accessToken = await getAccessToken();
   const targetUrl = getErpEndpoint(context.endpoint);
 
@@ -47,7 +43,7 @@ export async function proxyErpRequest(req: Request, tenantContext: TenantContext
 
   try {
     const erpResponse = await fetch(targetUrl, options);
-    const responseText = erpResponse.status === 204 ? '' : await erpResponse.text();
+    const responseBody = await readProxyResponseBody(erpResponse);
 
     logProxyResponse({
       requestId: context.requestId,
@@ -57,15 +53,25 @@ export async function proxyErpRequest(req: Request, tenantContext: TenantContext
       status: erpResponse.status,
       durationMs: Date.now() - startedAt,
       headers: erpResponse.headers,
-      body: responseText,
+      body: responseBody,
     });
 
     return {
       status: erpResponse.status,
       headers: erpResponse.headers,
-      body: responseText,
+      body: responseBody,
     };
   } catch (error) {
+    const proxyError =
+      error instanceof AppError
+        ? error
+        : new AppError(error instanceof Error ? error.message : 'ERP proxy request failed.', {
+            cause: error,
+            code: 'erp_proxy_failed',
+            publicMessage: 'The ERP request could not be completed.',
+            statusCode: 502,
+          });
+
     logger.error(
       {
         event: 'erp_error',
@@ -76,13 +82,38 @@ export async function proxyErpRequest(req: Request, tenantContext: TenantContext
         endpoint: context.endpoint,
         targetUrl,
         durationMs: Date.now() - startedAt,
-        err: error,
+        err: proxyError,
       },
       'ERP proxy request failed.',
     );
 
-    throw error;
+    throw proxyError;
   }
+}
+
+async function readProxyResponseBody(response: Response): Promise<Buffer | string | null> {
+  if (response.status === 204) {
+    return null;
+  }
+
+  const contentType = response.headers.get('content-type')?.toLowerCase() ?? '';
+
+  if (isTextLikeContentType(contentType)) {
+    return await response.text();
+  }
+
+  return Buffer.from(await response.arrayBuffer());
+}
+
+function isTextLikeContentType(contentType: string): boolean {
+  return (
+    contentType.startsWith('text/') ||
+    contentType.includes('json') ||
+    contentType.includes('xml') ||
+    contentType.includes('javascript') ||
+    contentType.includes('x-www-form-urlencoded') ||
+    contentType.includes('graphql')
+  );
 }
 
 function logProxyRequest(input: {
@@ -125,7 +156,7 @@ function logProxyResponse(input: {
   status: number;
   durationMs: number;
   headers: Headers;
-  body: string;
+  body: Buffer | string | null;
 }): void {
   const proxyLogLevel = getConfiguredProxyLogLevel();
 
