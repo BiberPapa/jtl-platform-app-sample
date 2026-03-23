@@ -1,10 +1,10 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { createAppBridge } from '@jtl-software/cloud-apps-core';
 import { ThemeProvider } from '@jtl-software/platform-ui-react';
 import App from './App';
 import './index.css';
 import { AppBridgeProvider } from './services/appBridgeContext';
+import { createRuntimeAppBridgeClient } from './services/runtimeAppBridgeClient';
 
 function getRootElement(): HTMLElement {
   const element = document.getElementById('root');
@@ -16,18 +16,20 @@ function getRootElement(): HTMLElement {
   return element;
 }
 
-async function bootstrap(): Promise<void> {
-  const appBridge = await createAppBridge();
+function renderApp(): void {
+  void (async () => {
+    const appBridgeClient = await createRuntimeAppBridgeClient();
 
-  createRoot(getRootElement()).render(
-    <StrictMode>
-      <ThemeProvider defaultTheme="system">
-        <AppBridgeProvider appBridge={appBridge}>
-          <App />
-        </AppBridgeProvider>
-      </ThemeProvider>
-    </StrictMode>,
-  );
+    createRoot(getRootElement()).render(
+      <StrictMode>
+        <ThemeProvider defaultTheme="system">
+          <AppBridgeProvider appBridgeClient={appBridgeClient}>
+            <App />
+          </AppBridgeProvider>
+        </ThemeProvider>
+      </StrictMode>,
+    );
+  })();
 }
 
-void bootstrap();
+renderApp();

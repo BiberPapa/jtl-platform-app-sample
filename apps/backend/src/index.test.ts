@@ -113,7 +113,7 @@ describe('backend routes', () => {
     expect(getSessionContextFromTokenMock).not.toHaveBeenCalled();
   });
 
-  it('returns backend app info with normalized production defaults', async () => {
+  it('returns backend app info with normalized prod defaults', async () => {
     process.env.API_ENVIRONMENT = '';
     process.env.NOHUB_TENANT_ID = '';
     const { createApp } = await import('./index.js');
@@ -122,7 +122,7 @@ describe('backend routes', () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual({
-      environment: 'production',
+      environment: 'prod',
       nohubTenantId: null,
       isNohubConfigured: false,
       hubUrl: 'https://hub.jtl-cloud.com',
@@ -151,7 +151,7 @@ describe('backend routes', () => {
     });
   });
 
-  it('normalizes unsupported backend environments to production in app info', async () => {
+  it('normalizes unsupported backend environments to prod in app info', async () => {
     process.env.API_ENVIRONMENT = 'beta';
     process.env.NOHUB_TENANT_ID = '';
     const { createApp } = await import('./index.js');
@@ -159,7 +159,7 @@ describe('backend routes', () => {
     const response = await request(createApp()).get('/app-info');
 
     expect(response.status).toBe(200);
-    expect((response.body as { environment: string }).environment).toBe('production');
+    expect((response.body as { environment: string }).environment).toBe('prod');
   });
 
   it('returns structured success for a valid setup request', async () => {

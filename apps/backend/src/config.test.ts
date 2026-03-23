@@ -21,13 +21,13 @@ describe('backend config helpers', () => {
   });
 
   it('normalizes API environments for display use cases', () => {
-    expect(getNormalizedApiEnvironment(undefined)).toBe('production');
-    expect(getNormalizedApiEnvironment('')).toBe('production');
-    expect(getNormalizedApiEnvironment('prod')).toBe('production');
-    expect(getNormalizedApiEnvironment('production')).toBe('production');
+    expect(getNormalizedApiEnvironment(undefined)).toBe('prod');
+    expect(getNormalizedApiEnvironment('')).toBe('prod');
+    expect(getNormalizedApiEnvironment('prod')).toBe('prod');
+    expect(getNormalizedApiEnvironment('production')).toBe('prod');
     expect(getNormalizedApiEnvironment('dev')).toBe('dev');
     expect(getNormalizedApiEnvironment('qa')).toBe('qa');
-    expect(getNormalizedApiEnvironment('beta')).toBe('production');
+    expect(getNormalizedApiEnvironment('beta')).toBe('prod');
   });
 
   it('builds the correct auth and jwks endpoints', () => {

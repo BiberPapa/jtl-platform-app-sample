@@ -1,4 +1,4 @@
-export function getNormalizedApiEnvironment(apiEnvironment: string | undefined): 'dev' | 'qa' | 'production' {
+export function getNormalizedApiEnvironment(apiEnvironment: string | undefined): 'dev' | 'qa' | 'prod' {
   const normalizedEnvironment = (apiEnvironment?.trim() || 'prod').toLowerCase();
 
   if (normalizedEnvironment === 'dev') {
@@ -9,7 +9,7 @@ export function getNormalizedApiEnvironment(apiEnvironment: string | undefined):
     return 'qa';
   }
 
-  return 'production';
+  return 'prod';
 }
 
 export function getApiEnvironmentSuffix(apiEnvironment: string | undefined): string {

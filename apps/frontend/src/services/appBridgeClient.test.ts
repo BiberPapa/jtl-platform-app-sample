@@ -1,6 +1,6 @@
 import type { AppBridge } from '@jtl-software/cloud-apps-core';
 import { describe, expect, it, vi } from 'vitest';
-import { createAppBridgeClient } from './appBridgeClient';
+import { createAppBridgeClient, createDummyAppBridgeClient } from './appBridgeClient';
 
 type BridgeMock = {
   appBridge: AppBridge;
@@ -59,5 +59,30 @@ describe('createAppBridgeClient', () => {
       await subscriptionHandler({ invalid: true });
     }).rejects.toThrow('The bridge emitted an unexpected CustomerChanged payload.');
     expect(handler).not.toHaveBeenCalled();
+  });
+});
+
+describe('createDummyAppBridgeClient', () => {
+  it('returns predictable default values and logs the nohub mode', async () => {
+    const consoleInfoSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
+    const client = createDummyAppBridgeClient();
+
+    await expect(client.getSessionToken()).resolves.toBe('');
+    await expect(client.getCurrentCustomerId()).resolves.toBe('');
+    await expect(client.setupCompleted()).resolves.toBeUndefined();
+
+    const unsubscribe = client.subscribeToCustomerChanged(vi.fn());
+    expect(typeof unsubscribe).toBe('function');
+    unsubscribe();
+
+    expect(consoleInfoSpy).toHaveBeenCalledWith('[NOHUB][DummyAppBridge] getSessionToken was called while the app is running outside the hub.');
+    expect(consoleInfoSpy).toHaveBeenCalledWith('[NOHUB][DummyAppBridge] getCurrentCustomerId was called while the app is running outside the hub.');
+    expect(consoleInfoSpy).toHaveBeenCalledWith('[NOHUB][DummyAppBridge] setupCompleted was called while the app is running outside the hub.');
+    expect(consoleInfoSpy).toHaveBeenCalledWith(
+      '[NOHUB][DummyAppBridge] subscribeToCustomerChanged was called while the app is running outside the hub.',
+    );
+    expect(consoleInfoSpy).toHaveBeenCalledWith(
+      '[NOHUB][DummyAppBridge] unsubscribeCustomerChanged was called while the app is running outside the hub.',
+    );
   });
 });

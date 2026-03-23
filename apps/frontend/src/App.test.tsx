@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
-import type { AppBridgeClient } from './services/appBridgeClient';
+import { createAppBridgeClient, type AppBridgeClient } from './services/appBridgeClient';
 import { AppBridgeProvider } from './services/appBridgeContext';
 
 const {
@@ -171,7 +171,7 @@ function createAppBridgeMock(): BridgeMock {
 function renderAtPath(pathname: string, appBridge: AppBridge): void {
   window.history.pushState({}, '', pathname);
   render(
-    <AppBridgeProvider appBridge={appBridge}>
+    <AppBridgeProvider appBridgeClient={createAppBridgeClient(appBridge)}>
       <App />
     </AppBridgeProvider>,
   );
@@ -192,7 +192,7 @@ describe('get app mode rendering', () => {
 
   it('renders the developer start page on the root route', () => {
     requestAppInfoMock.mockResolvedValue({
-      environment: 'production',
+      environment: 'prod',
       nohubTenantId: null,
       isNohubConfigured: false,
       hubUrl: 'https://hub.jtl-cloud.com',

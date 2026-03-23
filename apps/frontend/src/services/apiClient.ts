@@ -17,12 +17,17 @@ export type BackendResponse = {
 
 export async function requestBackend({ path, appBridgeClient, method = 'GET' }: BackendRequestOptions): Promise<BackendResponse> {
   const sessionToken = await appBridgeClient.getSessionToken();
-  const response = await fetch(buildBackendUrl(path), {
+  const requestInit: RequestInit = {
     method,
-    headers: {
+  };
+
+  if (sessionToken) {
+    requestInit.headers = {
       'X-Session-Token': sessionToken,
-    },
-  });
+    };
+  }
+
+  const response = await fetch(buildBackendUrl(path), requestInit);
   const text = method === 'HEAD' || response.status === 204 ? '' : await response.text();
 
   return {

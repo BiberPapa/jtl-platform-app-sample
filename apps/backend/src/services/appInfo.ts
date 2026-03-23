@@ -1,7 +1,7 @@
 import { getApiBaseUrl, getAuthEndpoint, getCloudErpUrl, getHubUrl, getNormalizedApiEnvironment } from '../config.js';
 
 export type AppInfo = {
-  environment: 'dev' | 'qa' | 'production';
+  environment: 'dev' | 'qa' | 'prod';
   nohubTenantId: string | null;
   isNohubConfigured: boolean;
   hubUrl: string;

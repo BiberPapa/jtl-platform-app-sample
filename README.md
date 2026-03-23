@@ -46,7 +46,7 @@ These environment variables have to be added in `apps/backend` for the project t
 | ------------------------------- | ----------------------------------------------------------- | ---------- |
 | `CLIENT_ID`                     | The client ID of the sample app                             | `Variable` |
 | `CLIENT_SECRET`                 | The client secret of the sample app                         | `Secret`   |
-| `API_ENVIRONMENT`               | The API environment (defaults to production)                | `Variable` |
+| `API_ENVIRONMENT`               | The API environment (defaults to `prod`)                    | `Variable` |
 | `LOG_LEVEL`                     | Backend application log level                               | `Variable` |
 | `ERP_PROXY_LOG_LEVEL`           | ERP proxy log level (`off`, `basic`, `verbose`)             | `Variable` |
 | `ERP_PROXY_LOG_BODY_MAX_LENGTH` | Max body length for verbose ERP proxy logs                  | `Variable` |

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { AppBridgeClient } from './appBridgeClient';
+import { createDummyAppBridgeClient, type AppBridgeClient } from './appBridgeClient';
 import { getBackendErrorMessage, requestBackend } from './apiClient';
 
 describe('requestBackend', () => {
@@ -70,6 +70,29 @@ describe('requestBackend', () => {
     ).resolves.toMatchObject({
       text: '',
       json: null,
+    });
+  });
+
+  it('omits the session header when the bridge returns an empty token', async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValueOnce(
+      createResponse({
+        ok: true,
+        status: 200,
+        text: '{"message":"ok"}',
+      }),
+    );
+
+    vi.stubGlobal('fetch', fetchMock);
+
+    const response = await requestBackend({
+      path: '/app-info',
+      appBridgeClient: createDummyAppBridgeClient(),
+    });
+
+    expect(response.ok).toBe(true);
+    expect(response.json).toEqual({ message: 'ok' });
+    expect(fetchMock).toHaveBeenCalledWith('https://api.example.test/app-info', {
+      method: 'GET',
     });
   });
 });
