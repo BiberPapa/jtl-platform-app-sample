@@ -5,6 +5,7 @@ type BackendRequestOptions = {
   path: string;
   appBridgeClient: AppBridgeClient;
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'HEAD';
+  body?: string;
 };
 
 export type BackendResponse = {
@@ -15,7 +16,7 @@ export type BackendResponse = {
   json: unknown;
 };
 
-export async function requestBackend({ path, appBridgeClient, method = 'GET' }: BackendRequestOptions): Promise<BackendResponse> {
+export async function requestBackend({ path, appBridgeClient, method = 'GET', body }: BackendRequestOptions): Promise<BackendResponse> {
   const sessionToken = await appBridgeClient.getSessionToken();
   const requestInit: RequestInit = {
     method,
@@ -24,6 +25,14 @@ export async function requestBackend({ path, appBridgeClient, method = 'GET' }: 
   if (sessionToken) {
     requestInit.headers = {
       'X-Session-Token': sessionToken,
+    };
+  }
+
+  if (body !== undefined) {
+    requestInit.body = body;
+    requestInit.headers = {
+      ...(requestInit.headers && !(requestInit.headers instanceof Headers) && !Array.isArray(requestInit.headers) ? requestInit.headers : {}),
+      'Content-Type': 'application/json',
     };
   }
 

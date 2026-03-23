@@ -1,6 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { ThemeProvider } from '@jtl-software/platform-ui-react';
+import './services/setupGraphiQlWorkers';
 import App from './App';
 import './index.css';
 import { AppBridgeProvider } from './services/appBridgeContext';

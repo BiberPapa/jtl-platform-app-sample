@@ -3,7 +3,9 @@ import express from 'express';
 import { assignRequestContext } from './middleware/requestContext.js';
 import { appInfoHandler } from './routes/appInfoRoute.js';
 import { connectTenantHandler } from './routes/connectTenantRoute.js';
+import { graphQlProxyHandler } from './routes/graphQlProxyRoute.js';
 import { erpProxyHandler } from './routes/erpProxyRoute.js';
+import { graphQlSchemaHandler } from './routes/graphQlSchemaRoute.js';
 import { openApiHandler } from './routes/openApiRoute.js';
 
 export function createApp() {
@@ -20,6 +22,8 @@ export function createApp() {
   app.get('/app-info', appInfoHandler);
   app.post('/connect-tenant', connectTenantHandler);
   app.get('/openapi.json', openApiHandler);
+  app.get('/graphql/schema.graphql', graphQlSchemaHandler);
+  app.post('/graphql', graphQlProxyHandler);
   app.all(/^\/erp\/(.+)$/, erpProxyHandler);
 
   return app;

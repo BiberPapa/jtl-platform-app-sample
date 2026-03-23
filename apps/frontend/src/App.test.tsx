@@ -10,12 +10,16 @@ import { AppBridgeProvider } from './services/appBridgeContext';
 const {
   connectTenantMock,
   getCurrentCustomerIdMock,
+  requestGraphQlOperationMock,
+  requestGraphQlSchemaMock,
   requestAppInfoMock,
   requestErpInfoStatusMock,
   requestAuthorizationStatusMock,
   requestPlaygroundRequestMock,
 } = vi.hoisted(() => ({
   connectTenantMock: vi.fn<(appBridgeClient: AppBridgeClient) => Promise<{ message: string }>>(),
+  requestGraphQlOperationMock: vi.fn<(appBridgeClient: AppBridgeClient, payload: unknown) => Promise<unknown>>(),
+  requestGraphQlSchemaMock: vi.fn<(appBridgeClient: AppBridgeClient) => Promise<string>>(),
   requestAppInfoMock: vi.fn<(appBridgeClient: AppBridgeClient) => Promise<unknown>>(),
   requestErpInfoStatusMock: vi.fn<(appBridgeClient: AppBridgeClient) => Promise<unknown>>(),
   requestAuthorizationStatusMock: vi.fn<(appBridgeClient: AppBridgeClient) => Promise<unknown>>(),
@@ -126,6 +130,11 @@ vi.mock('./services/appInfoService', () => ({
   requestAppInfo: requestAppInfoMock,
 }));
 
+vi.mock('./services/graphQlSchemaService', () => ({
+  requestGraphQlOperation: requestGraphQlOperationMock,
+  requestGraphQlSchema: requestGraphQlSchemaMock,
+}));
+
 vi.mock('./services/erpService', () => ({
   requestErpInfoStatus: requestErpInfoStatusMock,
   requestAuthorizationStatus: requestAuthorizationStatusMock,
@@ -134,6 +143,14 @@ vi.mock('./services/erpService', () => ({
 
 vi.mock('swagger-ui-react', () => ({
   default: ({ url }: { url: string }) => <div data-testid="swagger-ui">Swagger UI: {url}</div>,
+}));
+
+vi.mock('graphiql', () => ({
+  GraphiQL: ({ schema }: { schema?: unknown }) => <div data-testid="graphiql">GraphiQL {schema ? 'ready' : 'missing schema'}</div>,
+}));
+
+vi.mock('@graphiql/plugin-explorer', () => ({
+  explorerPlugin: () => ({ title: 'GraphiQL Explorer', icon: () => null, content: () => null }),
 }));
 
 type BridgeMock = {
@@ -180,6 +197,17 @@ function renderAtPath(pathname: string, appBridge: AppBridge): void {
 describe('get app mode rendering', () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    requestGraphQlOperationMock.mockResolvedValue({ data: { __typename: 'Query' } });
+    requestGraphQlSchemaMock.mockResolvedValue(`
+      type Query {
+        product(id: ID!): Product
+      }
+
+      type Product {
+        id: ID!
+        name: String!
+      }
+    `);
   });
 
   it('renders the fallback for an unknown path', () => {
@@ -578,7 +606,7 @@ describe('get app mode rendering', () => {
     expect(screen.getByText(/worker-42/)).toBeInTheDocument();
   });
 
-  it('opens the API explorer as an in-page modal from the playground card', async () => {
+  it('opens the GraphQL explorer by default from the playground card', async () => {
     const user = userEvent.setup();
     const { appBridge } = createAppBridgeMock();
 
@@ -609,8 +637,81 @@ describe('get app mode rendering', () => {
 
     await user.click(await screen.findByRole('button', { name: 'API Explorer' }));
 
-    expect(screen.getByRole('dialog', { name: 'API Explorer' })).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'GraphQL API Explorer' })).toBeInTheDocument();
+    expect(await screen.findByTestId('graphiql')).toHaveTextContent('GraphiQL ready');
+    expect(requestGraphQlSchemaMock).toHaveBeenCalledWith(expect.anything());
+  });
+
+  it('opens the REST explorer from the API explorer menu', async () => {
+    const user = userEvent.setup();
+    const { appBridge } = createAppBridgeMock();
+
+    requestErpInfoStatusMock.mockResolvedValue({
+      reachable: true,
+      tenantId: 'eazybusiness',
+      version: '2.0.0+Sha.e01a5a0',
+      totalTimeMs: 12,
+      erpTimeMs: 5.222,
+      infrastructureTimeMs: 6.778,
+      frontendTimeMs: 5.222,
+      errorMessage: null,
+    });
+    requestAuthorizationStatusMock.mockResolvedValue({
+      state: 'authorized',
+      message: null,
+    });
+    requestPlaygroundRequestMock.mockResolvedValue({
+      ok: true,
+      status: 200,
+      responseTimeMs: 37,
+      route: '/v1/worker',
+      method: 'GET',
+      body: { workerId: 'worker-42' },
+    });
+
+    renderAtPath('/erp/menu/Dashboard', appBridge);
+
+    await user.click(await screen.findByRole('button', { name: 'Open API Explorer menu' }));
+    await user.click(screen.getByRole('menuitem', { name: 'REST API' }));
+
+    expect(screen.getByRole('dialog', { name: 'REST API Explorer' })).toBeInTheDocument();
     expect(screen.getByTestId('swagger-ui')).toHaveTextContent('Swagger UI: https://api.example.test/openapi.json');
+  });
+
+  it('opens the GraphQL explorer from the API explorer menu', async () => {
+    const user = userEvent.setup();
+    const { appBridge } = createAppBridgeMock();
+
+    requestErpInfoStatusMock.mockResolvedValue({
+      reachable: true,
+      tenantId: 'eazybusiness',
+      version: '2.0.0+Sha.e01a5a0',
+      totalTimeMs: 12,
+      erpTimeMs: 5.222,
+      infrastructureTimeMs: 6.778,
+      frontendTimeMs: 5.222,
+      errorMessage: null,
+    });
+    requestAuthorizationStatusMock.mockResolvedValue({
+      state: 'authorized',
+      message: null,
+    });
+    requestPlaygroundRequestMock.mockResolvedValue({
+      ok: true,
+      status: 200,
+      responseTimeMs: 37,
+      route: '/v1/worker',
+      method: 'GET',
+      body: { workerId: 'worker-42' },
+    });
+
+    renderAtPath('/erp/menu/Dashboard', appBridge);
+
+    await user.click(await screen.findByRole('button', { name: 'Open API Explorer menu' }));
+    await user.click(screen.getByRole('menuitem', { name: 'GraphQL API' }));
+
+    expect(screen.getByRole('dialog', { name: 'GraphQL API Explorer' })).toBeInTheDocument();
+    expect(await screen.findByTestId('graphiql')).toHaveTextContent('GraphiQL ready');
   });
 
   it('closes the API explorer modal without leaving the dashboard', async () => {
@@ -645,7 +746,7 @@ describe('get app mode rendering', () => {
     await user.click(await screen.findByRole('button', { name: 'API Explorer' }));
     await user.click(screen.getByRole('button', { name: 'Close Explorer' }));
 
-    expect(screen.queryByRole('dialog', { name: 'API Explorer' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('dialog', { name: 'GraphQL API Explorer' })).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'API playground' })).toBeInTheDocument();
   });
 

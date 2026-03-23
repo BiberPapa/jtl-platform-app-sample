@@ -259,6 +259,102 @@ describe('backend routes', () => {
     });
   });
 
+  it('uses NOHUB_TENANT_ID for GraphQL requests without a session token', async () => {
+    process.env.NOHUB_TENANT_ID = 'fallback-tenant-id';
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      headers: new Headers({
+        'content-type': 'application/json; charset=utf-8',
+      }),
+      text: () => Promise.resolve('{"data":{"viewer":{"id":"1"}}}'),
+    });
+
+    vi.stubGlobal('fetch', fetchMock);
+
+    const { createApp } = await import('./index.js');
+
+    const response = await request(createApp()).post('/graphql').send({
+      query: '{ viewer { id } }',
+      variables: null,
+      operationName: 'Viewer',
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ data: { viewer: { id: '1' } } });
+    expect(getSessionContextFromTokenMock).not.toHaveBeenCalled();
+    expect(fetchMock).toHaveBeenCalledWith('https://api.jtl-cloud.com/erp/v2/graphql', {
+      method: 'POST',
+      headers: {
+        'X-Tenant-ID': 'fallback-tenant-id',
+        Authorization: 'Bearer access-token',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        query: '{ viewer { id } }',
+        variables: null,
+        operationName: 'Viewer',
+      }),
+    });
+  });
+
+  it('uses the validated tenant and session token for GraphQL requests', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      headers: new Headers({
+        'content-type': 'application/json; charset=utf-8',
+      }),
+      text: () => Promise.resolve('{"data":{"viewer":{"id":"1"}}}'),
+    });
+
+    vi.stubGlobal('fetch', fetchMock);
+
+    const { createApp } = await import('./index.js');
+
+    const response = await request(createApp())
+      .post('/graphql')
+      .set('X-Session-Token', 'session-token')
+      .send({
+        query: '{ viewer { id } }',
+        variables: { includeMeta: true },
+        operationName: 'Viewer',
+      });
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ data: { viewer: { id: '1' } } });
+    expect(getSessionContextFromTokenMock).toHaveBeenCalledWith('session-token');
+    expect(fetchMock).toHaveBeenCalledWith('https://api.jtl-cloud.com/erp/v2/graphql', {
+      method: 'POST',
+      headers: {
+        'X-Session-Token': 'session-token',
+        'X-Tenant-ID': 'platform-tenant-id',
+        Authorization: 'Bearer access-token',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        query: '{ viewer { id } }',
+        variables: { includeMeta: true },
+        operationName: 'Viewer',
+      }),
+    });
+  });
+
+  it('returns an error for GraphQL requests when neither session token nor NOHUB_TENANT_ID is available', async () => {
+    process.env.NOHUB_TENANT_ID = '';
+    const { createApp } = await import('./index.js');
+
+    const response = await request(createApp()).post('/graphql').send({
+      query: '{ viewer { id } }',
+    });
+
+    expect(response.status).toBe(500);
+    expect(response.body).toEqual({
+      error: 'Failed to execute GraphQL request',
+      message: 'Either the X-Session-Token header or NOHUB_TENANT_ID must be provided.',
+    });
+  });
+
   it('does not emit ERP proxy logs when ERP_PROXY_LOG_LEVEL is off', async () => {
     process.env.ERP_PROXY_LOG_LEVEL = 'off';
     const logs = captureJsonLogs();
@@ -534,5 +630,16 @@ describe('backend routes', () => {
     expect(infoOperation?.tags).toEqual(['API Information']);
     expect(infoOperation?.summary).toBe('Get API Status');
     expect(infoOperation?.responses?.['404']).toBeUndefined();
+  });
+
+  it('returns the local GraphQL schema via the transformed schema route', async () => {
+    const { createApp } = await import('./index.js');
+    const sourceSchema = await readFile(new URL('./assets/schema.graphql', import.meta.url), 'utf8');
+
+    const response = await request(createApp()).get('/graphql/schema.graphql');
+
+    expect(response.status).toBe(200);
+    expect(response.headers['content-type']).toContain('text/plain');
+    expect(response.text).toBe(sourceSchema.charCodeAt(0) === 0xfeff ? sourceSchema.slice(1) : sourceSchema);
   });
 });

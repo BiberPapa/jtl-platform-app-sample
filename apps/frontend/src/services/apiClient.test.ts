@@ -95,6 +95,34 @@ describe('requestBackend', () => {
       method: 'GET',
     });
   });
+
+  it('sends JSON request bodies for backend POST requests', async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValueOnce(
+      createResponse({
+        ok: true,
+        status: 200,
+        text: '{"data":{"viewer":{"id":"1"}}}',
+      }),
+    );
+
+    vi.stubGlobal('fetch', fetchMock);
+
+    await requestBackend({
+      path: '/graphql',
+      method: 'POST',
+      body: '{"query":"{ viewer { id } }"}',
+      appBridgeClient,
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith('https://api.example.test/graphql', {
+      method: 'POST',
+      headers: {
+        'X-Session-Token': 'session-token',
+        'Content-Type': 'application/json',
+      },
+      body: '{"query":"{ viewer { id } }"}',
+    });
+  });
 });
 
 describe('getBackendErrorMessage', () => {

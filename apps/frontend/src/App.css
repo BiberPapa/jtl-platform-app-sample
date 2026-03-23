@@ -226,6 +226,25 @@
   padding: 0.5rem;
 }
 
+.app-graphiql-shell {
+  min-height: 40rem;
+  height: min(70vh, 48rem);
+}
+
+.app-graphiql-shell .graphiql-container {
+  height: 100%;
+}
+
+.graphiql-dialog-overlay {
+  z-index: 60 !important;
+}
+
+.graphiql-dialog,
+.graphiql-tooltip,
+[data-radix-popper-content-wrapper] {
+  z-index: 61 !important;
+}
+
 @media (max-width: 768px) {
   .app-page-shell {
     padding: 1rem;

@@ -49,3 +49,7 @@ export function getErpEndpoint(endpoint: string, apiEnvironmentSuffix = environm
 
   return `${getApiBaseUrl(apiEnvironmentSuffix)}/erp/${normalizedEndpoint}`;
 }
+
+export function getGraphQlEndpoint(apiEnvironmentSuffix = environmentSuffix): string {
+  return `${getApiBaseUrl(apiEnvironmentSuffix)}/erp/v2/graphql`;
+}

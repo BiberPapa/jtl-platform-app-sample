@@ -4,6 +4,7 @@ import {
   getAuthEndpoint,
   getCloudErpUrl,
   getErpEndpoint,
+  getGraphQlEndpoint,
   getHubUrl,
   getJwksEndpoint,
   getNormalizedApiEnvironment,
@@ -47,5 +48,10 @@ describe('backend config helpers', () => {
   it('builds ERP endpoints from config', () => {
     expect(getErpEndpoint('customers', '.dev')).toBe('https://api.dev.jtl-cloud.com/erp/customers');
     expect(getErpEndpoint('/orders', '.qa')).toBe('https://api.qa.jtl-cloud.com/erp/orders');
+  });
+
+  it('builds the GraphQL endpoint from config', () => {
+    expect(getGraphQlEndpoint('')).toBe('https://api.jtl-cloud.com/erp/v2/graphql');
+    expect(getGraphQlEndpoint('.qa')).toBe('https://api.qa.jtl-cloud.com/erp/v2/graphql');
   });
 });

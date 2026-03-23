@@ -1,4 +1,5 @@
 import { Alert, Badge, Button, Card, CardContent, CardHeader, CardTitle, Input, Select } from '@jtl-software/platform-ui-react';
+import type { CSSProperties } from 'react';
 import { useCallback, useEffect, useState } from 'react';
 import { AppPageShell } from '../../components';
 import { useAppBridgeClient } from '../../services/appBridgeContext';
@@ -12,7 +13,7 @@ import {
   type PlaygroundRequestResult,
 } from '../../services/erpService';
 import { getGlobalTenantIdFromSessionToken } from '../../services/sessionTokenTenant';
-import ApiExplorerModal from './ApiExplorerModal';
+import ApiExplorerModal, { type ApiExplorerMode } from './ApiExplorerModal';
 import TimingBreakdownCard from './TimingBreakdownCard';
 
 type DashboardState = {
@@ -33,6 +34,8 @@ function DashboardPage() {
   const [playgroundResult, setPlaygroundResult] = useState<PlaygroundRequestResult | null>(null);
   const [playgroundError, setPlaygroundError] = useState<string | null>(null);
   const [isApiExplorerOpen, setIsApiExplorerOpen] = useState(false);
+  const [apiExplorerMode, setApiExplorerMode] = useState<ApiExplorerMode>('graphql');
+  const [isApiExplorerMenuOpen, setIsApiExplorerMenuOpen] = useState(false);
 
   const loadStatus = useCallback(async (): Promise<void> => {
     try {
@@ -68,6 +71,12 @@ function DashboardPage() {
   useEffect(() => {
     void loadStatus();
   }, [loadStatus]);
+
+  const openApiExplorer = useCallback((mode: ApiExplorerMode) => {
+    setApiExplorerMode(mode);
+    setIsApiExplorerOpen(true);
+    setIsApiExplorerMenuOpen(false);
+  }, []);
 
   return (
     <AppPageShell
@@ -150,8 +159,53 @@ function DashboardPage() {
               <CardTitle>API playground</CardTitle>
               <p className="app-muted-text">Run manual requests against the ERP proxy and inspect status, duration, and response data.</p>
             </div>
-            <div className="app-button-row">
-              <Button type="button" variant="outline" label="API Explorer" onClick={() => setIsApiExplorerOpen(true)} />
+            <div className="app-button-row" style={{ position: 'relative' }}>
+              <div style={{ display: 'flex', alignItems: 'stretch', gap: '0.5rem' }}>
+                <Button type="button" variant="outline" label="API Explorer" onClick={() => openApiExplorer('graphql')} />
+                <button
+                  type="button"
+                  aria-label="Open API Explorer menu"
+                  aria-haspopup="menu"
+                  aria-expanded={isApiExplorerMenuOpen}
+                  onClick={() => setIsApiExplorerMenuOpen(currentValue => !currentValue)}
+                  style={{
+                    border: '1px solid #d9d9d9',
+                    borderRadius: '0.75rem',
+                    padding: '0.75rem 0.85rem',
+                    background: '#fff',
+                    fontWeight: 700,
+                  }}
+                >
+                  ▾
+                </button>
+              </div>
+              {isApiExplorerMenuOpen ? (
+                <div
+                  role="menu"
+                  aria-label="API Explorer options"
+                  style={{
+                    position: 'absolute',
+                    top: 'calc(100% + 0.5rem)',
+                    left: 0,
+                    zIndex: 10,
+                    border: '1px solid #d9d9d9',
+                    borderRadius: '0.75rem',
+                    background: '#fff',
+                    padding: '0.5rem',
+                    minWidth: '12rem',
+                    display: 'grid',
+                    gap: '0.25rem',
+                    boxShadow: '0 12px 30px rgba(15, 23, 42, 0.12)',
+                  }}
+                >
+                  <button type="button" role="menuitem" onClick={() => openApiExplorer('graphql')} style={apiExplorerMenuItemStyle}>
+                    GraphQL API
+                  </button>
+                  <button type="button" role="menuitem" onClick={() => openApiExplorer('rest')} style={apiExplorerMenuItemStyle}>
+                    REST API
+                  </button>
+                </div>
+              ) : null}
               <Button
                 type="button"
                 variant="outline"
@@ -221,7 +275,7 @@ function DashboardPage() {
           ) : null}
         </CardContent>
       </Card>
-      {isApiExplorerOpen ? <ApiExplorerModal onClose={() => setIsApiExplorerOpen(false)} /> : null}
+      {isApiExplorerOpen ? <ApiExplorerModal mode={apiExplorerMode} onClose={() => setIsApiExplorerOpen(false)} /> : null}
     </AppPageShell>
   );
 }
@@ -289,5 +343,14 @@ function formatPlaygroundBody(body: unknown): string {
 
   return JSON.stringify(body, null, 2);
 }
+
+const apiExplorerMenuItemStyle: CSSProperties = {
+  textAlign: 'left',
+  border: 'none',
+  borderRadius: '0.5rem',
+  padding: '0.625rem 0.75rem',
+  background: '#fff',
+  fontWeight: 600,
+};
 
 export default DashboardPage;
