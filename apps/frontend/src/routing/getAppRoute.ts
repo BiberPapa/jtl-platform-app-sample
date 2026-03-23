@@ -1,4 +1,5 @@
 export type AppRoute =
+  | { kind: 'developer-home' }
   | { kind: 'setup' }
   | { kind: 'support' }
   | { kind: 'privacy' }
@@ -12,6 +13,10 @@ export type AppRoute =
 
 export function getAppRoute(url: URL): AppRoute {
   const normalizedPath = url.pathname.replace(/^\/+|\/+$/g, '');
+
+  if (normalizedPath === '') {
+    return { kind: 'developer-home' };
+  }
 
   if (normalizedPath === 'setup') {
     return { kind: 'setup' };

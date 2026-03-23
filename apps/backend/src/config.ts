@@ -1,3 +1,17 @@
+export function getNormalizedApiEnvironment(apiEnvironment: string | undefined): 'dev' | 'qa' | 'production' {
+  const normalizedEnvironment = (apiEnvironment?.trim() || 'prod').toLowerCase();
+
+  if (normalizedEnvironment === 'dev') {
+    return 'dev';
+  }
+
+  if (normalizedEnvironment === 'qa') {
+    return 'qa';
+  }
+
+  return 'production';
+}
+
 export function getApiEnvironmentSuffix(apiEnvironment: string | undefined): string {
   const normalizedEnvironment = apiEnvironment?.trim() || 'prod';
 
@@ -8,6 +22,14 @@ export const environmentSuffix = getApiEnvironmentSuffix(process.env.API_ENVIRON
 
 export function getApiBaseUrl(apiEnvironmentSuffix = environmentSuffix): string {
   return `https://api${apiEnvironmentSuffix}.jtl-cloud.com`;
+}
+
+export function getHubUrl(apiEnvironmentSuffix = environmentSuffix): string {
+  return `https://hub${apiEnvironmentSuffix}.jtl-cloud.com`;
+}
+
+export function getCloudErpUrl(apiEnvironmentSuffix = environmentSuffix): string {
+  return `https://erp${apiEnvironmentSuffix}.jtl-cloud.com`;
 }
 
 export function getAuthEndpoint(apiEnvironmentSuffix = environmentSuffix): string {

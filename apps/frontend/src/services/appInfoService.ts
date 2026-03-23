@@ -1,0 +1,47 @@
+import type { AppBridgeClient } from './appBridgeClient';
+import { getBackendErrorMessage, requestBackend } from './apiClient';
+
+export type AppInfoResponse = {
+  environment: 'dev' | 'qa' | 'prod';
+  nohubTenantId: string | null;
+  isNohubConfigured: boolean;
+  hubUrl: string;
+  cloudErpUrl: string;
+  apiBaseUrl: string;
+  authUrl: string;
+};
+
+export async function requestAppInfo(appBridgeClient: AppBridgeClient): Promise<AppInfoResponse> {
+  const response = await requestBackend({
+    path: '/app-info',
+    appBridgeClient,
+  });
+
+  if (!response.ok) {
+    throw new Error(getBackendErrorMessage(response, 'The backend app info could not be loaded.'));
+  }
+
+  if (!isAppInfoResponse(response.json)) {
+    throw new Error('The backend app info returned an unexpected payload.');
+  }
+
+  return response.json;
+}
+
+function isAppInfoResponse(value: unknown): value is AppInfoResponse {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+
+  const candidate = value as Record<string, unknown>;
+
+  return (
+    (candidate['environment'] === 'dev' || candidate['environment'] === 'qa' || candidate['environment'] === 'prod') &&
+    (typeof candidate['nohubTenantId'] === 'string' || candidate['nohubTenantId'] === null) &&
+    typeof candidate['isNohubConfigured'] === 'boolean' &&
+    typeof candidate['hubUrl'] === 'string' &&
+    typeof candidate['cloudErpUrl'] === 'string' &&
+    typeof candidate['apiBaseUrl'] === 'string' &&
+    typeof candidate['authUrl'] === 'string'
+  );
+}

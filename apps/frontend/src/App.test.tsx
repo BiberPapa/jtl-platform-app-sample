@@ -7,14 +7,21 @@ import App from './App';
 import type { AppBridgeClient } from './services/appBridgeClient';
 import { AppBridgeProvider } from './services/appBridgeContext';
 
-const { connectTenantMock, getCurrentCustomerIdMock, requestErpInfoStatusMock, requestAuthorizationStatusMock, requestPlaygroundRequestMock } =
-  vi.hoisted(() => ({
-    connectTenantMock: vi.fn<(appBridgeClient: AppBridgeClient) => Promise<{ message: string }>>(),
-    requestErpInfoStatusMock: vi.fn<(appBridgeClient: AppBridgeClient) => Promise<unknown>>(),
-    requestAuthorizationStatusMock: vi.fn<(appBridgeClient: AppBridgeClient) => Promise<unknown>>(),
-    requestPlaygroundRequestMock: vi.fn<(appBridgeClient: AppBridgeClient, request: { route: string; method: string }) => Promise<unknown>>(),
-    getCurrentCustomerIdMock: vi.fn<() => Promise<string>>(),
-  }));
+const {
+  connectTenantMock,
+  getCurrentCustomerIdMock,
+  requestAppInfoMock,
+  requestErpInfoStatusMock,
+  requestAuthorizationStatusMock,
+  requestPlaygroundRequestMock,
+} = vi.hoisted(() => ({
+  connectTenantMock: vi.fn<(appBridgeClient: AppBridgeClient) => Promise<{ message: string }>>(),
+  requestAppInfoMock: vi.fn<(appBridgeClient: AppBridgeClient) => Promise<unknown>>(),
+  requestErpInfoStatusMock: vi.fn<(appBridgeClient: AppBridgeClient) => Promise<unknown>>(),
+  requestAuthorizationStatusMock: vi.fn<(appBridgeClient: AppBridgeClient) => Promise<unknown>>(),
+  requestPlaygroundRequestMock: vi.fn<(appBridgeClient: AppBridgeClient, request: { route: string; method: string }) => Promise<unknown>>(),
+  getCurrentCustomerIdMock: vi.fn<() => Promise<string>>(),
+}));
 
 vi.mock('@jtl-software/platform-ui-react', () => ({
   Alert: ({ title, description, variant }: { title?: ReactNode; description?: ReactNode; variant?: string }) => (
@@ -115,6 +122,10 @@ vi.mock('./services/setupService', () => ({
   connectTenant: connectTenantMock,
 }));
 
+vi.mock('./services/appInfoService', () => ({
+  requestAppInfo: requestAppInfoMock,
+}));
+
 vi.mock('./services/erpService', () => ({
   requestErpInfoStatus: requestErpInfoStatusMock,
   requestAuthorizationStatus: requestAuthorizationStatusMock,
@@ -177,6 +188,55 @@ describe('get app mode rendering', () => {
     renderAtPath('/unknown', appBridge);
 
     expect(screen.getByRole('heading', { name: 'Unknown app mode' })).toBeInTheDocument();
+  });
+
+  it('renders the developer start page on the root route', () => {
+    requestAppInfoMock.mockResolvedValue({
+      environment: 'production',
+      nohubTenantId: null,
+      isNohubConfigured: false,
+      hubUrl: 'https://hub.jtl-cloud.com',
+      cloudErpUrl: 'https://erp.jtl-cloud.com',
+      apiBaseUrl: 'https://api.jtl-cloud.com',
+      authUrl: 'https://auth.jtl-cloud.com/oauth2/token',
+    });
+    const { appBridge } = createAppBridgeMock();
+
+    renderAtPath('/', appBridge);
+
+    expect(screen.getByRole('heading', { name: 'Developer Start Page' })).toBeInTheDocument();
+  });
+
+  it('renders backend app info on the developer start page', async () => {
+    requestAppInfoMock.mockResolvedValue({
+      environment: 'qa',
+      nohubTenantId: 'tenant-1',
+      isNohubConfigured: true,
+      hubUrl: 'https://hub.qa.jtl-cloud.com',
+      cloudErpUrl: 'https://erp.qa.jtl-cloud.com',
+      apiBaseUrl: 'https://api.qa.jtl-cloud.com',
+      authUrl: 'https://auth.qa.jtl-cloud.com/oauth2/token',
+    });
+    const { appBridge } = createAppBridgeMock();
+
+    renderAtPath('/', appBridge);
+
+    expect(await screen.findByText('qa')).toBeInTheDocument();
+    expect(screen.getByText('Configured')).toBeInTheDocument();
+    expect(screen.getByText('Tenant ID: tenant-1')).toBeInTheDocument();
+    expect(screen.getByText('https://api.qa.jtl-cloud.com')).toBeInTheDocument();
+    expect(screen.getByText('https://auth.qa.jtl-cloud.com/oauth2/token')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'JTL Hub' })).toHaveAttribute('href', 'https://hub.qa.jtl-cloud.com');
+    expect(screen.getByRole('link', { name: 'Cloud ERP' })).toHaveAttribute('href', 'https://erp.qa.jtl-cloud.com');
+  });
+
+  it('shows a developer app info error when the backend request fails', async () => {
+    requestAppInfoMock.mockRejectedValue(new Error('Backend app info failed.'));
+    const { appBridge } = createAppBridgeMock();
+
+    renderAtPath('/', appBridge);
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Backend app info failed.');
   });
 
   it('renders the setup page and handles a successful setup flow', async () => {

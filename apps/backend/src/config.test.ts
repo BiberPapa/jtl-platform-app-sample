@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { getApiEnvironmentSuffix, getAuthEndpoint, getErpEndpoint, getJwksEndpoint } from './config.js';
+import {
+  getApiEnvironmentSuffix,
+  getAuthEndpoint,
+  getCloudErpUrl,
+  getErpEndpoint,
+  getHubUrl,
+  getJwksEndpoint,
+  getNormalizedApiEnvironment,
+} from './config.js';
 
 describe('backend config helpers', () => {
   it('maps the production environment to an empty API suffix', () => {
@@ -12,11 +20,28 @@ describe('backend config helpers', () => {
     expect(getApiEnvironmentSuffix('qa')).toBe('.qa');
   });
 
+  it('normalizes API environments for display use cases', () => {
+    expect(getNormalizedApiEnvironment(undefined)).toBe('production');
+    expect(getNormalizedApiEnvironment('')).toBe('production');
+    expect(getNormalizedApiEnvironment('prod')).toBe('production');
+    expect(getNormalizedApiEnvironment('production')).toBe('production');
+    expect(getNormalizedApiEnvironment('dev')).toBe('dev');
+    expect(getNormalizedApiEnvironment('qa')).toBe('qa');
+    expect(getNormalizedApiEnvironment('beta')).toBe('production');
+  });
+
   it('builds the correct auth and jwks endpoints', () => {
     expect(getAuthEndpoint('')).toBe('https://auth.jtl-cloud.com/oauth2/token');
     expect(getAuthEndpoint('.beta')).toBe('https://auth.jtl-cloud.com/oauth2/token');
     expect(getAuthEndpoint('.qa')).toBe('https://auth.qa.jtl-cloud.com/oauth2/token');
     expect(getJwksEndpoint('.dev')).toBe('https://api.dev.jtl-cloud.com/account/.well-known/jwks.json');
+  });
+
+  it('builds the correct hub and cloud erp URLs', () => {
+    expect(getHubUrl('')).toBe('https://hub.jtl-cloud.com');
+    expect(getHubUrl('.qa')).toBe('https://hub.qa.jtl-cloud.com');
+    expect(getCloudErpUrl('')).toBe('https://erp.jtl-cloud.com');
+    expect(getCloudErpUrl('.dev')).toBe('https://erp.dev.jtl-cloud.com');
   });
 
   it('builds ERP endpoints from config', () => {

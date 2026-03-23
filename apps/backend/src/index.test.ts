@@ -90,7 +90,7 @@ describe('backend routes', () => {
   });
 
   it('returns a bad request when the setup route is missing a session token', async () => {
-    delete process.env.NOHUB_TENANT_ID;
+    process.env.NOHUB_TENANT_ID = '';
     const { createApp } = await import('./index.js');
 
     const response = await request(createApp()).post('/connect-tenant');
@@ -111,6 +111,55 @@ describe('backend routes', () => {
     expect(response.status).toBe(200);
     expect(response.body).toEqual({ message: 'Tenant connected successfully.' });
     expect(getSessionContextFromTokenMock).not.toHaveBeenCalled();
+  });
+
+  it('returns backend app info with normalized production defaults', async () => {
+    process.env.API_ENVIRONMENT = '';
+    process.env.NOHUB_TENANT_ID = '';
+    const { createApp } = await import('./index.js');
+
+    const response = await request(createApp()).get('/app-info');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({
+      environment: 'production',
+      nohubTenantId: null,
+      isNohubConfigured: false,
+      hubUrl: 'https://hub.jtl-cloud.com',
+      cloudErpUrl: 'https://erp.jtl-cloud.com',
+      apiBaseUrl: 'https://api.jtl-cloud.com',
+      authUrl: 'https://auth.jtl-cloud.com/oauth2/token',
+    });
+  });
+
+  it('returns backend app info with qa environment and configured NOHUB tenant', async () => {
+    process.env.API_ENVIRONMENT = 'qa';
+    process.env.NOHUB_TENANT_ID = 'fallback-tenant-id';
+    const { createApp } = await import('./index.js');
+
+    const response = await request(createApp()).get('/app-info');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({
+      environment: 'qa',
+      nohubTenantId: 'fallback-tenant-id',
+      isNohubConfigured: true,
+      hubUrl: 'https://hub.qa.jtl-cloud.com',
+      cloudErpUrl: 'https://erp.qa.jtl-cloud.com',
+      apiBaseUrl: 'https://api.qa.jtl-cloud.com',
+      authUrl: 'https://auth.qa.jtl-cloud.com/oauth2/token',
+    });
+  });
+
+  it('normalizes unsupported backend environments to production in app info', async () => {
+    process.env.API_ENVIRONMENT = 'beta';
+    process.env.NOHUB_TENANT_ID = '';
+    const { createApp } = await import('./index.js');
+
+    const response = await request(createApp()).get('/app-info');
+
+    expect(response.status).toBe(200);
+    expect((response.body as { environment: string }).environment).toBe('production');
   });
 
   it('returns structured success for a valid setup request', async () => {
@@ -137,7 +186,7 @@ describe('backend routes', () => {
   });
 
   it('returns an error for ERP requests when neither session token nor NOHUB_TENANT_ID is available', async () => {
-    delete process.env.NOHUB_TENANT_ID;
+    process.env.NOHUB_TENANT_ID = '';
     const { createApp } = await import('./index.js');
 
     const response = await request(createApp()).get('/erp/customers');

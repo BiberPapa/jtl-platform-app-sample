@@ -3,6 +3,7 @@ import { getAppRoute } from './getAppRoute';
 
 describe('getAppRoute', () => {
   it('returns setup, legal and pane routes for their fixed paths', () => {
+    expect(getAppRoute(new URL('http://localhost:50142/'))).toEqual({ kind: 'developer-home' });
     expect(getAppRoute(new URL('http://localhost:50142/setup'))).toEqual({ kind: 'setup' });
     expect(getAppRoute(new URL('http://localhost:50142/support'))).toEqual({ kind: 'support' });
     expect(getAppRoute(new URL('http://localhost:50142/privacy'))).toEqual({ kind: 'privacy' });
@@ -35,7 +36,6 @@ describe('getAppRoute', () => {
   });
 
   it('returns unknown for unsupported paths', () => {
-    expect(getAppRoute(new URL('http://localhost:50142/'))).toEqual({ kind: 'unknown' });
     expect(getAppRoute(new URL('http://localhost:50142/unknown'))).toEqual({ kind: 'unknown' });
   });
 });

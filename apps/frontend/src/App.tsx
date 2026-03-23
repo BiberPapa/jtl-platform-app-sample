@@ -1,13 +1,15 @@
 import './App.css';
 import { Card, CardContent } from '@jtl-software/platform-ui-react';
 import { AppPageShell } from './components';
-import { ErpPage, HubPage, PanePage, PrivacyPage, SetupPage, SupportPage, TermsOfUsePage } from './pages';
+import { DeveloperHomePage, ErpPage, HubPage, PanePage, PrivacyPage, SetupPage, SupportPage, TermsOfUsePage } from './pages';
 import { getAppRoute } from './routing/getAppRoute';
 
 function App() {
   const route = getAppRoute(new URL(window.location.href));
 
   switch (route.kind) {
+    case 'developer-home':
+      return <DeveloperHomePage />;
     case 'setup':
       return <SetupPage />;
     case 'support':
@@ -29,7 +31,7 @@ function App() {
         <AppPageShell
           eyebrow="Cloud App"
           title="Unknown app mode"
-          lead="Use `/setup`, `/support`, `/privacy`, `/terms-of-use`, `/hub`, `/erp`, `/erp/menu/Dashboard`, `/erp/tabs/...` or `/pane` to open one of the documented app entry points."
+          lead="Use `/`, `/setup`, `/support`, `/privacy`, `/terms-of-use`, `/hub`, `/erp`, `/erp/menu/Dashboard`, `/erp/tabs/...` or `/pane` to open one of the documented app entry points."
         >
           <Card>
             <CardContent>

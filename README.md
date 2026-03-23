@@ -28,6 +28,7 @@
 
 Use `apps/frontend/.env.example` as the starting point for frontend configuration.
 Keep `VITE_API_URL=http://localhost:50143` for the local backend.
+The frontend developer start page loads environment and NOHUB information from the backend `GET /app-info` route.
 The existing `apps/frontend/Dockerfile` is a legacy path and remains outside this pnpm migration; it references `src/sdk/js-core`, which does not exist in this repository and should be cleaned up separately.
 
 ## Ports
