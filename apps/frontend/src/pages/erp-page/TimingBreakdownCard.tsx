@@ -1,4 +1,4 @@
-import { Badge, Card, CardContent, CardHeader, CardTitle } from '@jtl-software/platform-ui-react';
+import { Badge, Card, CardContent } from '@jtl-software/platform-ui-react';
 
 type TimingTone = 'loading' | 'success' | 'warning' | 'error' | 'neutral';
 
@@ -60,31 +60,30 @@ function TimingBreakdownCard({ totalTimeMs, infrastructureTimeMs, erpTimeMs, fro
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Timing</CardTitle>
-      </CardHeader>
       <CardContent className="app-section-grid">
         <div className="app-metric-item">
           <div className="app-metric-copy">
             <p className="app-metric-label">Total time</p>
-            <p className="app-metric-value">{formatDuration(totalTimeMs, isLoading)}</p>
+            <div className="app-timing-summary">
+              <p className="app-metric-value">{formatDuration(totalTimeMs, isLoading)}</p>
+              <details>
+                <summary className="app-link">Show timing details</summary>
+                <div className="app-section-grid" style={{ marginTop: '0.75rem' }}>
+                  {items.map(item => (
+                    <div key={item.key} className="app-metric-item">
+                      <div className="app-metric-copy">
+                        <p className="app-metric-label">{item.label}</p>
+                        <p className="app-metric-value">{formatDuration(item.value, isLoading)}</p>
+                      </div>
+                      {item.detail ? <Badge label={item.detail} variant={getBadgeVariant(item.tone)} /> : null}
+                    </div>
+                  ))}
+                </div>
+              </details>
+            </div>
           </div>
           <Badge label={overallTone.label} variant={getBadgeVariant(overallTone.status)} />
         </div>
-        <details>
-          <summary className="app-link">Show timing details</summary>
-          <div className="app-section-grid" style={{ marginTop: '0.75rem' }}>
-            {items.map(item => (
-              <div key={item.key} className="app-metric-item">
-                <div className="app-metric-copy">
-                  <p className="app-metric-label">{item.label}</p>
-                  <p className="app-metric-value">{formatDuration(item.value, isLoading)}</p>
-                </div>
-                {item.detail ? <Badge label={item.detail} variant={getBadgeVariant(item.tone)} /> : null}
-              </div>
-            ))}
-          </div>
-        </details>
       </CardContent>
     </Card>
   );

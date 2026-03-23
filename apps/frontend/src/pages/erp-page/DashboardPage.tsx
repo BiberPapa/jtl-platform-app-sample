@@ -1,21 +1,13 @@
-import { Alert, Badge, Button, Card, CardContent, CardHeader, CardTitle, Input, Select } from '@jtl-software/platform-ui-react';
-import type { CSSProperties } from 'react';
+import { Alert, Badge, Button, Card, CardContent, CardHeader, CardTitle } from '@jtl-software/platform-ui-react';
 import { useCallback, useEffect, useState } from 'react';
 import { AppPageShell } from '../../components';
 import { useAppBridgeClient } from '../../services/appBridgeContext';
 import { toAppError } from '../../services/appError';
 import { useAppErrors } from '../../services/appErrorContext';
-import {
-  requestAuthorizationStatus,
-  requestErpInfoStatus,
-  requestPlaygroundRequest,
-  type AuthorizationStatus,
-  type ErpInfoStatus,
-  type PlaygroundRequestMethod,
-  type PlaygroundRequestResult,
-} from '../../services/erpService';
+import { requestAuthorizationStatus, requestErpInfoStatus, type AuthorizationStatus, type ErpInfoStatus } from '../../services/erpService';
 import { getGlobalTenantIdFromSessionToken } from '../../services/sessionTokenTenant';
 import ApiExplorerModal, { type ApiExplorerMode } from './ApiExplorerModal';
+import ApiPlaygroundModal from './ApiPlaygroundModal';
 import TimingBreakdownCard from './TimingBreakdownCard';
 
 type DashboardState = {
@@ -30,15 +22,7 @@ function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [status, setStatus] = useState<DashboardState | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [isPlaygroundOpen, setIsPlaygroundOpen] = useState(false);
-  const [playgroundMethod, setPlaygroundMethod] = useState<PlaygroundRequestMethod>('GET');
-  const [playgroundRoute, setPlaygroundRoute] = useState('/v1/worker');
-  const [isPlaygroundRequesting, setIsPlaygroundRequesting] = useState(false);
-  const [playgroundResult, setPlaygroundResult] = useState<PlaygroundRequestResult | null>(null);
-  const [playgroundError, setPlaygroundError] = useState<string | null>(null);
-  const [isApiExplorerOpen, setIsApiExplorerOpen] = useState(false);
-  const [apiExplorerMode, setApiExplorerMode] = useState<ApiExplorerMode>('graphql');
-  const [isApiExplorerMenuOpen, setIsApiExplorerMenuOpen] = useState(false);
+  const [activeModal, setActiveModal] = useState<ApiExplorerMode | 'playground' | null>(null);
 
   const loadStatus = useCallback(async (): Promise<void> => {
     try {
@@ -69,40 +53,12 @@ function DashboardPage() {
     }
   }, [appBridgeClient, reportError]);
 
-  const handlePlaygroundRequest = useCallback(async (): Promise<void> => {
-    try {
-      setIsPlaygroundRequesting(true);
-      setPlaygroundError(null);
-      const nextResult = await requestPlaygroundRequest(appBridgeClient, { route: playgroundRoute, method: playgroundMethod });
-
-      if (nextResult.error) {
-        reportError(nextResult.error);
-        setPlaygroundError(nextResult.error.details.userMessage);
-      }
-
-      setPlaygroundResult(nextResult);
-    } catch (error) {
-      const appError = toAppError(error, {
-        source: 'erp',
-        requestPath: `/erp${playgroundRoute}`,
-        fallbackMessage: 'The playground request could not be completed.',
-      });
-      setPlaygroundResult(null);
-      setPlaygroundError(appError.details.userMessage);
-      reportError(appError);
-    } finally {
-      setIsPlaygroundRequesting(false);
-    }
-  }, [appBridgeClient, playgroundMethod, playgroundRoute, reportError]);
-
   useEffect(() => {
     void loadStatus();
   }, [loadStatus]);
 
   const openApiExplorer = useCallback((mode: ApiExplorerMode) => {
-    setApiExplorerMode(mode);
-    setIsApiExplorerOpen(true);
-    setIsApiExplorerMenuOpen(false);
+    setActiveModal(mode);
   }, []);
 
   return (
@@ -114,17 +70,22 @@ function DashboardPage() {
         <Button
           type="button"
           variant="outline"
-          label={isLoading ? 'Refreshing dashboard' : 'Refresh dashboard'}
-          onClick={() => {
-            void loadStatus();
-          }}
+          size="icon"
+          icon="RefreshCw"
+          aria-label="Refresh dashboard"
+          isLoading={isLoading}
+          onClick={() => void loadStatus()}
           disabled={isLoading}
         />
       }
       width="wide"
     >
-      {isLoading ? <Alert title="Loading dashboard status..." variant="info" closable={false} /> : null}
-      {errorMessage ? <Alert title="Dashboard status could not be loaded" description={errorMessage} variant="destructive" closable={false} /> : null}
+      <div className="app-section-grid" aria-live="polite">
+        {isLoading ? <Alert title="Loading dashboard status..." variant="info" closable={false} /> : null}
+        {errorMessage ? (
+          <Alert title="Dashboard status could not be loaded" description={errorMessage} variant="destructive" closable={false} />
+        ) : null}
+      </div>
       <Card>
         <CardHeader>
           <div className="app-section-header">
@@ -177,132 +138,21 @@ function DashboardPage() {
               closable={false}
             />
           ) : null}
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader>
-          <div className="app-section-header">
+          <div className="app-section-grid">
             <div className="app-section-grid">
               <CardTitle>API playground</CardTitle>
-              <p className="app-muted-text">Run manual requests against the ERP proxy and inspect status, duration, and response data.</p>
+              <p className="app-muted-text">Open an explorer or run a manual request against the ERP proxy in a popup window.</p>
             </div>
-            <div className="app-button-row" style={{ position: 'relative' }}>
-              <div style={{ display: 'flex', alignItems: 'stretch', gap: '0.5rem' }}>
-                <Button type="button" variant="outline" label="API Explorer" onClick={() => openApiExplorer('graphql')} />
-                <button
-                  type="button"
-                  aria-label="Open API Explorer menu"
-                  aria-haspopup="menu"
-                  aria-expanded={isApiExplorerMenuOpen}
-                  onClick={() => setIsApiExplorerMenuOpen(currentValue => !currentValue)}
-                  style={{
-                    border: '1px solid #d9d9d9',
-                    borderRadius: '0.75rem',
-                    padding: '0.75rem 0.85rem',
-                    background: '#fff',
-                    fontWeight: 700,
-                  }}
-                >
-                  ▾
-                </button>
-              </div>
-              {isApiExplorerMenuOpen ? (
-                <div
-                  role="menu"
-                  aria-label="API Explorer options"
-                  style={{
-                    position: 'absolute',
-                    top: 'calc(100% + 0.5rem)',
-                    left: 0,
-                    zIndex: 10,
-                    border: '1px solid #d9d9d9',
-                    borderRadius: '0.75rem',
-                    background: '#fff',
-                    padding: '0.5rem',
-                    minWidth: '12rem',
-                    display: 'grid',
-                    gap: '0.25rem',
-                    boxShadow: '0 12px 30px rgba(15, 23, 42, 0.12)',
-                  }}
-                >
-                  <button type="button" role="menuitem" onClick={() => openApiExplorer('graphql')} style={apiExplorerMenuItemStyle}>
-                    GraphQL API
-                  </button>
-                  <button type="button" role="menuitem" onClick={() => openApiExplorer('rest')} style={apiExplorerMenuItemStyle}>
-                    REST API
-                  </button>
-                </div>
-              ) : null}
-              <Button
-                type="button"
-                variant="outline"
-                label={isPlaygroundOpen ? 'Hide playground' : 'Show playground'}
-                aria-expanded={isPlaygroundOpen}
-                aria-controls="dashboard-playground-panel"
-                onClick={() => {
-                  setIsPlaygroundOpen(currentValue => !currentValue);
-                }}
-              />
+            <div className="app-button-row">
+              <Button type="button" variant="outline" label="REST API Explorer" onClick={() => openApiExplorer('rest')} />
+              <Button type="button" variant="outline" label="GraphQL Explorer" onClick={() => openApiExplorer('graphql')} />
+              <Button type="button" variant="outline" label="API Playground" onClick={() => setActiveModal('playground')} />
             </div>
           </div>
-        </CardHeader>
-        <CardContent className="app-section-grid">
-          {!isPlaygroundOpen ? <p className="app-muted-text">Open the playground to send a manual request.</p> : null}
-          {isPlaygroundOpen ? (
-            <div id="dashboard-playground-panel" className="app-section-grid">
-              <form
-                className="app-form-grid app-form-grid--playground"
-                onSubmit={event => {
-                  event.preventDefault();
-                  void handlePlaygroundRequest();
-                }}
-              >
-                <Select
-                  label="Method"
-                  value={playgroundMethod}
-                  onChange={(value: string) => setPlaygroundMethod(value as PlaygroundRequestMethod)}
-                  options={[
-                    { value: 'GET', label: 'GET' },
-                    { value: 'POST', label: 'POST' },
-                    { value: 'PUT', label: 'PUT' },
-                    { value: 'DELETE', label: 'DELETE' },
-                    { value: 'HEAD', label: 'HEAD' },
-                  ]}
-                />
-                <Input label="Route" value={playgroundRoute} onChange={(value: string) => setPlaygroundRoute(value)} placeholder="/v1/worker" />
-                <Button type="submit" label={isPlaygroundRequesting ? 'Sending...' : 'Send request'} disabled={isPlaygroundRequesting} />
-              </form>
-              {playgroundError ? <Alert title={playgroundError} variant="destructive" closable={false} /> : null}
-              {playgroundResult ? (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Response details</CardTitle>
-                  </CardHeader>
-                  <CardContent className="app-section-grid">
-                    <div className="app-section-grid app-section-grid--two">
-                      <div>
-                        <p className="app-inline-label">Response status:</p>
-                        <p className="app-metric-value">{playgroundResult.status}</p>
-                      </div>
-                      <div>
-                        <p className="app-inline-label">Response time:</p>
-                        <p className="app-metric-value">{playgroundResult.responseTimeMs} ms</p>
-                      </div>
-                    </div>
-                    <p className="app-muted-text">
-                      Request: <strong>{playgroundResult.method}</strong> <strong>{playgroundResult.route}</strong>
-                    </p>
-                    <pre className="app-code-block">{formatPlaygroundBody(playgroundResult.body)}</pre>
-                  </CardContent>
-                </Card>
-              ) : (
-                <p className="app-muted-text">Enter a route and send a request to inspect the ERP response payload here.</p>
-              )}
-            </div>
-          ) : null}
         </CardContent>
       </Card>
-      {isApiExplorerOpen ? <ApiExplorerModal mode={apiExplorerMode} onClose={() => setIsApiExplorerOpen(false)} /> : null}
+      {activeModal === 'graphql' || activeModal === 'rest' ? <ApiExplorerModal mode={activeModal} onClose={() => setActiveModal(null)} /> : null}
+      {activeModal === 'playground' ? <ApiPlaygroundModal onClose={() => setActiveModal(null)} /> : null}
     </AppPageShell>
   );
 }
@@ -358,26 +208,5 @@ function getStatusBadgeVariant(status: 'loading' | 'success' | 'error'): 'defaul
 
   return 'default';
 }
-
-function formatPlaygroundBody(body: unknown): string {
-  if (body === null) {
-    return 'Empty response body';
-  }
-
-  if (typeof body === 'string') {
-    return body;
-  }
-
-  return JSON.stringify(body, null, 2);
-}
-
-const apiExplorerMenuItemStyle: CSSProperties = {
-  textAlign: 'left',
-  border: 'none',
-  borderRadius: '0.5rem',
-  padding: '0.625rem 0.75rem',
-  background: '#fff',
-  fontWeight: 600,
-};
 
 export default DashboardPage;

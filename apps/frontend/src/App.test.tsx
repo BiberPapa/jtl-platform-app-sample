@@ -497,6 +497,7 @@ describe('get app mode rendering', () => {
     expect(screen.getByText('Authorized')).toBeInTheDocument();
     expect(screen.getByText('2.0.0+Sha.e01a5a0')).toBeInTheDocument();
     expect(screen.getByText('12 ms')).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Timing' })).not.toBeInTheDocument();
     expect(screen.getAllByText('Good')).toHaveLength(3);
 
     await user.click(screen.getByText('Show timing details'));
@@ -507,13 +508,29 @@ describe('get app mode rendering', () => {
     expect(screen.getAllByText('Good')).toHaveLength(3);
     expect(screen.getByText('Okay')).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: /dashboard/i }));
+    await user.click(screen.getByRole('button', { name: 'Refresh dashboard' }));
 
     expect(await screen.findByText('2.0.1+Sha.abcdef0')).toBeInTheDocument();
     expect(screen.getByText('134 ms')).toBeInTheDocument();
     expect(screen.getAllByText('Warning')).toHaveLength(3);
     expect(requestErpInfoStatusMock).toHaveBeenCalledTimes(2);
     expect(requestAuthorizationStatusMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('shows the dashboard load error in the top status area', async () => {
+    const { appBridge } = createAppBridgeMock();
+
+    requestErpInfoStatusMock.mockRejectedValue(new Error('Dashboard fetch failed.'));
+    requestAuthorizationStatusMock.mockResolvedValue({
+      state: 'authorized',
+      message: null,
+    });
+
+    renderAtPath('/erp/menu/Dashboard', appBridge);
+
+    expect(screen.getByText('Loading dashboard status...')).toBeInTheDocument();
+    expect(await screen.findByRole('alert')).toHaveTextContent('Dashboard status could not be loaded');
+    expect(screen.getByRole('alert')).toHaveTextContent('The dashboard status could not be loaded.');
   });
 
   it('renders an unavailable ERP dashboard status when no info endpoint succeeds', async () => {
@@ -589,7 +606,7 @@ describe('get app mode rendering', () => {
     expect(screen.getByText('Authorization error: access to workers is denied.')).toBeInTheDocument();
   });
 
-  it('expands the playground and shows a manual request result with response time', async () => {
+  it('opens the manual API playground popup and shows a request result with response time', async () => {
     const user = userEvent.setup();
     const { appBridge } = createAppBridgeMock();
 
@@ -618,8 +635,9 @@ describe('get app mode rendering', () => {
 
     renderAtPath('/erp/menu/Dashboard', appBridge);
 
-    await user.click(screen.getByRole('button', { name: 'Show playground' }));
-    expect(screen.getByRole('heading', { name: 'API playground' })).toBeInTheDocument();
+    expect(screen.getAllByRole('heading', { name: 'API playground' })).toHaveLength(1);
+    await user.click(screen.getByRole('button', { name: 'API Playground' }));
+    expect(screen.getByRole('dialog', { name: 'API Playground' })).toBeInTheDocument();
     await user.selectOptions(screen.getByLabelText('Method'), 'DELETE');
     await user.clear(screen.getByLabelText('Route'));
     await user.type(screen.getByLabelText('Route'), '/v1/worker');
@@ -631,7 +649,32 @@ describe('get app mode rendering', () => {
     expect(screen.getByText(/worker-42/)).toBeInTheDocument();
   });
 
-  it('opens the GraphQL explorer by default from the playground card', async () => {
+  it('shows the three API tools buttons in the dashboard status card', async () => {
+    const { appBridge } = createAppBridgeMock();
+
+    requestErpInfoStatusMock.mockResolvedValue({
+      reachable: true,
+      tenantId: 'eazybusiness',
+      version: '2.0.0+Sha.e01a5a0',
+      totalTimeMs: 12,
+      erpTimeMs: 5.222,
+      infrastructureTimeMs: 6.778,
+      frontendTimeMs: 5.222,
+      errorMessage: null,
+    });
+    requestAuthorizationStatusMock.mockResolvedValue({
+      state: 'authorized',
+      message: null,
+    });
+
+    renderAtPath('/erp/menu/Dashboard', appBridge);
+
+    expect(await screen.findByRole('button', { name: 'REST API Explorer' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'GraphQL Explorer' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'API Playground' })).toBeInTheDocument();
+  });
+
+  it('opens the GraphQL explorer from the API tools section', async () => {
     const user = userEvent.setup();
     const { appBridge } = createAppBridgeMock();
 
@@ -660,14 +703,14 @@ describe('get app mode rendering', () => {
 
     renderAtPath('/erp/menu/Dashboard', appBridge);
 
-    await user.click(await screen.findByRole('button', { name: 'API Explorer' }));
+    await user.click(await screen.findByRole('button', { name: 'GraphQL Explorer' }));
 
     expect(screen.getByRole('dialog', { name: 'GraphQL API Explorer' })).toBeInTheDocument();
     expect(await screen.findByTestId('graphiql')).toHaveTextContent('GraphiQL ready');
     expect(requestGraphQlSchemaMock).toHaveBeenCalledWith(expect.anything());
   });
 
-  it('opens the REST explorer from the API explorer menu', async () => {
+  it('opens the REST explorer from the API tools section', async () => {
     const user = userEvent.setup();
     const { appBridge } = createAppBridgeMock();
 
@@ -696,47 +739,10 @@ describe('get app mode rendering', () => {
 
     renderAtPath('/erp/menu/Dashboard', appBridge);
 
-    await user.click(await screen.findByRole('button', { name: 'Open API Explorer menu' }));
-    await user.click(screen.getByRole('menuitem', { name: 'REST API' }));
+    await user.click(await screen.findByRole('button', { name: 'REST API Explorer' }));
 
     expect(screen.getByRole('dialog', { name: 'REST API Explorer' })).toBeInTheDocument();
     expect(screen.getByTestId('swagger-ui')).toHaveTextContent('Swagger UI: https://api.example.test/openapi.json');
-  });
-
-  it('opens the GraphQL explorer from the API explorer menu', async () => {
-    const user = userEvent.setup();
-    const { appBridge } = createAppBridgeMock();
-
-    requestErpInfoStatusMock.mockResolvedValue({
-      reachable: true,
-      tenantId: 'eazybusiness',
-      version: '2.0.0+Sha.e01a5a0',
-      totalTimeMs: 12,
-      erpTimeMs: 5.222,
-      infrastructureTimeMs: 6.778,
-      frontendTimeMs: 5.222,
-      errorMessage: null,
-    });
-    requestAuthorizationStatusMock.mockResolvedValue({
-      state: 'authorized',
-      message: null,
-    });
-    requestPlaygroundRequestMock.mockResolvedValue({
-      ok: true,
-      status: 200,
-      responseTimeMs: 37,
-      route: '/v1/worker',
-      method: 'GET',
-      body: { workerId: 'worker-42' },
-    });
-
-    renderAtPath('/erp/menu/Dashboard', appBridge);
-
-    await user.click(await screen.findByRole('button', { name: 'Open API Explorer menu' }));
-    await user.click(screen.getByRole('menuitem', { name: 'GraphQL API' }));
-
-    expect(screen.getByRole('dialog', { name: 'GraphQL API Explorer' })).toBeInTheDocument();
-    expect(await screen.findByTestId('graphiql')).toHaveTextContent('GraphiQL ready');
   });
 
   it('closes the API explorer modal without leaving the dashboard', async () => {
@@ -768,11 +774,39 @@ describe('get app mode rendering', () => {
 
     renderAtPath('/erp/menu/Dashboard', appBridge);
 
-    await user.click(await screen.findByRole('button', { name: 'API Explorer' }));
+    await user.click(await screen.findByRole('button', { name: 'GraphQL Explorer' }));
     await user.click(screen.getByRole('button', { name: 'Close Explorer' }));
 
     expect(screen.queryByRole('dialog', { name: 'GraphQL API Explorer' })).not.toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'API playground' })).toBeInTheDocument();
+    expect(screen.getAllByRole('heading', { name: 'API playground' })).toHaveLength(1);
+  });
+
+  it('closes the manual playground modal without leaving the dashboard', async () => {
+    const user = userEvent.setup();
+    const { appBridge } = createAppBridgeMock();
+
+    requestErpInfoStatusMock.mockResolvedValue({
+      reachable: true,
+      tenantId: 'eazybusiness',
+      version: '2.0.0+Sha.e01a5a0',
+      totalTimeMs: 12,
+      erpTimeMs: 5.222,
+      infrastructureTimeMs: 6.778,
+      frontendTimeMs: 5.222,
+      errorMessage: null,
+    });
+    requestAuthorizationStatusMock.mockResolvedValue({
+      state: 'authorized',
+      message: null,
+    });
+
+    renderAtPath('/erp/menu/Dashboard', appBridge);
+
+    await user.click(await screen.findByRole('button', { name: 'API Playground' }));
+    await user.click(screen.getByRole('button', { name: 'Close Playground' }));
+
+    expect(screen.queryByRole('dialog', { name: 'API Playground' })).not.toBeInTheDocument();
+    expect(screen.getAllByRole('heading', { name: 'API playground' })).toHaveLength(1);
   });
 
   it('shows empty playground responses explicitly', async () => {
@@ -804,7 +838,7 @@ describe('get app mode rendering', () => {
 
     renderAtPath('/erp/menu/Dashboard', appBridge);
 
-    await user.click(screen.getByRole('button', { name: 'Show playground' }));
+    await user.click(screen.getByRole('button', { name: 'API Playground' }));
     await user.click(screen.getByRole('button', { name: 'Send request' }));
 
     expect(await screen.findByText('Empty response body')).toBeInTheDocument();

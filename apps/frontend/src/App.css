@@ -135,6 +135,13 @@
   gap: 0.25rem;
 }
 
+.app-timing-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
 .app-link {
   color: var(--base-highlight);
 }
@@ -220,6 +227,10 @@
 .app-modal-body {
   overflow: auto;
   max-height: calc(100vh - 10rem);
+}
+
+.app-modal-body__content {
+  padding: 1rem 1.25rem 1.25rem;
 }
 
 .app-modal-body--api-explorer {
@@ -415,6 +426,10 @@
   .app-form-grid--playground,
   .app-section-grid--two {
     grid-template-columns: 1fr;
+  }
+
+  .app-timing-summary {
+    align-items: flex-start;
   }
 
   .app-modal-backdrop {
