@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createDummyAppBridgeClient, type AppBridgeClient } from './appBridgeClient';
-import { getBackendErrorMessage, requestBackend } from './apiClient';
+import { requestBackend } from './apiClient';
 
 describe('requestBackend', () => {
   const getSessionTokenMock = vi.fn<() => Promise<string>>();
@@ -122,46 +122,6 @@ describe('requestBackend', () => {
       },
       body: '{"query":"{ viewer { id } }"}',
     });
-  });
-});
-
-describe('getBackendErrorMessage', () => {
-  afterEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it('prefers structured backend error payloads', () => {
-    expect(
-      getBackendErrorMessage(
-        {
-          text: 'Plain text fallback',
-          json: { error: 'Structured backend error' },
-        },
-        'Fallback error',
-      ),
-    ).toBe('Structured backend error');
-  });
-
-  it('falls back to response text and then to the provided fallback message', () => {
-    expect(
-      getBackendErrorMessage(
-        {
-          text: 'Plain text fallback',
-          json: null,
-        },
-        'Fallback error',
-      ),
-    ).toBe('Plain text fallback');
-
-    expect(
-      getBackendErrorMessage(
-        {
-          text: '',
-          json: null,
-        },
-        'Fallback error',
-      ),
-    ).toBe('Fallback error');
   });
 });
 

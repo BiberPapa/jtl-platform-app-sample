@@ -962,6 +962,31 @@ describe('get app mode rendering', () => {
 
     expect(await screen.findByDisplayValue('customer-from-call')).toBeInTheDocument();
   });
+
+  it('reports pane bridge failures through the shared app error flow', async () => {
+    const user = userEvent.setup();
+    const { appBridge, methodCall } = createAppBridgeMock();
+
+    methodCall.mockImplementation((methodName: string) => {
+      if (methodName === 'getCurrentCustomerId') {
+        return Promise.reject(new Error('Bridge customer lookup failed.'));
+      }
+
+      throw new Error(`Unexpected bridge method: ${methodName}`);
+    });
+
+    renderAtPath('/pane', appBridge);
+
+    await user.click(screen.getByRole('button', { name: 'Get Current Customer' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('The current customer could not be loaded.');
+    expect(screen.getByRole('button', { name: 'Open error history (1 error)' })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Open error history (1 error)' }));
+
+    expect(screen.getByRole('dialog', { name: 'Error history' })).toBeInTheDocument();
+    expect(screen.getByText('Bridge customer lookup failed.')).toBeInTheDocument();
+  });
 });
 
 function createSessionToken(payload: Record<string, unknown>): string {

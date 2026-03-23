@@ -1,11 +1,8 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { ThemeProvider } from '@jtl-software/platform-ui-react';
-import './services/setupGraphiQlWorkers';
-import App from './App';
 import './index.css';
-import { AppBridgeProvider } from './services/appBridgeContext';
-import { createRuntimeAppBridgeClient } from './services/runtimeAppBridgeClient';
+import { AppBootstrap } from './components';
 
 function getRootElement(): HTMLElement {
   const element = document.getElementById('root');
@@ -17,20 +14,10 @@ function getRootElement(): HTMLElement {
   return element;
 }
 
-function renderApp(): void {
-  void (async () => {
-    const appBridgeClient = await createRuntimeAppBridgeClient();
-
-    createRoot(getRootElement()).render(
-      <StrictMode>
-        <ThemeProvider defaultTheme="system">
-          <AppBridgeProvider appBridgeClient={appBridgeClient}>
-            <App />
-          </AppBridgeProvider>
-        </ThemeProvider>
-      </StrictMode>,
-    );
-  })();
-}
-
-renderApp();
+createRoot(getRootElement()).render(
+  <StrictMode>
+    <ThemeProvider defaultTheme="system">
+      <AppBootstrap />
+    </ThemeProvider>
+  </StrictMode>,
+);

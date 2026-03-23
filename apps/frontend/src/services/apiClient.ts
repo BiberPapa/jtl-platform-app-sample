@@ -48,14 +48,6 @@ export async function requestBackend({ path, appBridgeClient, method = 'GET', bo
   };
 }
 
-export function getBackendErrorMessage(response: Pick<BackendResponse, 'text' | 'json'>, fallbackMessage: string): string {
-  if (isErrorPayload(response.json)) {
-    return response.json.error ?? response.json.message ?? fallbackMessage;
-  }
-
-  return response.text || fallbackMessage;
-}
-
 export function buildBackendUrl(path: string): string {
   return `${apiUrl}${path}`;
 }
@@ -70,14 +62,4 @@ function parseJsonResponse(responseText: string): unknown {
   } catch {
     return null;
   }
-}
-
-function isErrorPayload(value: unknown): value is { error?: string; message?: string } {
-  if (!value || typeof value !== 'object') {
-    return false;
-  }
-
-  const candidate = value as Record<string, unknown>;
-
-  return typeof candidate['error'] === 'string' || typeof candidate['message'] === 'string';
 }
