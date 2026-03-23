@@ -15,6 +15,32 @@ export default defineConfig({
       },
     ],
   },
+  build: {
+    chunkSizeWarningLimit: 2000,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes('node_modules')) {
+            return undefined;
+          }
+
+          if (id.includes('@graphiql/plugin-explorer')) {
+            return 'vendor-graphiql-explorer';
+          }
+
+          if (id.includes('graphiql')) {
+            return 'vendor-graphiql';
+          }
+
+          if (id.includes('swagger-ui-react')) {
+            return 'vendor-swagger';
+          }
+
+          return undefined;
+        },
+      },
+    },
+  },
   server: {
     port: 50142,
   },

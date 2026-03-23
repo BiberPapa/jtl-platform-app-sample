@@ -637,7 +637,7 @@ describe('get app mode rendering', () => {
 
     expect(screen.getAllByRole('heading', { name: 'API playground' })).toHaveLength(1);
     await user.click(screen.getByRole('button', { name: 'API Playground' }));
-    expect(screen.getByRole('dialog', { name: 'API Playground' })).toBeInTheDocument();
+    expect(await screen.findByRole('dialog', { name: 'API Playground' })).toBeInTheDocument();
     await user.selectOptions(screen.getByLabelText('Method'), 'DELETE');
     await user.clear(screen.getByLabelText('Route'));
     await user.type(screen.getByLabelText('Route'), '/v1/worker');
@@ -705,7 +705,7 @@ describe('get app mode rendering', () => {
 
     await user.click(await screen.findByRole('button', { name: 'GraphQL Explorer' }));
 
-    expect(screen.getByRole('dialog', { name: 'GraphQL API Explorer' })).toBeInTheDocument();
+    expect(await screen.findByRole('dialog', { name: 'GraphQL API Explorer' })).toBeInTheDocument();
     expect(await screen.findByTestId('graphiql')).toHaveTextContent('GraphiQL ready');
     expect(requestGraphQlSchemaMock).toHaveBeenCalledWith(expect.anything());
   });
@@ -741,8 +741,8 @@ describe('get app mode rendering', () => {
 
     await user.click(await screen.findByRole('button', { name: 'REST API Explorer' }));
 
-    expect(screen.getByRole('dialog', { name: 'REST API Explorer' })).toBeInTheDocument();
-    expect(screen.getByTestId('swagger-ui')).toHaveTextContent('Swagger UI: https://api.example.test/openapi.json');
+    expect(await screen.findByRole('dialog', { name: 'REST API Explorer' })).toBeInTheDocument();
+    expect(await screen.findByTestId('swagger-ui')).toHaveTextContent('Swagger UI: https://api.example.test/openapi.json');
   });
 
   it('closes the API explorer modal without leaving the dashboard', async () => {

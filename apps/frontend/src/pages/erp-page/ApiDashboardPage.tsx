@@ -1,14 +1,16 @@
 import { Alert, Badge, Button, Card, CardContent, CardHeader, CardTitle } from '@jtl-software/platform-ui-react';
-import { useCallback, useEffect, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
 import { AppPageShell } from '../../components';
 import { useAppBridgeClient } from '../../services/appBridgeContext';
 import { toAppError } from '../../services/appError';
 import { useAppErrors } from '../../services/appErrorContext';
 import { requestAuthorizationStatus, requestErpInfoStatus, type AuthorizationStatus, type ErpInfoStatus } from '../../services/erpService';
 import { getGlobalTenantIdFromSessionToken } from '../../services/sessionTokenTenant';
-import ApiExplorerModal, { type ApiExplorerMode } from './ApiExplorerModal';
-import ApiPlaygroundModal from './ApiPlaygroundModal';
+import type { ApiExplorerMode } from './ApiExplorerModal';
 import TimingBreakdownCard from './TimingBreakdownCard';
+
+const ApiExplorerModal = lazy(() => import('./ApiExplorerModal'));
+const ApiPlaygroundModal = lazy(() => import('./ApiPlaygroundModal'));
 
 type DashboardState = {
   erpInfo: ErpInfoStatus;
@@ -151,8 +153,16 @@ function ApiDashboardPage() {
           </div>
         </CardContent>
       </Card>
-      {activeModal === 'graphql' || activeModal === 'rest' ? <ApiExplorerModal mode={activeModal} onClose={() => setActiveModal(null)} /> : null}
-      {activeModal === 'playground' ? <ApiPlaygroundModal onClose={() => setActiveModal(null)} /> : null}
+      {activeModal === 'graphql' || activeModal === 'rest' ? (
+        <Suspense fallback={<Alert title="Loading API explorer..." variant="info" closable={false} />}>
+          <ApiExplorerModal mode={activeModal} onClose={() => setActiveModal(null)} />
+        </Suspense>
+      ) : null}
+      {activeModal === 'playground' ? (
+        <Suspense fallback={<Alert title="Loading API playground..." variant="info" closable={false} />}>
+          <ApiPlaygroundModal onClose={() => setActiveModal(null)} />
+        </Suspense>
+      ) : null}
     </AppPageShell>
   );
 }
