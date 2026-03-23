@@ -14,9 +14,9 @@ describe('getAppRoute', () => {
 
   it('distinguishes ERP home and ERP menu item routes', () => {
     expect(getAppRoute(new URL('http://localhost:50142/erp'))).toEqual({ kind: 'erp-home' });
-    expect(getAppRoute(new URL('http://localhost:50142/erp/menu/Dashboard'))).toEqual({
+    expect(getAppRoute(new URL('http://localhost:50142/erp/menu/ApiDashboard'))).toEqual({
       kind: 'erp-menu-item',
-      menuItemId: 'Dashboard',
+      menuItemId: 'ApiDashboard',
     });
     expect(getAppRoute(new URL('http://localhost:50142/erp/menu/ApiTest'))).toEqual({
       kind: 'erp-menu-item',

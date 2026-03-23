@@ -49,9 +49,9 @@
       },
       "menuItems": [
         {
-          "id": "Dashboard",
-          "name": "Dashboard",
-          "url": "http://localhost:50142/erp/menu/Dashboard"
+          "id": "ApiDashboard",
+          "name": "API Dashboard",
+          "url": "http://localhost:50142/erp/menu/ApiDashboard"
         },
         {
           "id": "Swagger",

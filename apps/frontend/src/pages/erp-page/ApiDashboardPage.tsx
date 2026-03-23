@@ -16,7 +16,7 @@ type DashboardState = {
   globalTenantId: string | null;
 };
 
-function DashboardPage() {
+function ApiDashboardPage() {
   const appBridgeClient = useAppBridgeClient();
   const { reportError } = useAppErrors();
   const [isLoading, setIsLoading] = useState(true);
@@ -43,7 +43,7 @@ function DashboardPage() {
     } catch (error) {
       const appError = toAppError(error, {
         source: 'erp',
-        fallbackMessage: 'The dashboard status could not be loaded.',
+        fallbackMessage: 'The API dashboard status could not be loaded.',
       });
       setStatus(null);
       setErrorMessage(appError.details.userMessage);
@@ -64,7 +64,7 @@ function DashboardPage() {
   return (
     <AppPageShell
       eyebrow="ERP"
-      title="Dashboard"
+      title="API Dashboard"
       lead="Overview of API availability, authorization, and response times for the demo app."
       actions={
         <Button
@@ -72,7 +72,7 @@ function DashboardPage() {
           variant="outline"
           size="icon"
           icon="RefreshCw"
-          aria-label="Refresh dashboard"
+          aria-label="Refresh API dashboard"
           isLoading={isLoading}
           onClick={() => void loadStatus()}
           disabled={isLoading}
@@ -81,9 +81,9 @@ function DashboardPage() {
       width="wide"
     >
       <div className="app-section-grid" aria-live="polite">
-        {isLoading ? <Alert title="Loading dashboard status..." variant="info" closable={false} /> : null}
+        {isLoading ? <Alert title="Loading API dashboard status..." variant="info" closable={false} /> : null}
         {errorMessage ? (
-          <Alert title="Dashboard status could not be loaded" description={errorMessage} variant="destructive" closable={false} />
+          <Alert title="API dashboard status could not be loaded" description={errorMessage} variant="destructive" closable={false} />
         ) : null}
       </div>
       <Card>
@@ -209,4 +209,4 @@ function getStatusBadgeVariant(status: 'loading' | 'success' | 'error'): 'defaul
   return 'default';
 }
 
-export default DashboardPage;
+export default ApiDashboardPage;

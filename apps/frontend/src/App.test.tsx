@@ -378,7 +378,7 @@ describe('get app mode rendering', () => {
     expect(screen.getByText(/App Launcher entry point/i)).toBeInTheDocument();
   });
 
-  it('renders the ERP root page as the dashboard', async () => {
+  it('renders the ERP root page as the API dashboard', async () => {
     const { appBridge } = createAppBridgeMock();
 
     requestErpInfoStatusMock.mockResolvedValue({
@@ -408,11 +408,11 @@ describe('get app mode rendering', () => {
 
     expect(await screen.findByText('Local: eazybusiness')).toBeInTheDocument();
     expect(screen.getByText('Global: global-tenant-id')).toBeInTheDocument();
-    expect(screen.getByText('Dashboard')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /dashboard/i })).toBeInTheDocument();
+    expect(screen.getByText('API Dashboard')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Refresh API dashboard' })).toBeInTheDocument();
   });
 
-  it('renders the root ERP menu page', async () => {
+  it('renders the root API dashboard menu page', async () => {
     const { appBridge } = createAppBridgeMock();
 
     requestErpInfoStatusMock.mockResolvedValue({
@@ -438,12 +438,12 @@ describe('get app mode rendering', () => {
       body: { items: [] },
     });
 
-    renderAtPath('/erp/menu/Dashboard', appBridge);
+    renderAtPath('/erp/menu/ApiDashboard', appBridge);
 
     expect(await screen.findByText('Local: eazybusiness')).toBeInTheDocument();
     expect(screen.getByText('Global: global-tenant-id')).toBeInTheDocument();
-    expect(screen.getByText('Dashboard')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /dashboard/i })).toBeInTheDocument();
+    expect(screen.getByText('API Dashboard')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Refresh API dashboard' })).toBeInTheDocument();
   });
 
   it('renders ERP dashboard status data and allows reloading', async () => {
@@ -489,7 +489,7 @@ describe('get app mode rendering', () => {
       body: { items: [] },
     });
 
-    renderAtPath('/erp/menu/Dashboard', appBridge);
+    renderAtPath('/erp/menu/ApiDashboard', appBridge);
 
     expect(await screen.findByText('Local: eazybusiness')).toBeInTheDocument();
     expect(screen.getByText('Global: global-tenant-id')).toBeInTheDocument();
@@ -508,7 +508,7 @@ describe('get app mode rendering', () => {
     expect(screen.getAllByText('Good')).toHaveLength(3);
     expect(screen.getByText('Okay')).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: 'Refresh dashboard' }));
+    await user.click(screen.getByRole('button', { name: 'Refresh API dashboard' }));
 
     expect(await screen.findByText('2.0.1+Sha.abcdef0')).toBeInTheDocument();
     expect(screen.getByText('134 ms')).toBeInTheDocument();
@@ -526,11 +526,11 @@ describe('get app mode rendering', () => {
       message: null,
     });
 
-    renderAtPath('/erp/menu/Dashboard', appBridge);
+    renderAtPath('/erp/menu/ApiDashboard', appBridge);
 
-    expect(screen.getByText('Loading dashboard status...')).toBeInTheDocument();
-    expect(await screen.findByRole('alert')).toHaveTextContent('Dashboard status could not be loaded');
-    expect(screen.getByRole('alert')).toHaveTextContent('The dashboard status could not be loaded.');
+    expect(screen.getByText('Loading API dashboard status...')).toBeInTheDocument();
+    expect(await screen.findByRole('alert')).toHaveTextContent('API dashboard status could not be loaded');
+    expect(screen.getByRole('alert')).toHaveTextContent('The API dashboard status could not be loaded.');
   });
 
   it('renders an unavailable ERP dashboard status when no info endpoint succeeds', async () => {
@@ -566,7 +566,7 @@ describe('get app mode rendering', () => {
       body: { error: 'failed' },
     });
 
-    renderAtPath('/erp/menu/Dashboard', appBridge);
+    renderAtPath('/erp/menu/ApiDashboard', appBridge);
 
     expect(await screen.findByText('Local: No tenant information')).toBeInTheDocument();
     expect(screen.getByText('Global: No tenant information')).toBeInTheDocument();
@@ -600,7 +600,7 @@ describe('get app mode rendering', () => {
       body: { items: [] },
     });
 
-    renderAtPath('/erp/menu/Dashboard', appBridge);
+    renderAtPath('/erp/menu/ApiDashboard', appBridge);
 
     expect(await screen.findByText('Not authorized')).toBeInTheDocument();
     expect(screen.getByText('Authorization error: access to workers is denied.')).toBeInTheDocument();
@@ -633,7 +633,7 @@ describe('get app mode rendering', () => {
       body: { workerId: 'worker-42' },
     });
 
-    renderAtPath('/erp/menu/Dashboard', appBridge);
+    renderAtPath('/erp/menu/ApiDashboard', appBridge);
 
     expect(screen.getAllByRole('heading', { name: 'API playground' })).toHaveLength(1);
     await user.click(screen.getByRole('button', { name: 'API Playground' }));
@@ -667,7 +667,7 @@ describe('get app mode rendering', () => {
       message: null,
     });
 
-    renderAtPath('/erp/menu/Dashboard', appBridge);
+    renderAtPath('/erp/menu/ApiDashboard', appBridge);
 
     expect(await screen.findByRole('button', { name: 'REST API Explorer' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'GraphQL Explorer' })).toBeInTheDocument();
@@ -701,7 +701,7 @@ describe('get app mode rendering', () => {
       body: { workerId: 'worker-42' },
     });
 
-    renderAtPath('/erp/menu/Dashboard', appBridge);
+    renderAtPath('/erp/menu/ApiDashboard', appBridge);
 
     await user.click(await screen.findByRole('button', { name: 'GraphQL Explorer' }));
 
@@ -737,7 +737,7 @@ describe('get app mode rendering', () => {
       body: { workerId: 'worker-42' },
     });
 
-    renderAtPath('/erp/menu/Dashboard', appBridge);
+    renderAtPath('/erp/menu/ApiDashboard', appBridge);
 
     await user.click(await screen.findByRole('button', { name: 'REST API Explorer' }));
 
@@ -772,7 +772,7 @@ describe('get app mode rendering', () => {
       body: { workerId: 'worker-42' },
     });
 
-    renderAtPath('/erp/menu/Dashboard', appBridge);
+    renderAtPath('/erp/menu/ApiDashboard', appBridge);
 
     await user.click(await screen.findByRole('button', { name: 'GraphQL Explorer' }));
     await user.click(screen.getByRole('button', { name: 'Close Explorer' }));
@@ -800,7 +800,7 @@ describe('get app mode rendering', () => {
       message: null,
     });
 
-    renderAtPath('/erp/menu/Dashboard', appBridge);
+    renderAtPath('/erp/menu/ApiDashboard', appBridge);
 
     await user.click(await screen.findByRole('button', { name: 'API Playground' }));
     await user.click(screen.getByRole('button', { name: 'Close Playground' }));
@@ -836,7 +836,7 @@ describe('get app mode rendering', () => {
       body: null,
     });
 
-    renderAtPath('/erp/menu/Dashboard', appBridge);
+    renderAtPath('/erp/menu/ApiDashboard', appBridge);
 
     await user.click(screen.getByRole('button', { name: 'API Playground' }));
     await user.click(screen.getByRole('button', { name: 'Send request' }));
@@ -870,7 +870,7 @@ describe('get app mode rendering', () => {
       body: { items: [] },
     });
 
-    renderAtPath('/erp/menu/Dashboard', appBridge);
+    renderAtPath('/erp/menu/ApiDashboard', appBridge);
 
     expect(await screen.findAllByText('Problematic')).toHaveLength(3);
   });
@@ -908,7 +908,7 @@ describe('get app mode rendering', () => {
       body: { items: [] },
     });
 
-    renderAtPath('/erp/menu/Dashboard', appBridge);
+    renderAtPath('/erp/menu/ApiDashboard', appBridge);
 
     expect(await screen.findByText('Local: eazybusiness')).toBeInTheDocument();
     expect(screen.getByText('Global: No tenant information')).toBeInTheDocument();

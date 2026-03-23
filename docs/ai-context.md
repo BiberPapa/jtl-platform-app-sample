@@ -6,7 +6,7 @@
 - `apps/backend/src/logger.ts` contains backend logging configuration and ERP log helpers.
 - `apps/backend/src/routes/erpProxyRoute.ts` is the main HTTP entry point for ERP proxy requests.
 - `apps/frontend/src/services/erpService.ts` contains frontend-side ERP timing extraction and API helpers.
-- `apps/frontend/src/pages/erp-page/DashboardPage.tsx` and `apps/frontend/src/pages/erp-page/ApiTestPage.tsx` surface diagnostics in the UI.
+- `apps/frontend/src/pages/erp-page/ApiDashboardPage.tsx` and `apps/frontend/src/pages/erp-page/ApiTestPage.tsx` surface diagnostics in the UI.
 
 ## Typical Verification
 
