@@ -1,5 +1,6 @@
 import type { AppBridgeClient } from './appBridgeClient';
-import { getBackendErrorMessage, requestBackend } from './apiClient';
+import { createAppErrorFromBackendResponse, createUnexpectedAppError, toAppError } from './appError';
+import { requestBackend } from './apiClient';
 
 export type AppInfoResponse = {
   environment: 'dev' | 'qa' | 'prod';
@@ -12,20 +13,38 @@ export type AppInfoResponse = {
 };
 
 export async function requestAppInfo(appBridgeClient: AppBridgeClient): Promise<AppInfoResponse> {
-  const response = await requestBackend({
-    path: '/app-info',
-    appBridgeClient,
-  });
+  try {
+    const response = await requestBackend({
+      path: '/app-info',
+      appBridgeClient,
+    });
 
-  if (!response.ok) {
-    throw new Error(getBackendErrorMessage(response, 'The backend app info could not be loaded.'));
+    if (!response.ok) {
+      throw createAppErrorFromBackendResponse(response, {
+        source: 'app-info',
+        requestPath: '/app-info',
+        fallbackMessage: 'The backend app info could not be loaded.',
+      });
+    }
+
+    if (!isAppInfoResponse(response.json)) {
+      throw createUnexpectedAppError({
+        source: 'app-info',
+        requestPath: '/app-info',
+        fallbackMessage: 'The backend app info returned an unexpected payload.',
+        status: response.status,
+        raw: response.json,
+      });
+    }
+
+    return response.json;
+  } catch (error) {
+    throw toAppError(error, {
+      source: 'app-info',
+      requestPath: '/app-info',
+      fallbackMessage: 'The backend app info could not be loaded.',
+    });
   }
-
-  if (!isAppInfoResponse(response.json)) {
-    throw new Error('The backend app info returned an unexpected payload.');
-  }
-
-  return response.json;
 }
 
 function isAppInfoResponse(value: unknown): value is AppInfoResponse {

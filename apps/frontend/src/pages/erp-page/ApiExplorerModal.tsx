@@ -8,6 +8,8 @@ import { useEffect, useMemo, useState } from 'react';
 import SwaggerUI from 'swagger-ui-react';
 import 'swagger-ui-react/swagger-ui.css';
 import { useAppBridgeClient } from '../../services/appBridgeContext';
+import { toAppError } from '../../services/appError';
+import { useAppErrors } from '../../services/appErrorContext';
 import { buildBackendUrl } from '../../services/apiClient';
 import { requestGraphQlOperation, requestGraphQlSchema } from '../../services/graphQlSchemaService';
 
@@ -20,6 +22,7 @@ export type ApiExplorerMode = 'graphql' | 'rest';
 
 function ApiExplorerModal({ mode, onClose }: ApiExplorerModalProps) {
   const appBridgeClient = useAppBridgeClient();
+  const { reportError } = useAppErrors();
   const [graphQlSchema, setGraphQlSchema] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const isGraphQlMode = mode === 'graphql';
@@ -49,8 +52,14 @@ function ApiExplorerModal({ mode, onClose }: ApiExplorerModalProps) {
         setGraphQlSchema(await requestGraphQlSchema(appBridgeClient));
       } catch (error) {
         if (isMounted) {
+          const appError = toAppError(error, {
+            source: 'graphql',
+            requestPath: '/graphql/schema.graphql',
+            fallbackMessage: 'The GraphQL schema could not be loaded.',
+          });
           setGraphQlSchema(null);
-          setErrorMessage(error instanceof Error ? error.message : 'The GraphQL schema could not be loaded.');
+          setErrorMessage(appError.details.userMessage);
+          reportError(appError);
         }
       }
     })();
@@ -58,7 +67,7 @@ function ApiExplorerModal({ mode, onClose }: ApiExplorerModalProps) {
     return () => {
       isMounted = false;
     };
-  }, [appBridgeClient, isGraphQlMode]);
+  }, [appBridgeClient, isGraphQlMode, reportError]);
 
   const graphQlFetcher = useMemo(
     () =>
@@ -82,13 +91,24 @@ function ApiExplorerModal({ mode, onClose }: ApiExplorerModalProps) {
         const variables =
           typeof graphQlParams.variables === 'string' ? parseGraphQlVariables(graphQlParams.variables) : (graphQlParams.variables ?? null);
 
-        return await requestGraphQlOperation(appBridgeClient, {
-          query,
-          variables,
-          operationName: graphQlParams.operationName ?? null,
-        });
+        try {
+          return await requestGraphQlOperation(appBridgeClient, {
+            query,
+            variables,
+            operationName: graphQlParams.operationName ?? null,
+          });
+        } catch (error) {
+          reportError(
+            toAppError(error, {
+              source: 'graphql',
+              requestPath: '/graphql',
+              fallbackMessage: 'The GraphQL request could not be completed.',
+            }),
+          );
+          throw error;
+        }
       },
-    [appBridgeClient],
+    [appBridgeClient, reportError],
   );
 
   return (

@@ -235,6 +235,168 @@
   height: 100%;
 }
 
+.app-toast-stack {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 80;
+  display: grid;
+  gap: 0.75rem;
+  width: min(24rem, calc(100vw - 2rem));
+}
+
+.app-toast {
+  display: grid;
+  gap: 0.75rem;
+  padding: 0.9rem 1rem;
+  border-radius: var(--radius-rounded-xl);
+  background: color-mix(in srgb, var(--base-destructive) 12%, var(--base-background) 88%);
+  border: 1px solid color-mix(in srgb, var(--base-destructive) 36%, var(--base-border) 64%);
+  box-shadow: var(--base-shadow-20) 0 18px 32px -24px;
+}
+
+.app-toast__copy {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.app-toast__title {
+  margin: 0;
+  font-weight: 700;
+  color: color-mix(in srgb, var(--base-destructive) 72%, currentColor 28%);
+}
+
+.app-toast__meta {
+  margin: 0;
+  font-size: 0.8rem;
+  color: color-mix(in srgb, var(--base-destructive) 48%, var(--base-muted-foreground) 52%);
+}
+
+.app-toast__action,
+.app-drawer__secondary-action,
+.app-error-history-trigger,
+.app-error-history-item {
+  font: inherit;
+}
+
+.app-toast__action,
+.app-drawer__secondary-action {
+  justify-self: start;
+  border: 1px solid color-mix(in srgb, var(--base-destructive) 28%, var(--base-border) 72%);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--base-destructive) 10%, transparent 90%);
+  padding: 0.45rem 0.8rem;
+  cursor: pointer;
+}
+
+.app-error-history-trigger {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.app-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 75;
+  background: rgba(17, 24, 39, 0.56);
+  backdrop-filter: blur(4px);
+}
+
+.app-drawer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: min(100%, 64rem);
+  height: 100%;
+  background: var(--base-background);
+  box-shadow: var(--base-shadow-30) -24px 0 48px -32px;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.app-drawer__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.25rem;
+  border-bottom: 1px solid var(--base-border);
+}
+
+.app-drawer__body {
+  display: grid;
+  grid-template-columns: minmax(18rem, 24rem) minmax(0, 1fr);
+  min-height: 0;
+}
+
+.app-error-history-list {
+  border-right: 1px solid var(--base-border);
+  overflow: auto;
+  padding: 1rem;
+  display: grid;
+  gap: 0.75rem;
+  align-content: start;
+}
+
+.app-error-history-item {
+  width: 100%;
+  text-align: left;
+  display: grid;
+  gap: 0.35rem;
+  border: 1px solid var(--base-border);
+  border-radius: var(--radius-rounded-xl);
+  background: transparent;
+  padding: 0.9rem;
+  cursor: pointer;
+}
+
+.app-error-history-item--active {
+  background: color-mix(in srgb, var(--base-highlight) 8%, var(--base-background) 92%);
+  border-color: color-mix(in srgb, var(--base-highlight) 30%, var(--base-border) 70%);
+}
+
+.app-error-history-item__title {
+  margin: 0;
+  font-weight: 700;
+}
+
+.app-error-history-item__meta {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--base-muted-foreground);
+  word-break: break-word;
+}
+
+.app-error-detail {
+  overflow: auto;
+  padding: 1rem 1.25rem;
+  display: grid;
+  gap: 1.25rem;
+}
+
+.app-validation-issue {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.8rem;
+  border-radius: var(--radius-rounded-xl);
+  background: var(--base-muted);
+}
+
+.app-validation-issue__field {
+  margin: 0;
+  font-weight: 700;
+}
+
+.app-validation-issue__list {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
 .graphiql-dialog-overlay {
   z-index: 60 !important;
 }
@@ -262,5 +424,27 @@
   .app-modal-header {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .app-toast-stack {
+    left: 1rem;
+    right: 1rem;
+    bottom: 1rem;
+    top: auto;
+    width: auto;
+  }
+
+  .app-drawer {
+    width: 100%;
+  }
+
+  .app-drawer__header,
+  .app-drawer__body {
+    grid-template-columns: 1fr;
+  }
+
+  .app-error-history-list {
+    border-right: 0;
+    border-bottom: 1px solid var(--base-border);
   }
 }

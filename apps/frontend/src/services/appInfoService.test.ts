@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createDummyAppBridgeClient, type AppBridgeClient } from './appBridgeClient';
+import { AppError } from './appError';
 import { requestAppInfo } from './appInfoService';
 
 describe('requestAppInfo', () => {
@@ -93,7 +94,14 @@ describe('requestAppInfo', () => {
 
     vi.stubGlobal('fetch', fetchMock);
 
-    await expect(requestAppInfo(appBridgeClient)).rejects.toThrow('The backend app info returned an unexpected payload.');
+    const requestPromise = requestAppInfo(appBridgeClient);
+
+    await expect(requestPromise).rejects.toBeInstanceOf(AppError);
+    await expect(requestPromise).rejects.toMatchObject({
+      details: {
+        userMessage: 'The backend app info returned an unexpected payload.',
+      },
+    });
   });
 });
 

@@ -2,10 +2,13 @@ import { Alert, Card, CardContent, CardHeader, CardTitle } from '@jtl-software/p
 import { useEffect, useState } from 'react';
 import { AppPageShell } from '../../components';
 import { useAppBridgeClient } from '../../services/appBridgeContext';
+import { toAppError } from '../../services/appError';
+import { useAppErrors } from '../../services/appErrorContext';
 import { requestAppInfo, type AppInfoResponse } from '../../services/appInfoService';
 
 function DeveloperHomePage() {
   const appBridgeClient = useAppBridgeClient();
+  const { reportError } = useAppErrors();
   const [isLoading, setIsLoading] = useState(true);
   const [appInfo, setAppInfo] = useState<AppInfoResponse | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -24,8 +27,14 @@ function DeveloperHomePage() {
         }
       } catch (error) {
         if (isMounted) {
+          const appError = toAppError(error, {
+            source: 'app-info',
+            requestPath: '/app-info',
+            fallbackMessage: 'The backend app info could not be loaded.',
+          });
           setAppInfo(null);
-          setErrorMessage(error instanceof Error ? error.message : 'The backend app info could not be loaded.');
+          setErrorMessage(appError.details.userMessage);
+          reportError(appError);
         }
       } finally {
         if (isMounted) {
@@ -37,7 +46,7 @@ function DeveloperHomePage() {
     return () => {
       isMounted = false;
     };
-  }, [appBridgeClient]);
+  }, [appBridgeClient, reportError]);
 
   return (
     <AppPageShell

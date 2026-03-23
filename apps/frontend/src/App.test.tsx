@@ -40,14 +40,22 @@ vi.mock('@jtl-software/platform-ui-react', () => ({
     onClick,
     disabled,
     type,
+    icon,
+    badgeNum,
+    'aria-label': ariaLabel,
   }: {
     label?: string;
     onClick?: () => void;
     disabled?: boolean;
     type?: 'button' | 'submit' | 'reset';
+    icon?: ReactNode;
+    badgeNum?: number;
+    'aria-label'?: string;
   }) => (
-    <button type={type ?? 'button'} onClick={onClick} disabled={disabled}>
+    <button type={type ?? 'button'} onClick={onClick} disabled={disabled} aria-label={ariaLabel}>
+      {icon ? <span>{typeof icon === 'string' ? icon : 'icon'}</span> : null}
       {label}
+      {badgeNum != null ? <span>{badgeNum}</span> : null}
     </button>
   ),
   Card: ({ children }: { children: ReactNode }) => <div>{children}</div>,
@@ -264,7 +272,24 @@ describe('get app mode rendering', () => {
 
     renderAtPath('/', appBridge);
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('Backend app info failed.');
+    expect(await screen.findByRole('alert')).toHaveTextContent('The backend app info could not be loaded.');
+  });
+
+  it('records API errors in the global error history and shows a toast', async () => {
+    const user = userEvent.setup();
+    requestAppInfoMock.mockRejectedValue(new Error('Backend app info failed.'));
+    const { appBridge } = createAppBridgeMock();
+
+    renderAtPath('/', appBridge);
+
+    expect(await screen.findByText('The backend app info could not be loaded.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Open error history (1 error)' })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Open error history (1 error)' }));
+
+    expect(screen.getByRole('dialog', { name: 'Error history' })).toBeInTheDocument();
+    expect(screen.getByText('Backend app info failed.')).toBeInTheDocument();
+    expect(screen.getAllByText(/\/app-info/).length).toBeGreaterThan(0);
   });
 
   it('renders the setup page and handles a successful setup flow', async () => {
@@ -313,7 +338,7 @@ describe('get app mode rendering', () => {
     await user.click(screen.getByRole('button', { name: 'Continue' }));
     await user.click(screen.getByRole('button', { name: 'Test connection' }));
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('Backend validation failed.');
+    expect(await screen.findByRole('alert')).toHaveTextContent('An unexpected error occurred while testing the connection.');
     expect(methodCall).not.toHaveBeenCalledWith('setupCompleted');
   });
 

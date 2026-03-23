@@ -3,10 +3,17 @@ import { Card, CardContent } from '@jtl-software/platform-ui-react';
 import { AppPageShell } from './components';
 import { DeveloperHomePage, ErpPage, HubPage, PanePage, PrivacyPage, SetupPage, SupportPage, TermsOfUsePage } from './pages';
 import { getAppRoute } from './routing/getAppRoute';
+import { AppErrorProvider } from './services/appErrorContext';
 
 function App() {
   const route = getAppRoute(new URL(window.location.href));
 
+  return <AppErrorProvider>{renderRoute(route)}</AppErrorProvider>;
+}
+
+export default App;
+
+function renderRoute(route: ReturnType<typeof getAppRoute>) {
   switch (route.kind) {
     case 'developer-home':
       return <DeveloperHomePage />;
@@ -42,5 +49,3 @@ function App() {
       );
   }
 }
-
-export default App;

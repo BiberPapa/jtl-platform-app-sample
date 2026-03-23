@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AppBridgeClient } from './appBridgeClient';
+import { AppError } from './appError';
 import { requestGraphQlOperation, requestGraphQlSchema } from './graphQlSchemaService';
 
 describe('graphQlSchemaService', () => {
@@ -70,6 +71,31 @@ describe('graphQlSchemaService', () => {
         variables: { includeMeta: true },
         operationName: 'Viewer',
       }),
+    });
+  });
+
+  it('throws a normalized GraphQL error when the response contains errors[]', async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValueOnce(
+      createResponse({
+        ok: true,
+        status: 200,
+        text: '{"errors":[{"message":"Viewer failed","path":["viewer"],"extensions":{"code":"GRAPHQL_VALIDATION_FAILED"}}]}',
+      }),
+    );
+
+    vi.stubGlobal('fetch', fetchMock);
+
+    const requestPromise = requestGraphQlOperation(appBridgeClient, {
+      query: '{ viewer { id } }',
+    });
+
+    await expect(requestPromise).rejects.toBeInstanceOf(AppError);
+    await expect(requestPromise).rejects.toMatchObject({
+      details: {
+        kind: 'graphql',
+        code: 'GRAPHQL_VALIDATION_FAILED',
+        userMessage: 'The GraphQL request could not be completed.',
+      },
     });
   });
 });

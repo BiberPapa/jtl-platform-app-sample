@@ -2,6 +2,8 @@ import { Alert, Button, Card, CardContent, Checkbox } from '@jtl-software/platfo
 import { useCallback, useEffect, useState } from 'react';
 import { AppPageShell } from '../../components';
 import { useAppBridgeClient } from '../../services/appBridgeContext';
+import { toAppError } from '../../services/appError';
+import { useAppErrors } from '../../services/appErrorContext';
 import { connectTenant } from '../../services/setupService';
 
 type SetupStep = 'terms' | 'connection' | 'success';
@@ -16,6 +18,7 @@ function SetupPage() {
   const [completionMessage, setCompletionMessage] = useState<string | null>(null);
   const [showManualCloseHint, setShowManualCloseHint] = useState(false);
   const appBridgeClient = useAppBridgeClient();
+  const { reportError } = useAppErrors();
 
   useEffect(() => {
     if (currentStep !== 'success' || completionState !== 'idle') {
@@ -35,9 +38,13 @@ function SetupPage() {
         }
       } catch (error) {
         if (!cancelled) {
-          const message = error instanceof Error ? error.message : 'Setup completion could not be reported to the host.';
+          const appError = toAppError(error, {
+            source: 'bridge',
+            fallbackMessage: 'Setup completion could not be reported to the host.',
+          });
           setCompletionState('error');
-          setCompletionMessage(message);
+          setCompletionMessage(appError.details.userMessage);
+          reportError(appError);
         }
       }
     };
@@ -47,7 +54,7 @@ function SetupPage() {
     return () => {
       cancelled = true;
     };
-  }, [appBridgeClient, completionState, currentStep]);
+  }, [appBridgeClient, completionState, currentStep, reportError]);
 
   const handleConnectionTest = useCallback(async (): Promise<void> => {
     try {
@@ -61,11 +68,16 @@ function SetupPage() {
       setCompletionMessage(null);
       setCurrentStep('success');
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'An unexpected error occurred while testing the connection.';
+      const appError = toAppError(error, {
+        source: 'setup',
+        requestPath: '/connect-tenant',
+        fallbackMessage: 'An unexpected error occurred while testing the connection.',
+      });
       setConnectionState('error');
-      setConnectionMessage(message);
+      setConnectionMessage(appError.details.userMessage);
+      reportError(appError);
     }
-  }, [appBridgeClient]);
+  }, [appBridgeClient, reportError]);
 
   const handleOpenConnectionStep = useCallback(() => {
     if (!hasAcceptedTerms) {

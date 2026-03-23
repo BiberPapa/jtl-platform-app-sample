@@ -43,6 +43,7 @@ describe('requestErpInfoStatus', () => {
       infrastructureTimeMs: 8.75,
       frontendTimeMs: 3.25,
       errorMessage: null,
+      error: null,
     });
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
@@ -68,7 +69,9 @@ describe('requestErpInfoStatus', () => {
     vi.stubGlobal('fetch', fetchMock);
     vi.spyOn(performance, 'now').mockReturnValueOnce(200).mockReturnValueOnce(210);
 
-    await expect(requestErpInfoStatus(appBridgeClient)).resolves.toEqual({
+    const result = await requestErpInfoStatus(appBridgeClient);
+
+    expect(result).toMatchObject({
       reachable: false,
       tenantId: null,
       version: null,
@@ -76,7 +79,12 @@ describe('requestErpInfoStatus', () => {
       erpTimeMs: 3.5,
       infrastructureTimeMs: 6.25,
       frontendTimeMs: 3.75,
-      errorMessage: 'V2 info unavailable',
+      errorMessage: 'The /v2/info endpoint could not be loaded.',
+    });
+    expect(result.error).not.toBeNull();
+    expect(result.error?.details).toMatchObject({
+      kind: 'backend',
+      technicalMessage: 'V2 info unavailable',
     });
   });
 });
@@ -111,6 +119,7 @@ describe('requestAuthorizationStatus', () => {
     await expect(requestAuthorizationStatus(appBridgeClient)).resolves.toEqual({
       state: 'authorized',
       message: null,
+      error: null,
     });
   });
 
@@ -125,9 +134,16 @@ describe('requestAuthorizationStatus', () => {
 
     vi.stubGlobal('fetch', fetchMock);
 
-    await expect(requestAuthorizationStatus(appBridgeClient)).resolves.toEqual({
+    const result = await requestAuthorizationStatus(appBridgeClient);
+
+    expect(result).toMatchObject({
       state: 'unauthorized',
-      message: 'Access denied.',
+      message: 'You are not authorized to perform this action.',
+    });
+    expect(result.error).not.toBeNull();
+    expect(result.error?.details).toMatchObject({
+      technicalMessage: 'Access denied.',
+      status: 401,
     });
   });
 
@@ -141,9 +157,15 @@ describe('requestAuthorizationStatus', () => {
 
     vi.stubGlobal('fetch', fetchMock);
 
-    await expect(requestAuthorizationStatus(appBridgeClient)).resolves.toEqual({
+    const result = await requestAuthorizationStatus(appBridgeClient);
+
+    expect(result).toMatchObject({
       state: 'error',
-      message: 'Backend timeout',
+      message: 'The authorization status could not be determined.',
+    });
+    expect(result.error).not.toBeNull();
+    expect(result.error?.details).toMatchObject({
+      technicalMessage: 'Backend timeout',
     });
   });
 });
@@ -187,6 +209,7 @@ describe('requestPlaygroundRequest', () => {
       body: {
         workerId: 'worker-42',
       },
+      error: null,
     });
 
     expect(fetchMock).toHaveBeenCalledWith('https://api.example.test/erp/v1/worker', {
@@ -216,6 +239,7 @@ describe('requestPlaygroundRequest', () => {
       route: '/workers',
       method: 'GET',
       body: null,
+      error: null,
     });
   });
 });

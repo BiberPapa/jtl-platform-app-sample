@@ -1,5 +1,6 @@
 import type { AppBridgeClient } from './appBridgeClient';
-import { getBackendErrorMessage, requestBackend } from './apiClient';
+import { createAppErrorFromBackendResponse, createGraphQlAppError, toAppError, type GraphQlExecutionError } from './appError';
+import { requestBackend } from './apiClient';
 
 export type GraphQlRequestPayload = {
   query: string;
@@ -8,29 +9,71 @@ export type GraphQlRequestPayload = {
 };
 
 export async function requestGraphQlSchema(appBridgeClient: AppBridgeClient): Promise<string> {
-  const response = await requestBackend({
-    path: '/graphql/schema.graphql',
-    appBridgeClient,
-  });
+  try {
+    const response = await requestBackend({
+      path: '/graphql/schema.graphql',
+      appBridgeClient,
+    });
 
-  if (!response.ok) {
-    throw new Error(getBackendErrorMessage(response, 'The GraphQL schema could not be loaded.'));
+    if (!response.ok) {
+      throw createAppErrorFromBackendResponse(response, {
+        source: 'graphql',
+        requestPath: '/graphql/schema.graphql',
+        fallbackMessage: 'The GraphQL schema could not be loaded.',
+      });
+    }
+
+    return response.text;
+  } catch (error) {
+    throw toAppError(error, {
+      source: 'graphql',
+      requestPath: '/graphql/schema.graphql',
+      fallbackMessage: 'The GraphQL schema could not be loaded.',
+    });
   }
-
-  return response.text;
 }
 
 export async function requestGraphQlOperation(appBridgeClient: AppBridgeClient, payload: GraphQlRequestPayload): Promise<unknown> {
-  const response = await requestBackend({
-    path: '/graphql',
-    method: 'POST',
-    body: JSON.stringify(payload),
-    appBridgeClient,
-  });
+  try {
+    const response = await requestBackend({
+      path: '/graphql',
+      method: 'POST',
+      body: JSON.stringify(payload),
+      appBridgeClient,
+    });
 
-  if (!response.ok) {
-    throw new Error(getBackendErrorMessage(response, 'The GraphQL request could not be completed.'));
+    if (!response.ok) {
+      throw createAppErrorFromBackendResponse(response, {
+        source: 'graphql',
+        requestPath: '/graphql',
+        fallbackMessage: 'The GraphQL request could not be completed.',
+      });
+    }
+
+    if (hasGraphQlErrors(response.json)) {
+      throw createGraphQlAppError(response.json.errors, {
+        source: 'graphql',
+        requestPath: '/graphql',
+        fallbackMessage: 'The GraphQL request could not be completed.',
+        status: response.status,
+        raw: response.json,
+      });
+    }
+
+    return response.json;
+  } catch (error) {
+    throw toAppError(error, {
+      source: 'graphql',
+      requestPath: '/graphql',
+      fallbackMessage: 'The GraphQL request could not be completed.',
+    });
+  }
+}
+
+function hasGraphQlErrors(value: unknown): value is { errors: GraphQlExecutionError[] } {
+  if (!value || typeof value !== 'object' || !Array.isArray((value as { errors?: unknown }).errors)) {
+    return false;
   }
 
-  return response.json;
+  return true;
 }

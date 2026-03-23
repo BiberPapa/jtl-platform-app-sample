@@ -3,6 +3,8 @@ import type { CSSProperties } from 'react';
 import { useCallback, useEffect, useState } from 'react';
 import { AppPageShell } from '../../components';
 import { useAppBridgeClient } from '../../services/appBridgeContext';
+import { toAppError } from '../../services/appError';
+import { useAppErrors } from '../../services/appErrorContext';
 import {
   requestAuthorizationStatus,
   requestErpInfoStatus,
@@ -24,6 +26,7 @@ type DashboardState = {
 
 function DashboardPage() {
   const appBridgeClient = useAppBridgeClient();
+  const { reportError } = useAppErrors();
   const [isLoading, setIsLoading] = useState(true);
   const [status, setStatus] = useState<DashboardState | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -46,27 +49,51 @@ function DashboardPage() {
         requestAuthorizationStatus(appBridgeClient),
         getGlobalTenantIdFromSessionToken(appBridgeClient),
       ]);
+      if (erpInfo.error) {
+        reportError(erpInfo.error);
+      }
+      if (authorization.error) {
+        reportError(authorization.error);
+      }
       setStatus({ erpInfo, authorization, globalTenantId });
     } catch (error) {
+      const appError = toAppError(error, {
+        source: 'erp',
+        fallbackMessage: 'The dashboard status could not be loaded.',
+      });
       setStatus(null);
-      setErrorMessage(error instanceof Error ? error.message : 'The dashboard status could not be loaded.');
+      setErrorMessage(appError.details.userMessage);
+      reportError(appError);
     } finally {
       setIsLoading(false);
     }
-  }, [appBridgeClient]);
+  }, [appBridgeClient, reportError]);
 
   const handlePlaygroundRequest = useCallback(async (): Promise<void> => {
     try {
       setIsPlaygroundRequesting(true);
       setPlaygroundError(null);
-      setPlaygroundResult(await requestPlaygroundRequest(appBridgeClient, { route: playgroundRoute, method: playgroundMethod }));
+      const nextResult = await requestPlaygroundRequest(appBridgeClient, { route: playgroundRoute, method: playgroundMethod });
+
+      if (nextResult.error) {
+        reportError(nextResult.error);
+        setPlaygroundError(nextResult.error.details.userMessage);
+      }
+
+      setPlaygroundResult(nextResult);
     } catch (error) {
+      const appError = toAppError(error, {
+        source: 'erp',
+        requestPath: `/erp${playgroundRoute}`,
+        fallbackMessage: 'The playground request could not be completed.',
+      });
       setPlaygroundResult(null);
-      setPlaygroundError(error instanceof Error ? error.message : 'The playground request could not be completed.');
+      setPlaygroundError(appError.details.userMessage);
+      reportError(appError);
     } finally {
       setIsPlaygroundRequesting(false);
     }
-  }, [appBridgeClient, playgroundMethod, playgroundRoute]);
+  }, [appBridgeClient, playgroundMethod, playgroundRoute, reportError]);
 
   useEffect(() => {
     void loadStatus();
