@@ -3,15 +3,11 @@ import { copyProxyResponseHeaders } from '../http/proxyHeaders.js';
 import { getSessionTokenFromHeaders } from '../http/sessionTokenHeader.js';
 import { getRequestId } from '../middleware/requestContext.js';
 import { proxyErpRequest } from '../services/erpProxy.js';
+import { resolveTenantContext } from '../tenantContext.js';
 
 export const erpProxyHandler: RequestHandler = async (req, res) => {
   const requestId = getRequestId(res);
   const sessionToken = getSessionTokenFromHeaders(req.headers);
-
-  if (!sessionToken) {
-    res.status(400).json({ error: 'The X-Session-Token header must be provided.' });
-    return;
-  }
 
   const endpoint = req.params[0];
 
@@ -23,7 +19,8 @@ export const erpProxyHandler: RequestHandler = async (req, res) => {
   const startedAt = performance.now();
 
   try {
-    const erpResponse = await proxyErpRequest(req, sessionToken, {
+    const tenantContext = await resolveTenantContext(sessionToken);
+    const erpResponse = await proxyErpRequest(req, tenantContext, {
       requestId,
       inboundMethod: req.method,
       inboundPath: req.originalUrl,

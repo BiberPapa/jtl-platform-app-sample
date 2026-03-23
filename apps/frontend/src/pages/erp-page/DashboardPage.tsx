@@ -11,12 +11,14 @@ import {
   type PlaygroundRequestMethod,
   type PlaygroundRequestResult,
 } from '../../services/erpService';
+import { getGlobalTenantIdFromSessionToken } from '../../services/sessionTokenTenant';
 import ApiExplorerModal from './ApiExplorerModal';
 import TimingBreakdownCard from './TimingBreakdownCard';
 
 type DashboardState = {
   erpInfo: ErpInfoStatus;
   authorization: AuthorizationStatus;
+  globalTenantId: string | null;
 };
 
 function DashboardPage() {
@@ -36,8 +38,12 @@ function DashboardPage() {
     try {
       setIsLoading(true);
       setErrorMessage(null);
-      const [erpInfo, authorization] = await Promise.all([requestErpInfoStatus(appBridgeClient), requestAuthorizationStatus(appBridgeClient)]);
-      setStatus({ erpInfo, authorization });
+      const [erpInfo, authorization, globalTenantId] = await Promise.all([
+        requestErpInfoStatus(appBridgeClient),
+        requestAuthorizationStatus(appBridgeClient),
+        getGlobalTenantIdFromSessionToken(appBridgeClient),
+      ]);
+      setStatus({ erpInfo, authorization, globalTenantId });
     } catch (error) {
       setStatus(null);
       setErrorMessage(error instanceof Error ? error.message : 'The dashboard status could not be loaded.');
@@ -107,7 +113,8 @@ function DashboardPage() {
             <Card className="app-metric-card">
               <CardContent>
                 <p className="app-metric-label">Tenant Id</p>
-                <p className="app-metric-value">{status?.erpInfo.tenantId ?? (isLoading ? 'Loading...' : 'No tenant information')}</p>
+                <p className="app-metric-value">Local: {status?.erpInfo.tenantId ?? (isLoading ? 'Loading...' : 'No tenant information')}</p>
+                <p className="app-muted-text">Global: {status?.globalTenantId ?? (isLoading ? 'Loading...' : 'No tenant information')}</p>
               </CardContent>
             </Card>
             <Card className="app-metric-card">

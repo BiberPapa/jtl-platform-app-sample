@@ -132,7 +132,13 @@ type BridgeMock = {
 };
 
 function createAppBridgeMock(): BridgeMock {
-  const methodCall = vi.fn<(methodName: string) => Promise<unknown>>();
+  const methodCall = vi.fn<(methodName: string) => Promise<unknown>>((methodName: string) => {
+    if (methodName === 'getSessionToken') {
+      return Promise.resolve(createSessionToken({ tenantId: 'global-tenant-id' }));
+    }
+
+    return Promise.resolve(undefined);
+  });
   const expose = vi.fn();
   const subscribe = vi.fn(() => vi.fn());
 
@@ -287,7 +293,8 @@ describe('get app mode rendering', () => {
 
     renderAtPath('/erp', appBridge);
 
-    expect(await screen.findByText('eazybusiness')).toBeInTheDocument();
+    expect(await screen.findByText('Local: eazybusiness')).toBeInTheDocument();
+    expect(screen.getByText('Global: global-tenant-id')).toBeInTheDocument();
     expect(screen.getByText('Dashboard')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /dashboard/i })).toBeInTheDocument();
   });
@@ -320,7 +327,8 @@ describe('get app mode rendering', () => {
 
     renderAtPath('/erp/menu/Dashboard', appBridge);
 
-    expect(await screen.findByText('eazybusiness')).toBeInTheDocument();
+    expect(await screen.findByText('Local: eazybusiness')).toBeInTheDocument();
+    expect(screen.getByText('Global: global-tenant-id')).toBeInTheDocument();
     expect(screen.getByText('Dashboard')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /dashboard/i })).toBeInTheDocument();
   });
@@ -370,7 +378,8 @@ describe('get app mode rendering', () => {
 
     renderAtPath('/erp/menu/Dashboard', appBridge);
 
-    expect(await screen.findByText('eazybusiness')).toBeInTheDocument();
+    expect(await screen.findByText('Local: eazybusiness')).toBeInTheDocument();
+    expect(screen.getByText('Global: global-tenant-id')).toBeInTheDocument();
     expect(screen.getByText('Reachable')).toBeInTheDocument();
     expect(screen.getByText('Authorized')).toBeInTheDocument();
     expect(screen.getByText('2.0.0+Sha.e01a5a0')).toBeInTheDocument();
@@ -395,7 +404,14 @@ describe('get app mode rendering', () => {
   });
 
   it('renders an unavailable ERP dashboard status when no info endpoint succeeds', async () => {
-    const { appBridge } = createAppBridgeMock();
+    const { appBridge, methodCall } = createAppBridgeMock();
+    methodCall.mockImplementation((methodName: string) => {
+      if (methodName === 'getSessionToken') {
+        return Promise.resolve('');
+      }
+
+      return Promise.resolve(undefined);
+    });
 
     requestErpInfoStatusMock.mockResolvedValue({
       reachable: false,
@@ -422,7 +438,8 @@ describe('get app mode rendering', () => {
 
     renderAtPath('/erp/menu/Dashboard', appBridge);
 
-    expect(await screen.findByText('No tenant information')).toBeInTheDocument();
+    expect(await screen.findByText('Local: No tenant information')).toBeInTheDocument();
+    expect(screen.getByText('Global: No tenant information')).toBeInTheDocument();
     expect(screen.getAllByText('Unavailable')).toHaveLength(2);
     expect(screen.getByText('The /v2/info endpoint could not be loaded.')).toBeInTheDocument();
   });
@@ -638,6 +655,45 @@ describe('get app mode rendering', () => {
     expect(await screen.findAllByText('Problematic')).toHaveLength(3);
   });
 
+  it('shows no global tenant information when the session token is malformed', async () => {
+    const { appBridge, methodCall } = createAppBridgeMock();
+    methodCall.mockImplementation((methodName: string) => {
+      if (methodName === 'getSessionToken') {
+        return Promise.resolve('malformed-token');
+      }
+
+      return Promise.resolve(undefined);
+    });
+
+    requestErpInfoStatusMock.mockResolvedValue({
+      reachable: true,
+      tenantId: 'eazybusiness',
+      version: '2.0.0+Sha.e01a5a0',
+      totalTimeMs: 12,
+      erpTimeMs: 5.222,
+      infrastructureTimeMs: 6.778,
+      frontendTimeMs: 5.222,
+      errorMessage: null,
+    });
+    requestAuthorizationStatusMock.mockResolvedValue({
+      state: 'authorized',
+      message: null,
+    });
+    requestPlaygroundRequestMock.mockResolvedValue({
+      ok: true,
+      status: 200,
+      responseTimeMs: 11,
+      route: '/v1/worker',
+      method: 'GET',
+      body: { items: [] },
+    });
+
+    renderAtPath('/erp/menu/Dashboard', appBridge);
+
+    expect(await screen.findByText('Local: eazybusiness')).toBeInTheDocument();
+    expect(screen.getByText('Global: No tenant information')).toBeInTheDocument();
+  });
+
   it('renders an ERP-specific fallback for unknown menu items', () => {
     const { appBridge } = createAppBridgeMock();
 
@@ -687,3 +743,14 @@ describe('get app mode rendering', () => {
     expect(await screen.findByDisplayValue('customer-from-call')).toBeInTheDocument();
   });
 });
+
+function createSessionToken(payload: Record<string, unknown>): string {
+  const encodedHeader = encodeBase64Url(JSON.stringify({ alg: 'none', typ: 'JWT' }));
+  const encodedPayload = encodeBase64Url(JSON.stringify(payload));
+
+  return `${encodedHeader}.${encodedPayload}.signature`;
+}
+
+function encodeBase64Url(value: string): string {
+  return btoa(value).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+}

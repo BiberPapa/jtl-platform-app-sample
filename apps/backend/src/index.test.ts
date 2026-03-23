@@ -41,10 +41,29 @@ function captureJsonLogs() {
   };
 }
 
-function parseOpenApiDocument(documentText: string): { info?: Record<string, unknown>; openapi?: string } {
+type ParsedOpenApiDocument = {
+  info?: Record<string, unknown>;
+  openapi?: string;
+  paths?: Record<
+    string,
+    Record<
+      string,
+      {
+        description?: string;
+        parameters?: Array<{ description?: string; in?: string; name?: string }>;
+        responses?: Record<string, { description?: string }>;
+        summary?: string;
+        tags?: string[];
+      }
+    >
+  >;
+  tags?: Array<{ description?: string; name?: string }>;
+};
+
+function parseOpenApiDocument(documentText: string): ParsedOpenApiDocument {
   const normalizedDocumentText = documentText.charCodeAt(0) === 0xfeff ? documentText.slice(1) : documentText;
 
-  return JSON.parse(normalizedDocumentText) as { info?: Record<string, unknown>; openapi?: string };
+  return JSON.parse(normalizedDocumentText) as ParsedOpenApiDocument;
 }
 
 describe('backend routes', () => {
@@ -71,12 +90,27 @@ describe('backend routes', () => {
   });
 
   it('returns a bad request when the setup route is missing a session token', async () => {
+    delete process.env.NOHUB_TENANT_ID;
     const { createApp } = await import('./index.js');
 
     const response = await request(createApp()).post('/connect-tenant');
 
-    expect(response.status).toBe(400);
-    expect(response.body).toEqual({ error: 'The X-Session-Token header must be provided.' });
+    expect(response.status).toBe(500);
+    expect(response.body).toEqual({
+      error: 'Failed to connect tenant',
+      message: 'Either the X-Session-Token header or NOHUB_TENANT_ID must be provided.',
+    });
+  });
+
+  it('uses NOHUB_TENANT_ID for setup requests without a session token', async () => {
+    process.env.NOHUB_TENANT_ID = 'fallback-tenant';
+    const { createApp } = await import('./index.js');
+
+    const response = await request(createApp()).post('/connect-tenant');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ message: 'Tenant connected successfully.' });
+    expect(getSessionContextFromTokenMock).not.toHaveBeenCalled();
   });
 
   it('returns structured success for a valid setup request', async () => {
@@ -102,13 +136,47 @@ describe('backend routes', () => {
     });
   });
 
-  it('requires a session token header for ERP requests', async () => {
+  it('returns an error for ERP requests when neither session token nor NOHUB_TENANT_ID is available', async () => {
+    delete process.env.NOHUB_TENANT_ID;
     const { createApp } = await import('./index.js');
 
     const response = await request(createApp()).get('/erp/customers');
 
-    expect(response.status).toBe(400);
-    expect(response.body).toEqual({ error: 'The X-Session-Token header must be provided.' });
+    expect(response.status).toBe(500);
+    expect(response.body).toEqual({
+      error: 'Failed to fetch ERP info',
+      message: 'Either the X-Session-Token header or NOHUB_TENANT_ID must be provided.',
+    });
+  });
+
+  it('uses NOHUB_TENANT_ID and omits the session token header for ERP requests without a session token', async () => {
+    process.env.NOHUB_TENANT_ID = 'fallback-tenant-id';
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      headers: new Headers({
+        'content-type': 'application/json; charset=utf-8',
+      }),
+      text: () => Promise.resolve('{"result":"ok"}'),
+    });
+
+    vi.stubGlobal('fetch', fetchMock);
+
+    const { createApp } = await import('./index.js');
+
+    const response = await request(createApp()).get('/erp/customers');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ result: 'ok' });
+    expect(getSessionContextFromTokenMock).not.toHaveBeenCalled();
+    expect(fetchMock).toHaveBeenCalledWith('https://api.jtl-cloud.com/erp/customers', {
+      method: 'GET',
+      headers: {
+        'X-Tenant-ID': 'fallback-tenant-id',
+        Authorization: 'Bearer access-token',
+        'Content-Type': 'application/json',
+      },
+    });
   });
 
   it('uses the validated tenant and forwards nested ERP endpoints', async () => {
@@ -361,20 +429,61 @@ describe('backend routes', () => {
     expect(response.headers['transfer-encoding']).toBeUndefined();
   });
 
-  it('returns the local OpenAPI document with transformed description', async () => {
+  it('returns the local OpenAPI document with transformed tags and normalized texts', async () => {
     const { createApp } = await import('./index.js');
     const sourceDocumentText = await readFile(new URL('./assets/openapi.json', import.meta.url), 'utf8');
     const sourceDocument = parseOpenApiDocument(sourceDocumentText);
 
     const response = await request(createApp()).get('/openapi.json');
-    const responseBody = response.body as { info?: Record<string, unknown>; openapi?: string };
+    const responseBody = response.body as ParsedOpenApiDocument;
+    const tagNames = (responseBody.tags?.map(tag => tag.name) ?? []).filter((tagName): tagName is string => Boolean(tagName));
+    const availabilitiesOperation = responseBody.paths?.['/v2/availabilities']?.get;
+    const authenticationOperation = responseBody.paths?.['/v2/authentication']?.post;
+    const itemsOperation = responseBody.paths?.['/v2/items']?.post;
+    const workersOperation = responseBody.paths?.['/v2/workers']?.get;
+    const infoOperation = responseBody.paths?.['/v2/info']?.get;
 
     expect(response.status).toBe(200);
     expect(response.headers['content-type']).toContain('application/json');
     expect(responseBody.openapi).toBe(sourceDocument.openapi);
-    expect(responseBody.info).toEqual({
-      ...(sourceDocument.info ?? {}),
-      description: 'Hallo Welt',
+    expect(tagNames).toEqual([...tagNames].sort((left, right) => left.localeCompare(right)));
+    expect(tagNames).toContain('Synchronizations');
+    expect(tagNames).toContain('Item Configurations');
+    expect(tagNames).toContain('API Information');
+    expect(tagNames).not.toContain('worker');
+    expect(tagNames).not.toContain('wms');
+    expect(tagNames).not.toContain('WawiApp');
+    expect(tagNames).not.toContain('appRegistration');
+    expect(tagNames).not.toContain('login');
+    expect(tagNames).not.toContain('logout');
+    expect(responseBody.paths?.['/v2/wawiapp/customers']).toBeUndefined();
+    expect(responseBody.paths?.['/v2/authentication']).toBeDefined();
+    expect(responseBody.tags?.find(tag => tag.name === 'Business Configurations')?.description).toBe(
+      'Manage business-wide configuration resources such as warehouses, labels, payment methods, shipping methods, and number ranges.',
+    );
+    expect(availabilitiesOperation?.tags).toEqual(['Item Configurations']);
+    expect(availabilitiesOperation?.summary).toBe('List Availabilities');
+    expect(availabilitiesOperation?.description).toBe('Retrieve all item availabilities.');
+    expect(availabilitiesOperation?.responses?.['200']?.description).toBe('The available item availabilities.');
+    expect(availabilitiesOperation?.responses?.['401']).toBeUndefined();
+    expect(availabilitiesOperation?.responses?.['402']).toBeUndefined();
+    expect(availabilitiesOperation?.responses?.['404']).toBeUndefined();
+    expect(authenticationOperation?.tags).toBeUndefined();
+    expect(itemsOperation?.parameters?.some(parameter => parameter.name === 'x-appid')).toBe(false);
+    expect(itemsOperation?.parameters?.some(parameter => parameter.name === 'x-appversion')).toBe(false);
+    expect(itemsOperation?.parameters?.some(parameter => parameter.name === 'x-runas')).toBe(false);
+    expect(itemsOperation?.parameters?.some(parameter => parameter.name === 'X-SessionId')).toBe(false);
+    expect(itemsOperation?.parameters?.find(parameter => parameter.name === 'X-Session-Token')).toMatchObject({
+      description: 'The session token you obtained from the App Bridge.',
+      in: 'header',
+      name: 'X-Session-Token',
     });
+    expect(workersOperation?.tags).toEqual(['Synchronizations']);
+    expect(workersOperation?.summary).toBe('List Synchronizations');
+    expect(workersOperation?.description).toBe('Retrieve the available synchronization configurations.');
+    expect(workersOperation?.responses?.['404']).toBeUndefined();
+    expect(infoOperation?.tags).toEqual(['API Information']);
+    expect(infoOperation?.summary).toBe('Get API Status');
+    expect(infoOperation?.responses?.['404']).toBeUndefined();
   });
 });

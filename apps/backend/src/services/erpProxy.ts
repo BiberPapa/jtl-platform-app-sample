@@ -2,7 +2,7 @@ import type { Request } from 'express';
 import { getAccessToken } from '../accessToken.js';
 import { getErpEndpoint } from '../config.js';
 import { getConfiguredProxyLogLevel, logger, sanitizeHeaders, serializeLoggedBody } from '../logger.js';
-import { getSessionContextFromToken } from '../sessionToken.js';
+import type { TenantContext } from '../tenantContext.js';
 
 export type ErpProxyRequestContext = {
   requestId: string;
@@ -17,18 +17,17 @@ export type ErpProxyResponse = {
   body: string;
 };
 
-export async function proxyErpRequest(req: Request, sessionToken: string, context: ErpProxyRequestContext): Promise<ErpProxyResponse> {
-  const sessionContext = await getSessionContextFromToken(sessionToken);
+export async function proxyErpRequest(req: Request, tenantContext: TenantContext, context: ErpProxyRequestContext): Promise<ErpProxyResponse> {
   const accessToken = await getAccessToken();
   const targetUrl = getErpEndpoint(context.endpoint);
 
   const options: RequestInit = {
     method: req.method,
     headers: {
-      'X-Session-Token': sessionToken,
-      'X-Tenant-ID': sessionContext.tenantId,
       Authorization: `Bearer ${accessToken}`,
       'Content-Type': 'application/json',
+      'X-Tenant-ID': tenantContext.tenantId,
+      ...(tenantContext.sessionToken ? { 'X-Session-Token': tenantContext.sessionToken } : {}),
     },
   };
 
