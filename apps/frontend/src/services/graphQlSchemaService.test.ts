@@ -95,6 +95,54 @@ describe('graphQlSchemaService', () => {
         kind: 'graphql',
         code: 'GRAPHQL_VALIDATION_FAILED',
         userMessage: 'The GraphQL request could not be completed.',
+        technicalMessage: `GraphQL errors:
+- Viewer failed
+
+Query:
+{ viewer { id } }`,
+      },
+    });
+  });
+
+  it('normalizes GraphQL errors from 400 responses with errors[]', async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValueOnce(
+      createResponse({
+        ok: false,
+        status: 400,
+        text: '{"errors":[{"message":"The specified value type of field `eq` does not match the field type.","locations":[{"line":6,"column":26}],"path":["items"],"extensions":{"fieldName":"eq","fieldType":"Int","locationType":"Int","specifiedBy":"https://spec.graphql.org/October2021/#sec-Values-of-Correct-Type"}}]}',
+      }),
+    );
+
+    vi.stubGlobal('fetch', fetchMock);
+
+    const requestPromise = requestGraphQlOperation(appBridgeClient, {
+      query: `query BrokenItems {
+  items(where: { stockAvailable: { eq: "foo" } }) {
+    nodes {
+      name
+    }
+  }
+}`,
+    });
+
+    await expect(requestPromise).rejects.toBeInstanceOf(AppError);
+    await expect(requestPromise).rejects.toMatchObject({
+      details: {
+        kind: 'graphql',
+        code: 'GRAPHQL_ERROR',
+        status: 400,
+        userMessage: 'The GraphQL request could not be completed.',
+        technicalMessage: `GraphQL errors:
+- The specified value type of field \`eq\` does not match the field type.
+
+Query:
+query BrokenItems {
+  items(where: { stockAvailable: { eq: "foo" } }) {
+    nodes {
+      name
+    }
+  }
+}`,
       },
     });
   });

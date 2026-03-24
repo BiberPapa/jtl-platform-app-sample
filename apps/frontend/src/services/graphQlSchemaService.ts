@@ -42,21 +42,27 @@ export async function requestGraphQlOperation(appBridgeClient: AppBridgeClient, 
       appBridgeClient,
     });
 
+    if (hasGraphQlErrors(response.json)) {
+      throw createGraphQlAppError(
+        response.json.errors,
+        {
+          source: 'graphql',
+          requestPath: '/graphql',
+          fallbackMessage: 'The GraphQL request could not be completed.',
+          status: response.status,
+          raw: response.json,
+        },
+        {
+          query: payload.query,
+        },
+      );
+    }
+
     if (!response.ok) {
       throw createAppErrorFromBackendResponse(response, {
         source: 'graphql',
         requestPath: '/graphql',
         fallbackMessage: 'The GraphQL request could not be completed.',
-      });
-    }
-
-    if (hasGraphQlErrors(response.json)) {
-      throw createGraphQlAppError(response.json.errors, {
-        source: 'graphql',
-        requestPath: '/graphql',
-        fallbackMessage: 'The GraphQL request could not be completed.',
-        status: response.status,
-        raw: response.json,
       });
     }
 

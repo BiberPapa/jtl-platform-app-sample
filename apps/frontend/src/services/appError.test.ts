@@ -93,13 +93,28 @@ describe('appError helpers', () => {
         requestPath: '/graphql',
         fallbackMessage: 'The GraphQL request could not be completed.',
       },
+      {
+        query: `query Viewer {
+  viewer {
+    id
+  }
+}`,
+      },
     );
 
     expect(error.details).toMatchObject({
       kind: 'graphql',
       code: 'GRAPHQL_VALIDATION_FAILED',
       userMessage: 'The GraphQL request could not be completed.',
-      technicalMessage: 'Viewer field failed.',
+      technicalMessage: `GraphQL errors:
+- Viewer field failed.
+
+Query:
+query Viewer {
+  viewer {
+    id
+  }
+}`,
     });
     expect(error.details.validationErrors).toEqual([
       {

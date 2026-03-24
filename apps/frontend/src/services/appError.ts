@@ -36,6 +36,10 @@ export type GraphQlExecutionError = {
   extensions?: Record<string, unknown>;
 };
 
+export type GraphQlErrorContext = {
+  query: string;
+};
+
 type AspNetErrorPayload = {
   ErrorCode?: unknown;
   ValidationErrors?: unknown;
@@ -78,17 +82,13 @@ export function createAppErrorFromBackendResponse(response: Pick<BackendResponse
   });
 }
 
-export function createGraphQlAppError(graphQlErrors: GraphQlExecutionError[], fallback: AppErrorFallback): AppError {
+export function createGraphQlAppError(graphQlErrors: GraphQlExecutionError[], fallback: AppErrorFallback, context: GraphQlErrorContext): AppError {
   const validationErrors = graphQlErrors.map(error => ({
     field: error.path?.length ? error.path.join('.') : null,
     messages: [typeof error.message === 'string' ? error.message : 'Unknown GraphQL error'],
   }));
   const firstError = graphQlErrors[0];
-  const technicalMessage =
-    graphQlErrors
-      .map(error => (typeof error.message === 'string' ? error.message : null))
-      .filter((message): message is string => Boolean(message))
-      .join('\n') || fallback.fallbackMessage;
+  const technicalMessage = formatGraphQlTechnicalMessage(graphQlErrors, context.query, fallback.fallbackMessage);
 
   return new AppError({
     kind: 'graphql',
@@ -283,6 +283,20 @@ function getGraphQlErrorCode(error: GraphQlExecutionError | undefined): string {
   const extensionCode = error?.extensions?.['code'];
 
   return typeof extensionCode === 'string' && extensionCode.trim() ? extensionCode : 'GRAPHQL_ERROR';
+}
+
+function formatGraphQlTechnicalMessage(graphQlErrors: GraphQlExecutionError[], query: string, fallbackMessage: string): string {
+  const errorMessages = graphQlErrors
+    .map(error => (typeof error.message === 'string' ? error.message.trim() : null))
+    .filter((message): message is string => Boolean(message));
+  const formattedErrors = errorMessages.length ? errorMessages.map(message => `- ${message}`).join('\n') : `- ${fallbackMessage}`;
+  const normalizedQuery = query.trim();
+
+  if (!normalizedQuery) {
+    return `GraphQL errors:\n${formattedErrors}`;
+  }
+
+  return `GraphQL errors:\n${formattedErrors}\n\nQuery:\n${normalizedQuery}`;
 }
 
 function getUnknownTechnicalMessage(value: unknown, fallbackMessage: string): string {

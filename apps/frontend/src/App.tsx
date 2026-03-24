@@ -43,7 +43,7 @@ function renderRoute(route: ReturnType<typeof getAppRoute>) {
         <AppPageShell
           eyebrow="Cloud App"
           title="Unknown app mode"
-          lead="Use `/`, `/setup`, `/support`, `/privacy`, `/terms-of-use`, `/hub`, `/erp`, `/erp/menu/ApiDashboard`, `/erp/tabs/...` or `/pane` to open one of the documented app entry points."
+          lead="Use `/`, `/setup`, `/support`, `/privacy`, `/terms-of-use`, `/hub`, `/erp`, `/erp/menu/Dashboard`, `/erp/menu/ApiDashboard`, `/erp/tabs/...` or `/pane` to open one of the documented app entry points."
         >
           <Card>
             <CardContent>

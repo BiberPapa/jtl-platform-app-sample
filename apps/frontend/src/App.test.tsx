@@ -914,6 +914,81 @@ describe('get app mode rendering', () => {
     expect(screen.getByText('Global: No tenant information')).toBeInTheDocument();
   });
 
+  it('renders the ERP dashboard menu route with live GraphQL data', async () => {
+    const { appBridge } = createAppBridgeMock();
+
+    mockDashboardGraphQlResponses({
+      salesOrders: [
+        { salesOrderDate: '2026-01-05T08:00:00.000Z', totalGrossAmount: 12000, salesInvoiceStatus: 'COMPLETELY_INVOICED' },
+        { salesOrderDate: '2026-02-10T08:00:00.000Z', totalGrossAmount: 18000, salesInvoiceStatus: 'COMPLETELY_INVOICED' },
+        { salesOrderDate: '2026-03-11T08:00:00.000Z', totalGrossAmount: 15000, salesInvoiceStatus: 'PARTIALLY_INVOICED' },
+        { salesOrderDate: '2026-04-12T08:00:00.000Z', totalGrossAmount: 4000, salesInvoiceStatus: 'NOT_INVOICED' },
+        { salesOrderDate: '2026-05-13T08:00:00.000Z', totalGrossAmount: 14000, salesInvoiceStatus: 'COMPLETELY_INVOICED' },
+        { salesOrderDate: '2026-06-03T08:00:00.000Z', totalGrossAmount: 22000, salesInvoiceStatus: 'PARTIALLY_INVOICED' },
+      ],
+      topSellers: [
+        { name: 'Premium Laptop XPS-15', stockAvailable: 24, minimumStock: 5, averagePurchasePriceNet: 1000, profit: 220, isTopItem: true },
+        { name: 'Wireless Kopfhorer Pro', stockAvailable: 56, minimumStock: 12, averagePurchasePriceNet: 90, profit: 32, isTopItem: true },
+        { name: '4K Monitor 32"', stockAvailable: 4, minimumStock: 6, averagePurchasePriceNet: 280, profit: 75, isTopItem: true },
+        { name: 'Mechanische Tastatur RGB', stockAvailable: 8, minimumStock: null, averagePurchasePriceNet: 60, profit: 20, isTopItem: true },
+        { name: 'Smartphone Galaxy S24', stockAvailable: 24, minimumStock: 8, averagePurchasePriceNet: 650, profit: 140, isTopItem: true },
+      ],
+      inventoryItems: [
+        { name: 'Premium Laptop XPS-15', stockAvailable: 24, minimumStock: 5, averagePurchasePriceNet: 1000, profit: 220, isTopItem: true },
+        { name: 'Wireless Kopfhorer Pro', stockAvailable: 56, minimumStock: 12, averagePurchasePriceNet: 90, profit: 32, isTopItem: true },
+        { name: '4K Monitor 32"', stockAvailable: 4, minimumStock: 6, averagePurchasePriceNet: 280, profit: 75, isTopItem: true },
+        { name: 'Mechanische Tastatur RGB', stockAvailable: 8, minimumStock: null, averagePurchasePriceNet: 60, profit: 20, isTopItem: true },
+        { name: 'Smartphone Galaxy S24', stockAvailable: 24, minimumStock: 8, averagePurchasePriceNet: 650, profit: 140, isTopItem: true },
+      ],
+    });
+
+    renderAtPath('/erp/menu/Dashboard', appBridge);
+
+    expect(await screen.findByRole('heading', { name: 'Dashboard' })).toBeInTheDocument();
+    expect(screen.getByText('Umsatz aktuell')).toBeInTheDocument();
+    expect(screen.getByText('Gewinn')).toBeInTheDocument();
+    expect(screen.getByText('Offene Auftrage')).toBeInTheDocument();
+    expect(screen.getByText('Lagerwert Gesamt')).toBeInTheDocument();
+    expect(screen.getByText('Umsatzentwicklung')).toBeInTheDocument();
+    expect(screen.getByText('Bestand an Top-Sellern')).toBeInTheDocument();
+    expect(screen.getAllByText('Vorubergehend deaktiviert').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Keine GraphQL-Abfrage aktiv').length).toBeGreaterThan(0);
+  });
+
+  it('shows a loading state while the ERP dashboard queries are in flight', () => {
+    const { appBridge } = createAppBridgeMock();
+
+    requestGraphQlOperationMock.mockImplementation(() => new Promise(() => undefined));
+
+    renderAtPath('/erp/menu/Dashboard', appBridge);
+
+    expect(screen.getByText('Lade Dashboard-Daten...')).toBeInTheDocument();
+  });
+
+  it('shows a dashboard error when the GraphQL request fails', async () => {
+    const { appBridge } = createAppBridgeMock();
+
+    requestGraphQlOperationMock.mockRejectedValue(new Error('Dashboard GraphQL failed.'));
+
+    renderAtPath('/erp/menu/Dashboard', appBridge);
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Die Dashboard-Daten konnten nicht geladen werden.');
+  });
+
+  it('shows an empty state when the ERP dashboard receives no records', async () => {
+    const { appBridge } = createAppBridgeMock();
+
+    mockDashboardGraphQlResponses({
+      salesOrders: [],
+      topSellers: [],
+      inventoryItems: [],
+    });
+
+    renderAtPath('/erp/menu/Dashboard', appBridge);
+
+    expect(await screen.findByText(/Keine ERP-Daten verfugbar/i)).toBeInTheDocument();
+  });
+
   it('renders an ERP-specific fallback for unknown menu items', () => {
     const { appBridge } = createAppBridgeMock();
 
@@ -998,4 +1073,68 @@ function createSessionToken(payload: Record<string, unknown>): string {
 
 function encodeBase64Url(value: string): string {
   return btoa(value).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+}
+
+function mockDashboardGraphQlResponses(input: {
+  salesOrders: Array<{ salesOrderDate: string; totalGrossAmount: number; salesInvoiceStatus: string }>;
+  topSellers: Array<{
+    name: string;
+    stockAvailable: number;
+    minimumStock: number | null;
+    averagePurchasePriceNet: number;
+    profit: number;
+    isTopItem: boolean;
+  }>;
+  inventoryItems: Array<{
+    name: string;
+    stockAvailable: number;
+    minimumStock: number | null;
+    averagePurchasePriceNet: number;
+    profit: number;
+    isTopItem: boolean;
+  }>;
+}): void {
+  requestGraphQlOperationMock.mockImplementation((_appBridgeClient: AppBridgeClient, payload: unknown) => {
+    const query = getGraphQlQuery(payload);
+
+    if (query.includes('DashboardSalesOrders')) {
+      return Promise.resolve({
+        data: {
+          salesOrders: {
+            nodes: input.salesOrders,
+          },
+        },
+      });
+    }
+
+    if (query.includes('DashboardTopSellers')) {
+      return Promise.resolve({
+        data: {
+          items: {
+            nodes: input.topSellers,
+          },
+        },
+      });
+    }
+
+    if (query.includes('DashboardInventory')) {
+      return Promise.resolve({
+        data: {
+          items: {
+            nodes: input.inventoryItems,
+          },
+        },
+      });
+    }
+
+    return Promise.resolve({ data: { __typename: 'Query' } });
+  });
+}
+
+function getGraphQlQuery(payload: unknown): string {
+  if (!payload || typeof payload !== 'object') {
+    return '';
+  }
+
+  return typeof (payload as { query?: unknown }).query === 'string' ? (payload as { query: string }).query : '';
 }

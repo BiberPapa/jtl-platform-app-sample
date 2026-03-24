@@ -1,5 +1,6 @@
 import type { AppRoute } from '../../routing/getAppRoute';
 import ApiDashboardPage from './ApiDashboardPage';
+import ErpDashboardPage from './ErpDashboardPage';
 import UnknownErpPage from './UnknownErpPage';
 
 type ErpPageProps = {
@@ -11,7 +12,13 @@ function ErpPage({ route }: ErpPageProps) {
     case 'erp-home':
       return <ApiDashboardPage />;
     case 'erp-menu-item':
-      return route.menuItemId === 'ApiDashboard' ? <ApiDashboardPage /> : <UnknownErpPage kind="erp-menu-item" menuItemId={route.menuItemId} />;
+      return route.menuItemId === 'Dashboard' ? (
+        <ErpDashboardPage />
+      ) : route.menuItemId === 'ApiDashboard' ? (
+        <ApiDashboardPage />
+      ) : (
+        <UnknownErpPage kind="erp-menu-item" menuItemId={route.menuItemId} />
+      );
     case 'erp-tab':
       return <UnknownErpPage kind="erp-tab" tabId={route.tabId} />;
   }
