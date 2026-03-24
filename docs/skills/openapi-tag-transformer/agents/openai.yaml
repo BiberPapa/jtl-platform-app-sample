@@ -1,0 +1,4 @@
+interface:
+  display_name: 'OpenAPI Tag Transformer'
+  short_description: 'Refine one OpenAPI tag area into clear business-language documentation'
+  default_prompt: 'Use $openapi-tag-transformer to transform one OpenAPI tag area into consistent business-language documentation, including the tag text, endpoint descriptions, and documented error responses.'

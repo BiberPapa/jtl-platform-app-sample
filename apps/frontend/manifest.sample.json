@@ -23,40 +23,40 @@
     "dark": "https://imageslot.com/v1/400x400?bg=dd951c&fg=ffffff&shadow=ffffff&text=Demo&filetype=png"
   },
   "communication": {
-    "supportUrl": "http://localhost:50142/support",
+    "supportUrl": "http://localhost:6142/support",
     "guideUrl": "https://example.com/guide"
   },
   "legal": {
     "gdprRequestUrl": "https://example.com/gdpr/request",
     "gdprDeleteUrl": "https://example.com/gdpr/delete",
-    "privacyUrl": "http://localhost:50142/privacy",
-    "termsOfUseUrl": "http://localhost:50142/terms-of-use"
+    "privacyUrl": "http://localhost:6142/privacy",
+    "termsOfUseUrl": "http://localhost:6142/terms-of-use"
   },
   "lifecycle": {
-    "setupUrl": "http://localhost:50142/setup",
+    "setupUrl": "http://localhost:6142/setup",
     "connectUrl": "https://example.com/lifecycle/connect",
     "disconnectUrl": "https://example.com/lifecycle/disconnect"
   },
   "capabilities": {
     "hub": {
       "appLauncher": {
-        "redirectUrl": "http://localhost:50142/hub"
+        "redirectUrl": "http://localhost:6142/hub"
       }
     },
     "erp": {
       "headless": {
-        "url": "http://localhost:50142/erp"
+        "url": "http://localhost:6142/erp"
       },
       "menuItems": [
         {
           "id": "Dashboard",
           "name": "Dashboard",
-          "url": "http://localhost:50142/erp/menu/Dashboard"
+          "url": "http://localhost:6142/erp/menu/Dashboard"
         },
         {
           "id": "ApiDashboard",
           "name": "API Dashboard",
-          "url": "http://localhost:50142/erp/menu/ApiDashboard"
+          "url": "http://localhost:6142/erp/menu/ApiDashboard"
         }
       ],
       "api": {
@@ -67,7 +67,7 @@
           "context": "$tenantSlug.customers.overview",
           "matchChildContext": false,
           "title": "Customer Overview Pane",
-          "url": "http://localhost:50142/pane"
+          "url": "http://localhost:6142/pane"
         }
       ]
     }

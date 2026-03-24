@@ -1,12 +1,60 @@
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
+import { createServer } from 'node:net';
 import { fileURLToPath } from 'node:url';
-import { defineConfig, type PluginOption } from 'vite';
+import { defineConfig, loadEnv, type PluginOption } from 'vite';
 
 const platformUiAssetsDirectory = fileURLToPath(new URL('../../node_modules/@jtl-software/platform-ui-react/dist/assets/', import.meta.url));
 const plugins: PluginOption[] = [tailwindcss(), react()];
+const defaultDevPort = 6142;
+const fallbackDevPort = 5173;
 
-export default defineConfig({
+const parsePort = (value: string | undefined): number | undefined => {
+  if (!value) {
+    return undefined;
+  }
+
+  const port = Number.parseInt(value, 10);
+  if (Number.isNaN(port) || port <= 0 || port > 65_535) {
+    throw new Error(`Invalid Vite dev server port: ${value}`);
+  }
+
+  return port;
+};
+
+const canListenOnPort = async (port: number): Promise<boolean> =>
+  new Promise(resolve => {
+    const server = createServer();
+
+    server.once('error', () => {
+      resolve(false);
+    });
+
+    server.once('listening', () => {
+      server.close(() => {
+        resolve(true);
+      });
+    });
+
+    server.listen(port, '127.0.0.1');
+  });
+
+const resolveDevPort = async (mode: string): Promise<number> => {
+  const env = loadEnv(mode, process.cwd(), '');
+  const configuredPort = parsePort(env['VITE_DEV_PORT'] ?? env['PORT']);
+
+  if (configuredPort !== undefined) {
+    return configuredPort;
+  }
+
+  if (await canListenOnPort(defaultDevPort)) {
+    return defaultDevPort;
+  }
+
+  return fallbackDevPort;
+};
+
+export default defineConfig(async ({ mode }) => ({
   resolve: {
     alias: [
       {
@@ -19,7 +67,7 @@ export default defineConfig({
     chunkSizeWarningLimit: 2000,
     rollupOptions: {
       output: {
-        manualChunks(id) {
+        manualChunks(id: string) {
           if (!id.includes('node_modules')) {
             return undefined;
           }
@@ -42,7 +90,7 @@ export default defineConfig({
     },
   },
   server: {
-    port: 50142,
+    port: await resolveDevPort(mode),
   },
   plugins,
-});
+}));

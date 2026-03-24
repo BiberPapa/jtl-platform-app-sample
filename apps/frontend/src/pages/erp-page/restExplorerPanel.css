@@ -1,0 +1,303 @@
+.rest-explorer-panel {
+  min-height: 100%;
+}
+
+@media (prefers-color-scheme: dark) {
+  .rest-explorer-panel {
+    color-scheme: dark;
+  }
+
+  .rest-explorer-panel .swagger-ui {
+    color: #e5e7eb;
+  }
+
+  .rest-explorer-panel .swagger-ui .wrapper {
+    background: radial-gradient(circle at top left, rgb(30 41 59 / 40%), transparent 42%), linear-gradient(180deg, #0f172a 0%, #020617 100%);
+    padding-bottom: 2rem;
+  }
+
+  .rest-explorer-panel .swagger-ui,
+  .rest-explorer-panel .swagger-ui .info .title,
+  .rest-explorer-panel .swagger-ui .info h1,
+  .rest-explorer-panel .swagger-ui .info h2,
+  .rest-explorer-panel .swagger-ui .info h3,
+  .rest-explorer-panel .swagger-ui .info h4,
+  .rest-explorer-panel .swagger-ui .info h5,
+  .rest-explorer-panel .swagger-ui .info h6,
+  .rest-explorer-panel .swagger-ui .markdown h1,
+  .rest-explorer-panel .swagger-ui .markdown h2,
+  .rest-explorer-panel .swagger-ui .markdown h3,
+  .rest-explorer-panel .swagger-ui .markdown h4,
+  .rest-explorer-panel .swagger-ui .markdown h5,
+  .rest-explorer-panel .swagger-ui .markdown h6,
+  .rest-explorer-panel .swagger-ui .info hgroup.main,
+  .rest-explorer-panel .swagger-ui .info p,
+  .rest-explorer-panel .swagger-ui .info li,
+  .rest-explorer-panel .swagger-ui .markdown p,
+  .rest-explorer-panel .swagger-ui .markdown li,
+  .rest-explorer-panel .swagger-ui .opblock-tag,
+  .rest-explorer-panel .swagger-ui .opblock-summary-path,
+  .rest-explorer-panel .swagger-ui .parameter__name,
+  .rest-explorer-panel .swagger-ui .parameter__type,
+  .rest-explorer-panel .swagger-ui .response-col_status,
+  .rest-explorer-panel .swagger-ui .response-col_description,
+  .rest-explorer-panel .swagger-ui label,
+  .rest-explorer-panel .swagger-ui .tab li,
+  .rest-explorer-panel .swagger-ui section.models h4,
+  .rest-explorer-panel .swagger-ui section.models h5,
+  .rest-explorer-panel .swagger-ui .model-title,
+  .rest-explorer-panel .swagger-ui .model,
+  .rest-explorer-panel .swagger-ui .prop-type,
+  .rest-explorer-panel .swagger-ui .prop-format,
+  .rest-explorer-panel .swagger-ui .scheme-container .schemes-title,
+  .rest-explorer-panel .swagger-ui .dialog-ux .modal-ux-content,
+  .rest-explorer-panel .swagger-ui .dialog-ux .modal-ux-header h3 {
+    color: #e5e7eb;
+  }
+
+  .rest-explorer-panel .swagger-ui .info a,
+  .rest-explorer-panel .swagger-ui .link,
+  .rest-explorer-panel .swagger-ui .opblock-summary-method,
+  .rest-explorer-panel .swagger-ui .tab li.active button.tablinks,
+  .rest-explorer-panel .swagger-ui .copy-to-clipboard,
+  .rest-explorer-panel .swagger-ui .response-col_links a,
+  .rest-explorer-panel .swagger-ui .parameter__name.required span,
+  .rest-explorer-panel .swagger-ui .renderedMarkdown a {
+    color: #93c5fd;
+  }
+
+  .rest-explorer-panel .swagger-ui .info {
+    margin: 0;
+    padding: 2rem 1rem 1.5rem;
+    border: 1px solid #1e293b;
+    border-radius: 20px;
+    background: linear-gradient(180deg, rgb(15 23 42 / 92%), rgb(2 6 23 / 92%));
+    box-shadow: inset 0 1px 0 rgb(148 163 184 / 10%);
+  }
+
+  .rest-explorer-panel .swagger-ui .info .title small,
+  .rest-explorer-panel .swagger-ui .info .base-url,
+  .rest-explorer-panel .swagger-ui .info .base-url a,
+  .rest-explorer-panel .swagger-ui .scheme-container .servers-title,
+  .rest-explorer-panel .swagger-ui .opblock-summary-description,
+  .rest-explorer-panel .swagger-ui .parameter__deprecated,
+  .rest-explorer-panel .swagger-ui .response-col_status {
+    color: #cbd5e1;
+  }
+
+  .rest-explorer-panel .swagger-ui .scheme-container,
+  .rest-explorer-panel .swagger-ui .information-container,
+  .rest-explorer-panel .swagger-ui section.models,
+  .rest-explorer-panel .swagger-ui .model-container,
+  .rest-explorer-panel .swagger-ui .responses-inner,
+  .rest-explorer-panel .swagger-ui .opblock,
+  .rest-explorer-panel .swagger-ui .dialog-ux .modal-ux,
+  .rest-explorer-panel .swagger-ui .dialog-ux .modal-ux-content,
+  .rest-explorer-panel .swagger-ui .dialog-ux .modal-ux-header,
+  .rest-explorer-panel .swagger-ui .dialog-ux .modal-ux-body {
+    background: #111827;
+    border-color: #374151;
+    box-shadow: none;
+  }
+
+  .rest-explorer-panel .swagger-ui .opblock .opblock-section-header,
+  .rest-explorer-panel .swagger-ui .responses-table tr td,
+  .rest-explorer-panel .swagger-ui .responses-table tr th,
+  .rest-explorer-panel .swagger-ui table thead tr td,
+  .rest-explorer-panel .swagger-ui table thead tr th,
+  .rest-explorer-panel .swagger-ui .parameter__in,
+  .rest-explorer-panel .swagger-ui .model-toggle:after,
+  .rest-explorer-panel .swagger-ui .expand-methods,
+  .rest-explorer-panel .swagger-ui .opblock-tag,
+  .rest-explorer-panel .swagger-ui section.models,
+  .rest-explorer-panel .swagger-ui section.models .model-container,
+  .rest-explorer-panel .swagger-ui .tab li,
+  .rest-explorer-panel .swagger-ui .servers > label select {
+    border-color: #374151;
+  }
+
+  .rest-explorer-panel .swagger-ui .topbar,
+  .rest-explorer-panel .swagger-ui .opblock-tag,
+  .rest-explorer-panel .swagger-ui .opblock .opblock-summary,
+  .rest-explorer-panel .swagger-ui .opblock .opblock-section-header,
+  .rest-explorer-panel .swagger-ui .opblock-description-wrapper,
+  .rest-explorer-panel .swagger-ui .opblock-external-docs-wrapper,
+  .rest-explorer-panel .swagger-ui .responses-wrapper,
+  .rest-explorer-panel .swagger-ui .responses-table,
+  .rest-explorer-panel .swagger-ui .responses-inner,
+  .rest-explorer-panel .swagger-ui .parameters-col_description,
+  .rest-explorer-panel .swagger-ui .parameter__extension,
+  .rest-explorer-panel .swagger-ui .model-box,
+  .rest-explorer-panel .swagger-ui .highlight-code,
+  .rest-explorer-panel .swagger-ui .microlight,
+  .rest-explorer-panel .swagger-ui pre,
+  .rest-explorer-panel .swagger-ui .renderedMarkdown code,
+  .rest-explorer-panel .swagger-ui .renderedMarkdown pre {
+    background: #0f172a;
+    color: #e5e7eb;
+  }
+
+  .rest-explorer-panel .swagger-ui input[type='text'],
+  .rest-explorer-panel .swagger-ui input[type='password'],
+  .rest-explorer-panel .swagger-ui input[type='search'],
+  .rest-explorer-panel .swagger-ui input[type='email'],
+  .rest-explorer-panel .swagger-ui input[type='file'],
+  .rest-explorer-panel .swagger-ui textarea,
+  .rest-explorer-panel .swagger-ui select {
+    background: #1f2937;
+    border-color: #4b5563;
+    color: #f9fafb;
+  }
+
+  .rest-explorer-panel .swagger-ui table tbody tr td,
+  .rest-explorer-panel .swagger-ui table tbody tr th,
+  .rest-explorer-panel .swagger-ui .parameters-col_name,
+  .rest-explorer-panel .swagger-ui .parameters-col_description,
+  .rest-explorer-panel .swagger-ui .opblock-description-wrapper p,
+  .rest-explorer-panel .swagger-ui .opblock-external-docs-wrapper p,
+  .rest-explorer-panel .swagger-ui .responses-inner h4,
+  .rest-explorer-panel .swagger-ui .responses-inner h5,
+  .rest-explorer-panel .swagger-ui .response-col_description__inner p,
+  .rest-explorer-panel .swagger-ui .tab li button.tablinks {
+    color: #e2e8f0;
+  }
+
+  .rest-explorer-panel .swagger-ui input::placeholder,
+  .rest-explorer-panel .swagger-ui textarea::placeholder {
+    color: #9ca3af;
+  }
+
+  .rest-explorer-panel .swagger-ui .btn,
+  .rest-explorer-panel .swagger-ui .btn.authorize,
+  .rest-explorer-panel .swagger-ui .authorize {
+    background: #1f2937;
+    border-color: #4b5563;
+    color: #f9fafb;
+  }
+
+  .rest-explorer-panel .swagger-ui .btn.execute {
+    background: #0f766e;
+    border-color: #14b8a6;
+    color: #ecfeff;
+  }
+
+  .rest-explorer-panel .swagger-ui .btn.execute:hover {
+    background: #115e59;
+    border-color: #2dd4bf;
+  }
+
+  .rest-explorer-panel .swagger-ui .btn.cancel {
+    background: #7f1d1d;
+    border-color: #ef4444;
+    color: #fef2f2;
+  }
+
+  .rest-explorer-panel .swagger-ui .btn:hover,
+  .rest-explorer-panel .swagger-ui .opblock-summary:hover,
+  .rest-explorer-panel .swagger-ui .opblock-tag:hover {
+    filter: brightness(1.08);
+  }
+
+  .rest-explorer-panel .swagger-ui .opblock.opblock-get {
+    background: rgb(8 47 73 / 55%);
+    border-color: #38bdf8;
+  }
+
+  .rest-explorer-panel .swagger-ui .opblock.opblock-get .opblock-summary,
+  .rest-explorer-panel .swagger-ui .opblock.opblock-get .opblock-section-header {
+    background: rgb(8 47 73 / 72%);
+  }
+
+  .rest-explorer-panel .swagger-ui .opblock.opblock-get .opblock-summary-method {
+    background: linear-gradient(180deg, #7dd3fc 0%, #38bdf8 100%);
+    border-color: #bae6fd;
+    color: #082f49;
+    text-shadow: none;
+  }
+
+  .rest-explorer-panel .swagger-ui .opblock.opblock-post {
+    background: rgb(20 83 45 / 55%);
+    border-color: #4ade80;
+  }
+
+  .rest-explorer-panel .swagger-ui .opblock.opblock-post .opblock-summary,
+  .rest-explorer-panel .swagger-ui .opblock.opblock-post .opblock-section-header {
+    background: rgb(20 83 45 / 72%);
+  }
+
+  .rest-explorer-panel .swagger-ui .opblock.opblock-post .opblock-summary-method {
+    background: linear-gradient(180deg, #86efac 0%, #4ade80 100%);
+    border-color: #bbf7d0;
+    color: #052e16;
+    text-shadow: none;
+  }
+
+  .rest-explorer-panel .swagger-ui .opblock.opblock-put,
+  .rest-explorer-panel .swagger-ui .opblock.opblock-patch {
+    background: rgb(120 53 15 / 55%);
+    border-color: #fb923c;
+  }
+
+  .rest-explorer-panel .swagger-ui .opblock.opblock-put .opblock-summary,
+  .rest-explorer-panel .swagger-ui .opblock.opblock-put .opblock-section-header,
+  .rest-explorer-panel .swagger-ui .opblock.opblock-patch .opblock-summary,
+  .rest-explorer-panel .swagger-ui .opblock.opblock-patch .opblock-section-header {
+    background: rgb(120 53 15 / 72%);
+  }
+
+  .rest-explorer-panel .swagger-ui .opblock.opblock-put .opblock-summary-method,
+  .rest-explorer-panel .swagger-ui .opblock.opblock-patch .opblock-summary-method {
+    background: linear-gradient(180deg, #fdba74 0%, #fb923c 100%);
+    border-color: #fed7aa;
+    color: #431407;
+    text-shadow: none;
+  }
+
+  .rest-explorer-panel .swagger-ui .opblock.opblock-delete {
+    background: rgb(127 29 29 / 55%);
+    border-color: #f87171;
+  }
+
+  .rest-explorer-panel .swagger-ui .opblock.opblock-delete .opblock-summary,
+  .rest-explorer-panel .swagger-ui .opblock.opblock-delete .opblock-section-header {
+    background: rgb(127 29 29 / 72%);
+  }
+
+  .rest-explorer-panel .swagger-ui .opblock.opblock-delete .opblock-summary-method {
+    background: linear-gradient(180deg, #fda4af 0%, #f87171 100%);
+    border-color: #fecdd3;
+    color: #450a0a;
+    text-shadow: none;
+  }
+
+  .rest-explorer-panel .swagger-ui .opblock.opblock-head {
+    background: rgb(76 29 149 / 55%);
+    border-color: #a855f7;
+  }
+
+  .rest-explorer-panel .swagger-ui .opblock.opblock-head .opblock-summary,
+  .rest-explorer-panel .swagger-ui .opblock.opblock-head .opblock-section-header {
+    background: rgb(76 29 149 / 72%);
+  }
+
+  .rest-explorer-panel .swagger-ui .opblock.opblock-head .opblock-summary-method {
+    background: linear-gradient(180deg, #d8b4fe 0%, #a855f7 100%);
+    border-color: #e9d5ff;
+    color: #3b0764;
+    text-shadow: none;
+  }
+
+  .rest-explorer-panel .swagger-ui .opblock.opblock-deprecated {
+    background: rgb(63 63 70 / 65%);
+    border-color: #a1a1aa;
+  }
+
+  .rest-explorer-panel .swagger-ui .opblock .opblock-summary-path,
+  .rest-explorer-panel .swagger-ui .opblock .opblock-summary-description {
+    color: #f8fafc;
+  }
+
+  .rest-explorer-panel .swagger-ui .topbar {
+    border-radius: 18px 18px 0 0;
+  }
+}

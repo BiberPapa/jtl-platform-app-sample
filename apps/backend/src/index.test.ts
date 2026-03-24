@@ -42,8 +42,11 @@ function captureJsonLogs() {
 }
 
 type ParsedOpenApiDocument = {
+  components?: Record<string, unknown>;
   info?: Record<string, unknown>;
   openapi?: string;
+  security?: unknown;
+  servers?: Array<{ description?: string; url?: string }>;
   paths?: Record<
     string,
     Record<
@@ -52,6 +55,7 @@ type ParsedOpenApiDocument = {
         description?: string;
         parameters?: Array<{ description?: string; in?: string; name?: string }>;
         responses?: Record<string, { description?: string }>;
+        security?: unknown;
         summary?: string;
         tags?: string[];
       }
@@ -604,6 +608,7 @@ describe('backend routes', () => {
     const response = await request(createApp()).get('/openapi.json');
     const responseBody = response.body as ParsedOpenApiDocument;
     const tagNames = (responseBody.tags?.map(tag => tag.name) ?? []).filter((tagName): tagName is string => Boolean(tagName));
+    const accountingDataOperation = responseBody.paths?.['/v2/accountingData']?.get;
     const availabilitiesOperation = responseBody.paths?.['/v2/availabilities']?.get;
     const authenticationOperation = responseBody.paths?.['/v2/authentication']?.post;
     const itemsOperation = responseBody.paths?.['/v2/items']?.post;
@@ -613,10 +618,31 @@ describe('backend routes', () => {
     expect(response.status).toBe(200);
     expect(response.headers['content-type']).toContain('application/json');
     expect(responseBody.openapi).toBe(sourceDocument.openapi);
+    expect(responseBody.info?.['description']).toBe(
+      '# Overview\n' +
+        '\n' +
+        'Use this API to connect business applications with JTL ERP for core business processes such as items, sales orders, returns, stocks, shipping, procurement, and accounting data.\n' +
+        '\n' +
+        '# How To Use This API\n' +
+        '\n' +
+        "Use the endpoints in this document through this app's backend ERP proxy.\n" +
+        'The tags are organized by business area so you can quickly find the processes relevant to your integration scenario.\n' +
+        'For protected endpoints, use the current `X-Session-Token` from the app context.',
+    );
+    expect(responseBody.security).toBeUndefined();
+    expect(responseBody.components?.['securitySchemes']).toBeUndefined();
+    expect(responseBody.servers).toEqual([
+      {
+        url: '/erp',
+        description: 'Backend ERP proxy',
+      },
+    ]);
     expect(tagNames).toEqual([...tagNames].sort((left, right) => left.localeCompare(right)));
+    expect(tagNames).toContain('Accounting Data');
     expect(tagNames).toContain('Synchronizations');
     expect(tagNames).toContain('Item Configurations');
     expect(tagNames).toContain('API Information');
+    expect(tagNames).not.toContain('accountingData');
     expect(tagNames).not.toContain('worker');
     expect(tagNames).not.toContain('wms');
     expect(tagNames).not.toContain('WawiApp');
@@ -628,6 +654,21 @@ describe('backend routes', () => {
     expect(responseBody.tags?.find(tag => tag.name === 'Business Configurations')?.description).toBe(
       'Manage business-wide configuration resources such as warehouses, labels, payment methods, shipping methods, and number ranges.',
     );
+    expect(responseBody.tags?.find(tag => tag.name === 'Accounting Data')?.description).toBe(
+      'Retrieve finalized accounting transactions for accounting exports and reconciliation.',
+    );
+    expect(accountingDataOperation?.tags).toEqual(['Accounting Data']);
+    expect(accountingDataOperation?.summary).toBe('List Accounting Data');
+    expect(accountingDataOperation?.description).toBe(
+      'Retrieve finalized accounting transactions, including invoices, credits, cancellations, corrections, and related line items.',
+    );
+    expect(accountingDataOperation?.responses?.['200']?.description).toBe(
+      'A paginated list of finalized accounting transactions, including invoices, credits, cancellations, corrections, and related line items.',
+    );
+    expect(accountingDataOperation?.security).toBeUndefined();
+    expect(accountingDataOperation?.responses?.['401']).toBeUndefined();
+    expect(accountingDataOperation?.responses?.['402']).toBeUndefined();
+    expect(accountingDataOperation?.responses?.['404']).toBeUndefined();
     expect(availabilitiesOperation?.tags).toEqual(['Item Configurations']);
     expect(availabilitiesOperation?.summary).toBe('List Availabilities');
     expect(availabilitiesOperation?.description).toBe('Retrieve all item availabilities.');

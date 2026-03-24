@@ -36,14 +36,24 @@ type OpenApiOperation = {
   summary?: string;
   description?: string;
   responses?: Record<string, OpenApiResponse>;
+  security?: unknown;
   [key: string]: unknown;
 };
 
 type OpenApiPathItem = Record<string, unknown>;
 
+type OpenApiServer = {
+  url: string;
+  description?: string;
+  [key: string]: unknown;
+};
+
 type OpenApiDocument = {
+  components?: Record<string, unknown>;
   info?: Record<string, unknown>;
   paths?: Record<string, OpenApiPathItem>;
+  security?: unknown;
+  servers?: OpenApiServer[];
   tags?: OpenApiTag[];
   [key: string]: unknown;
 };
@@ -51,15 +61,62 @@ type OpenApiDocument = {
 const DESCRIPTION_PLACEHOLDERS = new Set(['Development', 'Planned']);
 const STRIPPABLE_DESCRIPTION_PREFIX = /<p[^>]*><\/p>/i;
 const OPERATION_METHODS = new Set(['get', 'post', 'put', 'patch', 'delete', 'head', 'options', 'trace']);
+const TRANSFORMED_INFO_DESCRIPTION = [
+  '# Overview',
+  '',
+  'Use this API to connect business applications with JTL ERP for core business processes such as items, sales orders, returns, stocks, shipping, procurement, and accounting data.',
+  '',
+  '# How To Use This API',
+  '',
+  "Use the endpoints in this document through this app's backend ERP proxy.",
+  'The tags are organized by business area so you can quickly find the processes relevant to your integration scenario.',
+  'For protected endpoints, use the current `X-Session-Token` from the app context.',
+].join('\n');
 
 export function transformOpenApiDocument(documentText: string): string {
   const document = JSON.parse(stripByteOrderMark(documentText)) as OpenApiDocument;
   const transformedPaths = transformPaths(document.paths ?? {});
+  const transformedComponents = transformComponents(document.components);
+  const transformedInfo = transformInfo(document.info);
+
+  if (transformedComponents) {
+    document.components = transformedComponents;
+  } else {
+    delete document.components;
+  }
+
+  if (transformedInfo) {
+    document.info = transformedInfo;
+  } else {
+    delete document.info;
+  }
 
   document.paths = transformedPaths;
+  delete document.security;
+  document.servers = buildTransformedServers();
   document.tags = buildTransformedTags(document.tags ?? [], transformedPaths);
 
   return JSON.stringify(document);
+}
+
+function buildTransformedServers(): OpenApiServer[] {
+  return [
+    {
+      url: '/erp',
+      description: 'Backend ERP proxy',
+    },
+  ];
+}
+
+function transformInfo(info: Record<string, unknown> | undefined): Record<string, unknown> | undefined {
+  if (!info) {
+    return info;
+  }
+
+  return {
+    ...info,
+    description: TRANSFORMED_INFO_DESCRIPTION,
+  };
 }
 
 function transformPaths(paths: Record<string, OpenApiPathItem>): Record<string, OpenApiPathItem> {
@@ -96,6 +153,8 @@ function transformOperation(path: string, method: string, operation: OpenApiOper
   const transformedOperation: OpenApiOperation = {
     ...operation,
   };
+
+  delete transformedOperation.security;
 
   const transformedTags = transformOperationTags(path, operation.tags ?? []);
   if (transformedTags.length > 0) {
@@ -135,6 +194,20 @@ function transformOperation(path: string, method: string, operation: OpenApiOper
   }
 
   return transformedOperation;
+}
+
+function transformComponents(components: Record<string, unknown> | undefined): Record<string, unknown> | undefined {
+  if (!components) {
+    return components;
+  }
+
+  const transformedComponents = {
+    ...components,
+  };
+
+  delete transformedComponents['securitySchemes'];
+
+  return transformedComponents;
 }
 
 function transformOperationTags(path: string, tags: string[]): string[] {

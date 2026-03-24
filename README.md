@@ -9,8 +9,9 @@
 ## Development
 
 - Run `pnpm dev` to start the TypeScript backend and frontend
-- Run `pnpm dev:backend:ts` to start only the backend on `http://localhost:50143`
+- Run `pnpm dev:backend:ts` to start only the backend on `http://localhost:6143`
 - Run `pnpm dev:frontend` to start only the frontend
+- If Windows reserves frontend port `6142`, the Vite dev server now falls back to `5173`; set `VITE_DEV_PORT` in `apps/frontend/.env` to pin a different local port.
 
 ## Commands
 
@@ -27,16 +28,16 @@
 - `apps/frontend` contains the React frontend
 
 Use `apps/frontend/.env.example` as the starting point for frontend configuration.
-Keep `VITE_API_URL=http://localhost:50143` for the local backend.
+Keep `VITE_API_URL=http://localhost:6143` for the local backend.
 The frontend developer start page loads environment and NOHUB information from the backend `GET /app-info` route.
 The existing `apps/frontend/Dockerfile` is a legacy path and remains outside this pnpm migration; it references `src/sdk/js-core`, which does not exist in this repository and should be cleaned up separately.
 
 ## Ports
 
-| Port  | Protocol | Service               |
-| ----- | -------- | --------------------- |
-| 50143 | HTTP     | API Main (TypeScript) |
-| 50142 | HTTP     | React App             |
+| Port | Protocol | Service               |
+| ---- | -------- | --------------------- |
+| 6143 | HTTP     | API Main (TypeScript) |
+| 6142 | HTTP     | React App             |
 
 ## Environment Variables
 

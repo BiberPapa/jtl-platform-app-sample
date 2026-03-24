@@ -30,6 +30,6 @@ RUN npm install --omit=dev
 COPY --from=builder --chown=10001:10001 /app/dist ./dist
 
 USER 10001:10001
-EXPOSE 50143
+EXPOSE 6143
 
 CMD ["node", "dist/index.js"]

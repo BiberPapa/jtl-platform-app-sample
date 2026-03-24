@@ -8,6 +8,7 @@ export const HIDDEN_OPERATION_TAGS = new Set(['WawiApp']);
 export const REMOVED_OPERATION_TAGS = new Set(['appRegistration', 'login', 'logout']);
 
 export const TAG_RENAMES = new Map<string, string>([
+  ['accountingData', 'Accounting Data'],
   ['worker', 'Synchronizations'],
   ['wms', 'Warehouse Management'],
   ['warehouse', 'Business Configurations'],
@@ -57,6 +58,7 @@ export const PATH_TAG_OVERRIDES = new Map<string, string>([
 ]);
 
 export const TAG_DESCRIPTIONS = new Map<string, string>([
+  ['Accounting Data', 'Retrieve finalized accounting transactions for accounting exports and reconciliation.'],
   ['API Information', 'Check API status information and available feature sets.'],
   ['Attributes', 'Manage item properties, property values, descriptions, and property groups.'],
   [
@@ -88,6 +90,17 @@ export const TAG_DESCRIPTIONS = new Map<string, string>([
 ]);
 
 export const OPERATION_OVERRIDES = new Map<string, OperationOverride>([
+  [
+    'GET /v2/accountingData',
+    {
+      summary: 'List Accounting Data',
+      description: 'Retrieve finalized accounting transactions, including invoices, credits, cancellations, corrections, and related line items.',
+      responses: {
+        200: 'A paginated list of finalized accounting transactions, including invoices, credits, cancellations, corrections, and related line items.',
+        404: null,
+      },
+    },
+  ],
   [
     'GET /v2/feature',
     {
