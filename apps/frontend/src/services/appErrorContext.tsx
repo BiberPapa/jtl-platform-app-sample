@@ -54,12 +54,12 @@ export function AppErrorProvider({ children }: AppErrorProviderProps) {
     const nextError = isAppError(error)
       ? error
       : toAppError(
-        error,
-        fallback ?? {
-          source: 'unknown',
-          fallbackMessage: 'An unexpected error occurred.',
-        },
-      );
+          error,
+          fallback ?? {
+            source: 'unknown',
+            fallbackMessage: 'An unexpected error occurred.',
+          },
+        );
     const fingerprint = getErrorFingerprint(nextError.details);
     const now = Date.now();
     const existingError = errorsRef.current.find(entry => {
