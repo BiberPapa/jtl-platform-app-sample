@@ -5,7 +5,7 @@ type AppBridgeContextValue = {
   appBridgeClient: AppBridgeClient;
 };
 
-const AppBridgeContext = createContext<AppBridgeContextValue | null>(null);
+export const AppBridgeContext = createContext<AppBridgeContextValue | null>(null);
 
 type AppBridgeProviderProps = {
   appBridgeClient: AppBridgeClient;
