@@ -49,6 +49,7 @@ function RestExplorerPanel() {
   return (
     <div className="rest-explorer-panel">
       <SwaggerUIWithExtendedProps
+        key={sessionToken || 'no-session-token'}
         url={buildBackendUrl('/openapi.json')}
         parameterMacro={(_operation: unknown, parameter: SwaggerParameter) => {
           if (parameter.get('in') === 'header' && parameter.get('name') === 'X-Session-Token') {

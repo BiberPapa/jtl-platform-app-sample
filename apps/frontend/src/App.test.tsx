@@ -2,6 +2,7 @@ import type { AppBridge } from '@jtl-software/cloud-apps-core';
 import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
+import { useState } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
 import { createAppBridgeClient, type AppBridgeClient } from './services/appBridgeClient';
@@ -150,7 +151,36 @@ vi.mock('./services/erpService', () => ({
 }));
 
 vi.mock('swagger-ui-react', () => ({
-  default: ({ url }: { url: string }) => <div data-testid="swagger-ui">Swagger UI: {url}</div>,
+  default: ({
+    url,
+    parameterMacro,
+  }: {
+    url: string;
+    parameterMacro?: (operation: unknown, parameter: { get: (key: string) => unknown }) => string | undefined;
+  }) => {
+    const [sessionToken] = useState(
+      () =>
+        parameterMacro?.(undefined, {
+          get: (key: string) => {
+            if (key === 'in') {
+              return 'header';
+            }
+
+            if (key === 'name') {
+              return 'X-Session-Token';
+            }
+
+            return undefined;
+          },
+        }) ?? '',
+    );
+
+    return (
+      <div data-testid="swagger-ui">
+        Swagger UI: {url} {sessionToken}
+      </div>
+    );
+  },
 }));
 
 vi.mock('graphiql', () => ({
@@ -745,6 +775,9 @@ describe('get app mode rendering', () => {
 
     expect(await screen.findByRole('dialog', { name: 'REST API Explorer' })).toBeInTheDocument();
     expect(await screen.findByTestId('swagger-ui')).toHaveTextContent('Swagger UI: https://api.example.test/openapi.json');
+    await waitFor(() => {
+      expect(screen.getByTestId('swagger-ui')).toHaveTextContent(createSessionToken({ tenantId: 'global-tenant-id' }));
+    });
   });
 
   it('closes the API explorer modal without leaving the dashboard', async () => {
