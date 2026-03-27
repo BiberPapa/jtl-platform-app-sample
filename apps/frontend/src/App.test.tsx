@@ -531,6 +531,8 @@ describe('get app mode rendering', () => {
     expect(screen.getByText('Loading API dashboard status...')).toBeInTheDocument();
     expect(await screen.findByRole('alert')).toHaveTextContent('API dashboard status could not be loaded');
     expect(screen.getByRole('alert')).toHaveTextContent('The API dashboard status could not be loaded.');
+    expect(requestErpInfoStatusMock).toHaveBeenCalledTimes(1);
+    expect(requestAuthorizationStatusMock).toHaveBeenCalledTimes(1);
   });
 
   it('renders an unavailable ERP dashboard status when no info endpoint succeeds', async () => {
