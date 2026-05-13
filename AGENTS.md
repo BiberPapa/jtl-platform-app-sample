@@ -16,6 +16,13 @@ This repository contains a single Cloud App application with:
 - Preserve existing behavior unless a change explicitly requires it.
 - Verify changes from repository root whenever possible.
 
+## Commit and Validation Policy
+
+- Do not use `git commit --no-verify` unless the user explicitly asks for it.
+- Before committing, fix errors instead of bypassing hooks.
+- After each code change, run linting and checks from the repository root and fix any errors introduced by the change.
+- At minimum, run `pnpm lint` and `pnpm typecheck`; run `pnpm test` when behavior changes or tests are affected.
+
 ## Backend Guardrails
 
 - Preserve upstream payload semantics in proxy code; do not coerce binary/file responses into text or JSON.
