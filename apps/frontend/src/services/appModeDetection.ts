@@ -8,20 +8,20 @@ export type AppMode = 'erp-embedded';
  * Static pages (setup, support, etc.) also require AppBridge for lifecycle management.
  */
 export function getRequiredAppMode(route: AppRoute): AppMode {
-    switch (route.kind) {
-        // All routes require AppBridge in ERP-only mode
-        case 'setup':
-        case 'support':
-        case 'privacy':
-        case 'terms-of-use':
-        case 'erp-menu-item':
-        case 'erp-pane':
-            return 'erp-embedded';
+  switch (route.kind) {
+    // All routes require AppBridge in ERP-only mode
+    case 'setup':
+    case 'support':
+    case 'privacy':
+    case 'terms-of-use':
+    case 'erp-menu-item':
+    case 'erp-pane':
+      return 'erp-embedded';
 
-        case 'unknown':
-        default:
-            return 'erp-embedded';
-    }
+    case 'unknown':
+    default:
+      return 'erp-embedded';
+  }
 }
 
 /**
@@ -29,5 +29,5 @@ export function getRequiredAppMode(route: AppRoute): AppMode {
  * In ERP-only mode, all routes require AppBridge.
  */
 export function requiresAppBridge(): boolean {
-    return true;
+  return true;
 }

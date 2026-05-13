@@ -34,6 +34,7 @@ JTL Hub
 ### 3. Single Deployable Unit
 
 The repository contains one Cloud App:
+
 - `apps/backend` – Express proxy for ERP API, OAuth client credentials flow
 - `apps/frontend` – React UI, AppBridge integration, diagnostics pages
 
@@ -91,17 +92,17 @@ apps/frontend/
 
 ### Routes
 
-| Path | Method | Purpose |
-|------|--------|---------|
-| `/` | GET | Returns 404 (backend is not a web server) |
-| `/app-info` | GET | App environment, capabilities, URLs |
-| `/connect-tenant` | POST | Lifecycle endpoint: verify ERP connection |
-| `/setup` | GET | Lifecycle endpoint: user setup page |
-| `/disconnect` | GET | Lifecycle endpoint: cleanup on uninstall |
-| `/erp/*` | ANY | ERP proxy (requires session token + tenant context) |
-| `/openapi.json` | GET | OpenAPI schema |
-| `/graphql` | POST | GraphQL proxy |
-| `/graphql/schema.graphql` | GET | GraphQL schema |
+| Path                      | Method | Purpose                                             |
+| ------------------------- | ------ | --------------------------------------------------- |
+| `/`                       | GET    | Returns 404 (backend is not a web server)           |
+| `/app-info`               | GET    | App environment, capabilities, URLs                 |
+| `/connect-tenant`         | POST   | Lifecycle endpoint: verify ERP connection           |
+| `/setup`                  | GET    | Lifecycle endpoint: user setup page                 |
+| `/disconnect`             | GET    | Lifecycle endpoint: cleanup on uninstall            |
+| `/erp/*`                  | ANY    | ERP proxy (requires session token + tenant context) |
+| `/openapi.json`           | GET    | OpenAPI schema                                      |
+| `/graphql`                | POST   | GraphQL proxy                                       |
+| `/graphql/schema.graphql` | GET    | GraphQL schema                                      |
 
 ### Session Token Validation
 
@@ -109,7 +110,7 @@ apps/frontend/
 // All routes require session token
 const sessionToken = req.get('X-Session-Token');
 if (!sessionToken) {
-  return res.status(400).json({error: "X-Session-Token header required"});
+  return res.status(400).json({ error: 'X-Session-Token header required' });
 }
 
 const tenantContext = resolveTenantContext(sessionToken);
@@ -123,7 +124,7 @@ Errors are returned with explicit HTTP status codes:
 ```typescript
 // ✅ Correct
 const error = new AppError('Missing session token', 'INVALID_SESSION_TOKEN', 400);
-res.status(error.statusCode).json({error: error.name, message: error.message});
+res.status(error.statusCode).json({ error: error.name, message: error.message });
 
 // Never falls back or returns 500 for validation errors
 ```
@@ -150,7 +151,7 @@ res.status(error.statusCode).json({error: error.name, message: error.message});
 // All API calls include session token
 const sessionToken = await appBridgeClient.getSessionToken();
 const response = await fetch('/api/endpoint', {
-  headers: {'X-Session-Token': sessionToken}
+  headers: { 'X-Session-Token': sessionToken },
 });
 ```
 

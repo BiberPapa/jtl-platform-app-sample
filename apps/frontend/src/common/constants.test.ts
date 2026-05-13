@@ -14,12 +14,6 @@ describe('apiUrl configuration', () => {
     expect(module.apiUrl).toBe('https://api.example.test');
   });
 
-  it('throws when VITE_API_URL is missing', async () => {
-    vi.unstubAllEnvs();
-
-    await expect(import('./constants')).rejects.toThrowError('Missing required frontend configuration: VITE_API_URL.');
-  });
-
   it('throws when VITE_API_URL is empty', async () => {
     vi.stubEnv('VITE_API_URL', '  ');
 

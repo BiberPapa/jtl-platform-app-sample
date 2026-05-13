@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import AppBootstrap from './AppBootstrap';
 import type { AppBridgeClient } from '../services/appBridgeClient';
 
@@ -26,6 +26,10 @@ vi.mock('../services/appBridgeContext', () => ({
 }));
 
 describe('AppBootstrap', () => {
+  beforeEach(() => {
+    window.history.pushState({}, '', 'http://localhost/setup');
+  });
+
   it('renders a loading state before the bridge client is ready', () => {
     const unresolvedLoader = vi.fn<() => Promise<AppBridgeClient>>(
       () =>

@@ -18,11 +18,11 @@ export type BackendResponse = {
 
 export async function requestBackend({ path, appBridgeClient, method = 'GET', body }: BackendRequestOptions): Promise<BackendResponse> {
   const sessionToken = await appBridgeClient.getSessionToken();
-  
+
   if (!sessionToken) {
     throw new Error('A session token is required to access the backend.');
   }
-  
+
   const requestInit: RequestInit = {
     method,
     headers: {

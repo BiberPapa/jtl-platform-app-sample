@@ -38,6 +38,7 @@ JTL Hub → AppBridge Session → Frontend → Backend
 ```
 
 **Key constraints:**
+
 - Frontend always provides `X-Session-Token` header
 - Backend requires valid session token for all routes
 - No environment-based fallbacks (e.g., `NOHUB_TENANT_ID`)
@@ -129,6 +130,7 @@ ERP_PROXY_LOG_LEVEL=basic
 ```
 
 **Do NOT include:**
+
 - ~~`NOHUB_TENANT_ID`~~ – No fallback credentials
 - ~~`NOHUB_BRIDGE_FALLBACK`~~ – No dummy bridges in production
 - ~~`LOCAL_DEV_TOKEN`~~ – No hardcoded tokens
@@ -143,6 +145,7 @@ pnpm dev
 ```
 
 The app starts at:
+
 - Backend: `http://localhost:6143`
 - Frontend: `http://localhost:6142`
 
@@ -159,11 +162,13 @@ The app starts at:
 ### 1. Session Token Handling
 
 **Frontend:**
+
 - Always call `appBridgeClient.getSessionToken()` before making backend requests
 - Never cache tokens across page reloads
 - Treat tokens as opaque strings (don't parse or validate client-side)
 
 **Backend:**
+
 - Validate session tokens against JTL's JWKS endpoint
 - Extract tenant ID from the session token (server-side only)
 - All ERP requests must include tenant context
@@ -229,7 +234,7 @@ Once deployed, integrate the app with JTL Hub:
 1. **In Partner Portal**: Update app listing with marketing info, screenshots, and support contact
 2. **Set Redirect URIs**: Production URL (e.g., `https://myapp.com/setup`)
 3. **Enable for Marketplace**: Submit for review if publishing to JTL Marketplace
-4. **Test Flow**: 
+4. **Test Flow**:
    - JTL Hub → Click to install
    - Redirect to `/setup` with session token
    - Call `/connect` to validate connection
@@ -244,6 +249,7 @@ See [JTL Hub Integration Guide](https://developer.jtl.cloud/docs/hub-integration
 **Cause:** App is not running within JTL Hub (no session context).
 
 **Fix:**
+
 - Open app from JTL Hub menu, not directly via URL
 - Check that AppBridge is properly initialized in `AppBootstrap.tsx`
 
@@ -252,6 +258,7 @@ See [JTL Hub Integration Guide](https://developer.jtl.cloud/docs/hub-integration
 **Cause:** Frontend didn't send session token to backend.
 
 **Fix:**
+
 - Verify `appBridgeClient.getSessionToken()` returns a non-empty string
 - Check that `requestBackend()` includes the token in headers
 - Ensure AppBridge is initialized before making API calls
@@ -261,6 +268,7 @@ See [JTL Hub Integration Guide](https://developer.jtl.cloud/docs/hub-integration
 **Cause:** Session token failed JWKS validation.
 
 **Fix:**
+
 - Token may have expired; refresh from AppBridge
 - Check that backend is using correct JWKS endpoint for the environment
 - Verify `API_ENVIRONMENT` matches the token's issuer
@@ -270,6 +278,7 @@ See [JTL Hub Integration Guide](https://developer.jtl.cloud/docs/hub-integration
 **Cause:** Session token doesn't contain a valid tenant ID.
 
 **Fix:**
+
 - Ensure user is logged in to JTL Hub before opening app
 - Check that user belongs to at least one tenant/business
 - Verify session token validation extracted tenant ID correctly

@@ -26,9 +26,7 @@
           }
         ],
         "api": {
-          "scopes": [
-            "system.all"
-          ]
+          "scopes": ["system.all"]
         },
         "pane": [
           {
@@ -37,9 +35,7 @@
             "matchChildContext": true,
             "title": "Bestellübersicht",
             "url": "http://localhost:6142/erp/pane/orders",
-            "requiredScopes": [
-              "orders.read"
-            ]
+            "requiredScopes": ["orders.read"]
           }
         ]
       }
@@ -62,24 +58,18 @@
       }
     },
     "benefits": {
-      "de-DE": [
-        "benefits"
-      ]
+      "de-DE": ["benefits"]
     },
     "category": {
       "main": "mainCate",
-      "sub": [
-        "subCate"
-      ]
+      "sub": ["subCate"]
     },
     "media": {
       "icons": {
         "light": "https://imageslot.com/v1/400x400?bg=dd951c&fg=ffffff&shadow=ffffff&text=Demo&filetype=png",
         "dark": "https://imageslot.com/v1/400x400?bg=dd951c&fg=ffffff&shadow=ffffff&text=Demo&filetype=png"
       },
-      "screenshots": [
-        "https://picsum.photos/200/200"
-      ],
+      "screenshots": ["https://picsum.photos/200/200"],
       "video": "https://picsum.photos/200/200"
     },
     "pricing": {

@@ -76,16 +76,12 @@ describe('erpProxyHandler', () => {
 
     expect(getSessionTokenFromHeadersMock).toHaveBeenCalledWith(request.headers);
     expect(resolveTenantContextMock).toHaveBeenCalledWith('session-token');
-    expect(proxyErpRequestMock).toHaveBeenCalledWith(
-      request,
-      expect.objectContaining({ tenantId: 'tenant-1' }),
-      {
-        endpoint: 'v2/info',
-        inboundMethod: 'GET',
-        inboundPath: '/erp/v2/info',
-        requestId: 'request-id-1',
-      },
-    );
+    expect(proxyErpRequestMock).toHaveBeenCalledWith(request, expect.objectContaining({ tenantId: 'tenant-1' }), {
+      endpoint: 'v2/info',
+      inboundMethod: 'GET',
+      inboundPath: '/erp/v2/info',
+      requestId: 'request-id-1',
+    });
     expect(copyProxyResponseHeadersMock).toHaveBeenCalledWith(expect.any(Headers), response, expect.any(Number));
     expect(sendProxyResponseMock).toHaveBeenCalledWith(
       expect.objectContaining({

@@ -333,8 +333,6 @@ describe('get app mode rendering', () => {
     expect(screen.getByText(/testing, evaluation, and demonstration purposes/i)).toBeInTheDocument();
   });
 
-
-
   it('renders the root API dashboard menu page', async () => {
     const { appBridge } = createAppBridgeMock();
 

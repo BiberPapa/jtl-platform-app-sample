@@ -75,21 +75,23 @@ The app gets environment/capabilities info from the backend and initializes AppB
 
 Required in `apps/backend/.env` (get from [JTL Partner Portal](https://partner.jtl.cloud)):
 
-| Name              | Description                           | Type       |
-| ----------------- | ------------------------------------- | ---------- |
-| `CLIENT_ID`       | OAuth client ID from Partner Portal   | `Variable` |
-| `CLIENT_SECRET`   | OAuth client secret (keep secure)     | `Secret`   |
-| `API_ENVIRONMENT` | API environment: `dev`, `qa`, `prod` | `Variable` |
-| `LOG_LEVEL`       | Backend log level                     | `Variable` |
-| `ERP_PROXY_LOG_LEVEL` | ERP proxy log level: `off`, `basic`, `verbose` | `Variable` |
-| `ERP_PROXY_LOG_BODY_MAX_LENGTH` | Max body length for verbose logs | `Variable` |
+| Name                            | Description                                    | Type       |
+| ------------------------------- | ---------------------------------------------- | ---------- |
+| `CLIENT_ID`                     | OAuth client ID from Partner Portal            | `Variable` |
+| `CLIENT_SECRET`                 | OAuth client secret (keep secure)              | `Secret`   |
+| `API_ENVIRONMENT`               | API environment: `dev`, `qa`, `prod`           | `Variable` |
+| `LOG_LEVEL`                     | Backend log level                              | `Variable` |
+| `ERP_PROXY_LOG_LEVEL`           | ERP proxy log level: `off`, `basic`, `verbose` | `Variable` |
+| `ERP_PROXY_LOG_BODY_MAX_LENGTH` | Max body length for verbose logs               | `Variable` |
 
 **Security notes:**
+
 - Never commit `CLIENT_SECRET` to version control
 - Use `.env.local` or secure environment injection in CI/CD
 - No fallback credentials (e.g., `NOHUB_TENANT_ID`) – app requires AppBridge session
 - In production, set `LOG_LEVEL=warn` and `ERP_PROXY_LOG_LEVEL=off`
 
 For local development with the dummy AppBridge:
+
 - `ERP_PROXY_LOG_LEVEL=basic` helps debug requests
 - Session tokens are validated against JTL's JWKS endpoint (no hardcoded tokens)

@@ -45,7 +45,7 @@ export function getAppRoute(url: URL): AppRoute {
 
 /**
  * Determine if a route requires AppBridge integration.
- * 
+ *
  * Routes that require AppBridge:
  * - setup: Lifecycle endpoint called from JTL Hub
  * - erp-menu-item: ERP menu item, runs inside the hub

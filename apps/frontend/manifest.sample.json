@@ -27,11 +27,7 @@
           }
         ],
         "api": {
-          "scopes": [
-            "orders.read",
-            "orders.write",
-            "items.read"
-          ]
+          "scopes": ["orders.read", "orders.write", "items.read"]
         },
         "pane": [
           {
@@ -40,9 +36,7 @@
             "matchChildContext": false,
             "title": "Bestellübersicht",
             "url": "https://example.com/erp/pane/orders",
-            "requiredScopes": [
-              "orders.read"
-            ]
+            "requiredScopes": ["orders.read"]
           }
         ]
       }
@@ -65,24 +59,18 @@
       }
     },
     "benefits": {
-      "de-DE": [
-        "benefits"
-      ]
+      "de-DE": ["benefits"]
     },
     "category": {
       "main": "mainCate",
-      "sub": [
-        "subCate"
-      ]
+      "sub": ["subCate"]
     },
     "media": {
       "icons": {
         "light": "https://picsum.photos/200/200",
         "dark": "https://picsum.photos/200/200"
       },
-      "screenshots": [
-        "https://picsum.photos/200/200"
-      ],
+      "screenshots": ["https://picsum.photos/200/200"],
       "video": "https://picsum.photos/200/200"
     },
     "pricing": {

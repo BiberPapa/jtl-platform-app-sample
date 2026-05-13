@@ -22,7 +22,7 @@ vi.mock('../logger.js', () => ({
     error: vi.fn(),
   },
   sanitizeHeaders: vi.fn(() => ({})),
-  serializeLoggedBody: vi.fn(body => body),
+  serializeLoggedBody: vi.fn(() => ({ kind: 'empty' as const })),
 }));
 
 describe('proxyErpRequest', () => {

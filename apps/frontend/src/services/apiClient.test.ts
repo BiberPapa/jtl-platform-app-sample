@@ -74,12 +74,12 @@ describe('requestBackend', () => {
   });
 
   it('throws when the session token is not available', async () => {
-    const getSessionTokenMock = vi.fn<() => Promise<string | null>>().mockResolvedValueOnce(null);
+    const getSessionTokenMock = vi.fn<() => Promise<string>>().mockResolvedValueOnce('');
     const appBridgeClient: AppBridgeClient = {
-      getSessionToken: getSessionTokenMock as any,
-      setupCompleted: vi.fn(),
-      getCurrentCustomerId: vi.fn(),
-      subscribeToCustomerChanged: vi.fn(),
+      getSessionToken: getSessionTokenMock,
+      setupCompleted: vi.fn<() => Promise<void>>(),
+      getCurrentCustomerId: vi.fn<() => Promise<string>>(),
+      subscribeToCustomerChanged: vi.fn(() => vi.fn()),
     };
 
     const requestPromise = requestBackend({
