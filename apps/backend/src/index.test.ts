@@ -19,10 +19,10 @@ const originalEnv = { ...process.env };
 
 function captureJsonLogs() {
   const chunks: string[] = [];
-  vi.spyOn(process.stdout, 'write').mockImplementation(((chunk: string | Uint8Array) => {
+  vi.spyOn(process.stdout, 'write').mockImplementation((chunk: string | Uint8Array) => {
     chunks.push(typeof chunk === 'string' ? chunk : Buffer.from(chunk).toString('utf8'));
     return true;
-  }) as typeof process.stdout.write);
+  });
 
   return {
     getLogs(): Array<Record<string, unknown>> {

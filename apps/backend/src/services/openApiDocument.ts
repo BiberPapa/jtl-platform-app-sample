@@ -131,7 +131,7 @@ function transformPaths(paths: Record<string, OpenApiPathItem>): Record<string, 
         continue;
       }
 
-      const operation = transformOperation(path, method.toUpperCase(), operationValue as OpenApiOperation);
+      const operation = transformOperation(path, method.toUpperCase(), operationValue);
       if (operation !== null) {
         transformedPathItem[method] = operation;
       }
@@ -269,7 +269,7 @@ function transformResponses(
     }
 
     if (!isRecord(response)) {
-      transformedResponses[code] = response as OpenApiResponse;
+      transformedResponses[code] = response;
       continue;
     }
 

@@ -27,7 +27,7 @@ vi.mock('../services/appBridgeContext', () => ({
 
 describe('AppBootstrap', () => {
   beforeEach(() => {
-    window.history.pushState({}, '', 'http://localhost/setup');
+    window.history.pushState({}, '', '/setup');
   });
 
   it('renders a loading state before the bridge client is ready', () => {

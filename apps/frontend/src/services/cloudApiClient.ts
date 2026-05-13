@@ -51,7 +51,7 @@ async function performRequest<T>(options: CloudApiRequestOptions & { retryCount?
         status: 401,
         headers: new Headers(),
         error: 'No session token available',
-      } as ErrorResponse;
+      };
     }
 
     const requestInit: RequestInit = {
@@ -85,7 +85,7 @@ async function performRequest<T>(options: CloudApiRequestOptions & { retryCount?
         status: response.status,
         headers: response.headers,
         error: text || `HTTP ${response.status}`,
-      } as ErrorResponse;
+      };
     }
 
     // Build success response
@@ -105,7 +105,7 @@ async function performRequest<T>(options: CloudApiRequestOptions & { retryCount?
       status: 0,
       headers: new Headers(),
       error: message,
-    } as ErrorResponse;
+    };
   }
 }
 
