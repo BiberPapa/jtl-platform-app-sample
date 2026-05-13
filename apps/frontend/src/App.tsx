@@ -1,7 +1,7 @@
 import './App.css';
 import { Card, CardContent } from '@jtl-software/platform-ui-react';
 import { AppErrorDisplay, AppPageShell } from './components';
-import { DeveloperHomePage, ErpPage, HubPage, PanePage, PrivacyPage, SetupPage, SupportPage, TermsOfUsePage } from './pages';
+import { ErpPage, PanePage, PrivacyPage, SetupPage, SupportPage, TermsOfUsePage } from './pages';
 import { getAppRoute } from './routing/getAppRoute';
 import { AppErrorProvider } from './services/appErrorContext';
 
@@ -20,8 +20,6 @@ export default App;
 
 function renderRoute(route: ReturnType<typeof getAppRoute>) {
   switch (route.kind) {
-    case 'developer-home':
-      return <DeveloperHomePage />;
     case 'setup':
       return <SetupPage />;
     case 'support':
@@ -30,24 +28,20 @@ function renderRoute(route: ReturnType<typeof getAppRoute>) {
       return <PrivacyPage />;
     case 'terms-of-use':
       return <TermsOfUsePage />;
-    case 'hub':
-      return <HubPage />;
-    case 'erp-home':
     case 'erp-menu-item':
-    case 'erp-tab':
       return <ErpPage route={route} />;
-    case 'pane':
+    case 'erp-pane':
       return <PanePage />;
     default:
       return (
         <AppPageShell
           eyebrow="Cloud App"
           title="Unknown app mode"
-          lead="Use `/`, `/setup`, `/support`, `/privacy`, `/terms-of-use`, `/hub`, `/erp`, `/erp/menu/Dashboard`, `/erp/menu/ApiDashboard`, `/erp/tabs/...` or `/pane` to open one of the documented app entry points."
+          lead="This app is an ERP-only plugin. Use `/setup`, `/support`, `/privacy`, `/terms-of-use`, `/erp/menu/<id>`, or `/erp/pane/<id>` to open one of the documented entry points."
         >
           <Card>
             <CardContent>
-              <p className="app-muted-text">Open one of the documented frontend entry points to continue.</p>
+              <p className="app-muted-text">Open one of the documented ERP-specific entry points to continue.</p>
             </CardContent>
           </Card>
         </AppPageShell>

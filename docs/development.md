@@ -1,13 +1,16 @@
 # Development
 
-## Setup
+For **initial setup and security best practices**, see [Setup and Security Guide](./setup-and-security.md).
 
-1. Enable Corepack.
-2. Run `pnpm install` from repository root.
-3. Configure backend `.env` values in `apps/backend`.
-4. Use `apps/frontend/.env.example` for frontend configuration.
+## Quick Start
 
-## Common Commands
+1. Enable Corepack: `corepack enable`
+2. Install dependencies: `pnpm install` (from repository root)
+3. Configure backend `.env` (see [Setup and Security Guide](./setup-and-security.md))
+4. Use `apps/frontend/.env.example` for frontend configuration
+5. Run `pnpm dev`
+
+## Local Development Commands
 
 - `pnpm dev`
 - `pnpm dev:backend:ts`
@@ -19,7 +22,15 @@
 
 ## Troubleshooting
 
-- If workspace binaries are missing, run `pnpm install`.
-- If Vite or Vitest native modules are locked on Windows, stop running dev processes and reinstall.
-- If ERP request logging is needed locally, configure `ERP_PROXY_LOG_LEVEL` in `apps/backend/.env`.
-- The existing `apps/frontend/Dockerfile` is intentionally not part of the pnpm migration and should be cleaned up separately before it is relied on.
+- **Missing workspace binaries**: Run `pnpm install`
+- **Native module issues on Windows**: Stop dev processes and reinstall
+- **ERP request debugging**: Set `ERP_PROXY_LOG_LEVEL=basic` in `apps/backend/.env`
+- **AppBridge not available**: App must run inside JTL Hub, not via direct URL
+- **Session token errors**: Ensure AppBridge initializes before API calls (see [Setup and Security Guide](./setup-and-security.md))
+
+## Architecture Notes
+
+- The app requires AppBridge session context from JTL Hub
+- No fallback credentials or dummy bridges in production code
+- All ERP requests require valid `X-Session-Token` header
+- Tenant context is extracted server-side from the session token

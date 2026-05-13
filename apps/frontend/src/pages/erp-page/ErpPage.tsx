@@ -4,24 +4,17 @@ import ErpDashboardPage from './ErpDashboardPage';
 import UnknownErpPage from './UnknownErpPage';
 
 type ErpPageProps = {
-  route: Extract<AppRoute, { kind: 'erp-home' | 'erp-menu-item' | 'erp-tab' }>;
+  route: Extract<AppRoute, { kind: 'erp-menu-item' }>;
 };
 
 function ErpPage({ route }: ErpPageProps) {
-  switch (route.kind) {
-    case 'erp-home':
-      return <ApiDashboardPage />;
-    case 'erp-menu-item':
-      return route.menuItemId === 'Dashboard' ? (
-        <ErpDashboardPage />
-      ) : route.menuItemId === 'ApiDashboard' ? (
-        <ApiDashboardPage />
-      ) : (
-        <UnknownErpPage kind="erp-menu-item" menuItemId={route.menuItemId} />
-      );
-    case 'erp-tab':
-      return <UnknownErpPage kind="erp-tab" tabId={route.tabId} />;
-  }
+  return route.menuItemId === 'Dashboard' ? (
+    <ErpDashboardPage />
+  ) : route.menuItemId === 'ApiDashboard' ? (
+    <ApiDashboardPage />
+  ) : (
+    <UnknownErpPage kind="erp-menu-item" menuItemId={route.menuItemId} />
+  );
 }
 
 export default ErpPage;

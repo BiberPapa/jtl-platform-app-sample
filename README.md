@@ -1,5 +1,37 @@
 # ![JTL logo](https://avatars.githubusercontent.com/u/31404730?s=25&v=4) JTL Cloud App
 
+An **ERP-only plugin** for the JTL Cloud Platform.
+
+This is a reference implementation that demonstrates secure integration with the JTL Cloud Platform, AppBridge session management, and ERP API proxying.
+
+## Quick Start
+
+For a **clean, secure setup from the start**, see [Setup and Security Guide](./docs/setup-and-security.md).
+
+For the quick version:
+
+1. Register app in [JTL Partner Portal](https://partner.jtl.cloud)
+2. Copy OAuth credentials to `apps/backend/.env`
+3. Run `pnpm install && pnpm dev`
+4. Access via JTL Hub (not directly via URL)
+
+## Architecture
+
+- **ERP-only**: No standalone functionality. Requires AppBridge session and JTL Hub context.
+- **Mandatory AppBridge**: Session tokens are always required. No fallback credentials.
+- **Tenant-aware**: Backend extracts tenant context from session token for all ERP calls.
+- **Secure by design**: Clean error handling, no deprecated code paths, structured logging.
+
+See [Architecture](./docs/architecture.md) and [Setup and Security Guide](./docs/setup-and-security.md) for details.
+
+## Official JTL Documentation
+
+- [JTL Cloud Platform Overview](https://developer.jtl.cloud/docs) – Platform architecture and integration model
+- [App Shell Integration](https://developer.jtl.cloud/docs/app-shell) – AppBridge and host communication
+- [OAuth & Security](https://developer.jtl.cloud/docs/auth) – Authentication flows and best practices
+- [ERP API Reference](https://developer.jtl.cloud/docs/erp-api) – ERP endpoint structure and tenant context
+- [App Registration Guide](https://developer.jtl.cloud/docs/app-registration) – Partner Portal setup
+
 ## Prerequisites
 
 - Node.js 20+
@@ -29,8 +61,8 @@
 
 Use `apps/frontend/.env.example` as the starting point for frontend configuration.
 Keep `VITE_API_URL=http://localhost:6143` for the local backend.
-The frontend developer start page loads environment and NOHUB information from the backend `GET /app-info` route.
-The existing `apps/frontend/Dockerfile` is a legacy path and remains outside this pnpm migration; it references `src/sdk/js-core`, which does not exist in this repository and should be cleaned up separately.
+
+The app gets environment/capabilities info from the backend and initializes AppBridge before rendering the UI.
 
 ## Ports
 
@@ -41,17 +73,23 @@ The existing `apps/frontend/Dockerfile` is a legacy path and remains outside thi
 
 ## Environment Variables
 
-These environment variables have to be added in `apps/backend` for the project to start.
+Required in `apps/backend/.env` (get from [JTL Partner Portal](https://partner.jtl.cloud)):
 
-| Name                            | Description                                                 | Type       |
-| ------------------------------- | ----------------------------------------------------------- | ---------- |
-| `CLIENT_ID`                     | The client ID of the sample app                             | `Variable` |
-| `CLIENT_SECRET`                 | The client secret of the sample app                         | `Secret`   |
-| `API_ENVIRONMENT`               | The API environment (defaults to `prod`)                    | `Variable` |
-| `LOG_LEVEL`                     | Backend application log level                               | `Variable` |
-| `ERP_PROXY_LOG_LEVEL`           | ERP proxy log level (`off`, `basic`, `verbose`)             | `Variable` |
-| `ERP_PROXY_LOG_BODY_MAX_LENGTH` | Max body length for verbose ERP proxy logs                  | `Variable` |
-| `NOHUB_TENANT_ID`               | Fallback tenant ID for local runs without hub session token | `Variable` |
+| Name              | Description                           | Type       |
+| ----------------- | ------------------------------------- | ---------- |
+| `CLIENT_ID`       | OAuth client ID from Partner Portal   | `Variable` |
+| `CLIENT_SECRET`   | OAuth client secret (keep secure)     | `Secret`   |
+| `API_ENVIRONMENT` | API environment: `dev`, `qa`, `prod` | `Variable` |
+| `LOG_LEVEL`       | Backend log level                     | `Variable` |
+| `ERP_PROXY_LOG_LEVEL` | ERP proxy log level: `off`, `basic`, `verbose` | `Variable` |
+| `ERP_PROXY_LOG_BODY_MAX_LENGTH` | Max body length for verbose logs | `Variable` |
 
-For local development, prefer `ERP_PROXY_LOG_LEVEL=basic` or `ERP_PROXY_LOG_LEVEL=verbose`.
-`DEBUG_ERP_PROXY=true` is deprecated and only kept as a compatibility fallback.
+**Security notes:**
+- Never commit `CLIENT_SECRET` to version control
+- Use `.env.local` or secure environment injection in CI/CD
+- No fallback credentials (e.g., `NOHUB_TENANT_ID`) – app requires AppBridge session
+- In production, set `LOG_LEVEL=warn` and `ERP_PROXY_LOG_LEVEL=off`
+
+For local development with the dummy AppBridge:
+- `ERP_PROXY_LOG_LEVEL=basic` helps debug requests
+- Session tokens are validated against JTL's JWKS endpoint (no hardcoded tokens)

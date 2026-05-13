@@ -256,72 +256,6 @@ describe('get app mode rendering', () => {
     expect(screen.getByRole('heading', { name: 'Unknown app mode' })).toBeInTheDocument();
   });
 
-  it('renders the developer start page on the root route', () => {
-    requestAppInfoMock.mockResolvedValue({
-      environment: 'prod',
-      nohubTenantId: null,
-      isNohubConfigured: false,
-      hubUrl: 'https://hub.jtl-cloud.com',
-      cloudErpUrl: 'https://erp.jtl-cloud.com',
-      apiBaseUrl: 'https://api.jtl-cloud.com',
-      authUrl: 'https://auth.jtl-cloud.com/oauth2/token',
-    });
-    const { appBridge } = createAppBridgeMock();
-
-    renderAtPath('/', appBridge);
-
-    expect(screen.getByRole('heading', { name: 'Developer Start Page' })).toBeInTheDocument();
-  });
-
-  it('renders backend app info on the developer start page', async () => {
-    requestAppInfoMock.mockResolvedValue({
-      environment: 'qa',
-      nohubTenantId: 'tenant-1',
-      isNohubConfigured: true,
-      hubUrl: 'https://hub.qa.jtl-cloud.com',
-      cloudErpUrl: 'https://erp.qa.jtl-cloud.com',
-      apiBaseUrl: 'https://api.qa.jtl-cloud.com',
-      authUrl: 'https://auth.qa.jtl-cloud.com/oauth2/token',
-    });
-    const { appBridge } = createAppBridgeMock();
-
-    renderAtPath('/', appBridge);
-
-    expect(await screen.findByText('qa')).toBeInTheDocument();
-    expect(screen.getByText('Configured')).toBeInTheDocument();
-    expect(screen.getByText('Tenant ID: tenant-1')).toBeInTheDocument();
-    expect(screen.getByText('https://api.qa.jtl-cloud.com')).toBeInTheDocument();
-    expect(screen.getByText('https://auth.qa.jtl-cloud.com/oauth2/token')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'JTL Hub' })).toHaveAttribute('href', 'https://hub.qa.jtl-cloud.com');
-    expect(screen.getByRole('link', { name: 'Cloud ERP' })).toHaveAttribute('href', 'https://erp.qa.jtl-cloud.com');
-  });
-
-  it('shows a developer app info error when the backend request fails', async () => {
-    requestAppInfoMock.mockRejectedValue(new Error('Backend app info failed.'));
-    const { appBridge } = createAppBridgeMock();
-
-    renderAtPath('/', appBridge);
-
-    expect(await screen.findByRole('alert')).toHaveTextContent('The backend app info could not be loaded.');
-  });
-
-  it('records API errors in the global error history and shows a toast', async () => {
-    const user = userEvent.setup();
-    requestAppInfoMock.mockRejectedValue(new Error('Backend app info failed.'));
-    const { appBridge } = createAppBridgeMock();
-
-    renderAtPath('/', appBridge);
-
-    expect(await screen.findByText('The backend app info could not be loaded.')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Open error history (1 error)' })).toBeInTheDocument();
-
-    await user.click(screen.getByRole('button', { name: 'Open error history (1 error)' }));
-
-    expect(screen.getByRole('dialog', { name: 'Error history' })).toBeInTheDocument();
-    expect(screen.getByText('Backend app info failed.')).toBeInTheDocument();
-    expect(screen.getAllByText(/\/app-info/).length).toBeGreaterThan(0);
-  });
-
   it('renders the setup page and handles a successful setup flow', async () => {
     const user = userEvent.setup();
     const { appBridge, methodCall } = createAppBridgeMock();
@@ -399,48 +333,7 @@ describe('get app mode rendering', () => {
     expect(screen.getByText(/testing, evaluation, and demonstration purposes/i)).toBeInTheDocument();
   });
 
-  it('renders the hub page', () => {
-    const { appBridge } = createAppBridgeMock();
 
-    renderAtPath('/hub', appBridge);
-
-    expect(screen.getByRole('heading', { name: 'Cloud App Launcher' })).toBeInTheDocument();
-    expect(screen.getByText(/App Launcher entry point/i)).toBeInTheDocument();
-  });
-
-  it('renders the ERP root page as the API dashboard', async () => {
-    const { appBridge } = createAppBridgeMock();
-
-    requestErpInfoStatusMock.mockResolvedValue({
-      reachable: true,
-      tenantId: 'eazybusiness',
-      version: '2.0.0+Sha.e01a5a0',
-      totalTimeMs: 12,
-      erpTimeMs: 5.222,
-      infrastructureTimeMs: 6.778,
-      frontendTimeMs: 5.222,
-      errorMessage: null,
-    });
-    requestAuthorizationStatusMock.mockResolvedValue({
-      state: 'authorized',
-      message: null,
-    });
-    requestPlaygroundRequestMock.mockResolvedValue({
-      ok: true,
-      status: 200,
-      responseTimeMs: 14,
-      route: '/v1/worker',
-      method: 'GET',
-      body: { items: [] },
-    });
-
-    renderAtPath('/erp', appBridge);
-
-    expect(await screen.findByText('Local: eazybusiness')).toBeInTheDocument();
-    expect(screen.getByText('Global: global-tenant-id')).toBeInTheDocument();
-    expect(screen.getByText('API Dashboard')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Refresh API dashboard' })).toBeInTheDocument();
-  });
 
   it('renders the root API dashboard menu page', async () => {
     const { appBridge } = createAppBridgeMock();
@@ -1033,15 +926,6 @@ describe('get app mode rendering', () => {
     expect(screen.getByText('menuItemId: unknown-menu-item')).toBeInTheDocument();
   });
 
-  it('renders an ERP-specific fallback for unknown tabs', () => {
-    const { appBridge } = createAppBridgeMock();
-
-    renderAtPath('/erp/tabs/unknown-tab', appBridge);
-
-    expect(screen.getByRole('heading', { name: 'Unknown ERP page' })).toBeInTheDocument();
-    expect(screen.getByText('tabId: unknown-tab')).toBeInTheDocument();
-  });
-
   it('renders the pane page, reacts to bridge events and loads the current customer on demand', async () => {
     const user = userEvent.setup();
     const { appBridge, methodCall, subscribe } = createAppBridgeMock();
@@ -1055,7 +939,7 @@ describe('get app mode rendering', () => {
       throw new Error(`Unexpected bridge method: ${methodName}`);
     });
 
-    renderAtPath('/pane', appBridge);
+    renderAtPath('/erp/pane/orders', appBridge);
 
     const subscriptionHandler = subscribe.mock.calls[0]?.[1] as ((value: unknown) => Promise<void>) | undefined;
     expect(subscriptionHandler).toBeDefined();
@@ -1085,7 +969,7 @@ describe('get app mode rendering', () => {
       throw new Error(`Unexpected bridge method: ${methodName}`);
     });
 
-    renderAtPath('/pane', appBridge);
+    renderAtPath('/erp/pane/orders', appBridge);
 
     await user.click(screen.getByRole('button', { name: 'Get Current Customer' }));
 

@@ -94,7 +94,6 @@ describe('backend routes', () => {
   });
 
   it('returns a bad request when the setup route is missing a session token', async () => {
-    process.env.NOHUB_TENANT_ID = '';
     const { createApp } = await import('./index.js');
 
     const response = await request(createApp()).post('/connect-tenant');
@@ -102,24 +101,12 @@ describe('backend routes', () => {
     expect(response.status).toBe(400);
     expect(response.body).toEqual({
       error: 'Failed to connect tenant',
-      message: 'Either the X-Session-Token header or NOHUB_TENANT_ID must be provided.',
+      message: 'The X-Session-Token header is required.',
     });
-  });
-
-  it('uses NOHUB_TENANT_ID for setup requests without a session token', async () => {
-    process.env.NOHUB_TENANT_ID = 'fallback-tenant';
-    const { createApp } = await import('./index.js');
-
-    const response = await request(createApp()).post('/connect-tenant');
-
-    expect(response.status).toBe(200);
-    expect(response.body).toEqual({ message: 'Tenant connected successfully.' });
-    expect(getSessionContextFromTokenMock).not.toHaveBeenCalled();
   });
 
   it('returns backend app info with normalized prod defaults', async () => {
     process.env.API_ENVIRONMENT = '';
-    process.env.NOHUB_TENANT_ID = '';
     const { createApp } = await import('./index.js');
 
     const response = await request(createApp()).get('/app-info');
@@ -127,8 +114,6 @@ describe('backend routes', () => {
     expect(response.status).toBe(200);
     expect(response.body).toEqual({
       environment: 'prod',
-      nohubTenantId: null,
-      isNohubConfigured: false,
       hubUrl: 'https://hub.jtl-cloud.com',
       cloudErpUrl: 'https://erp.jtl-cloud.com',
       apiBaseUrl: 'https://api.jtl-cloud.com',
@@ -136,28 +121,8 @@ describe('backend routes', () => {
     });
   });
 
-  it('returns backend app info with qa environment and configured NOHUB tenant', async () => {
-    process.env.API_ENVIRONMENT = 'qa';
-    process.env.NOHUB_TENANT_ID = 'fallback-tenant-id';
-    const { createApp } = await import('./index.js');
-
-    const response = await request(createApp()).get('/app-info');
-
-    expect(response.status).toBe(200);
-    expect(response.body).toEqual({
-      environment: 'qa',
-      nohubTenantId: 'fallback-tenant-id',
-      isNohubConfigured: true,
-      hubUrl: 'https://hub.qa.jtl-cloud.com',
-      cloudErpUrl: 'https://erp.qa.jtl-cloud.com',
-      apiBaseUrl: 'https://api.qa.jtl-cloud.com',
-      authUrl: 'https://auth.qa.jtl-cloud.com/oauth2/token',
-    });
-  });
-
   it('normalizes unsupported backend environments to prod in app info', async () => {
     process.env.API_ENVIRONMENT = 'beta';
-    process.env.NOHUB_TENANT_ID = '';
     const { createApp } = await import('./index.js');
 
     const response = await request(createApp()).get('/app-info');
@@ -189,8 +154,7 @@ describe('backend routes', () => {
     });
   });
 
-  it('returns an error for ERP requests when neither session token nor NOHUB_TENANT_ID is available', async () => {
-    process.env.NOHUB_TENANT_ID = '';
+  it('returns an error for ERP requests when session token is missing', async () => {
     const { createApp } = await import('./index.js');
 
     const response = await request(createApp()).get('/erp/customers');
@@ -198,37 +162,7 @@ describe('backend routes', () => {
     expect(response.status).toBe(400);
     expect(response.body).toEqual({
       error: 'Failed to fetch ERP info',
-      message: 'Either the X-Session-Token header or NOHUB_TENANT_ID must be provided.',
-    });
-  });
-
-  it('uses NOHUB_TENANT_ID and omits the session token header for ERP requests without a session token', async () => {
-    process.env.NOHUB_TENANT_ID = 'fallback-tenant-id';
-    const fetchMock = vi.fn().mockResolvedValue({
-      ok: true,
-      status: 200,
-      headers: new Headers({
-        'content-type': 'application/json; charset=utf-8',
-      }),
-      text: () => Promise.resolve('{"result":"ok"}'),
-    });
-
-    vi.stubGlobal('fetch', fetchMock);
-
-    const { createApp } = await import('./index.js');
-
-    const response = await request(createApp()).get('/erp/customers');
-
-    expect(response.status).toBe(200);
-    expect(response.body).toEqual({ result: 'ok' });
-    expect(getSessionContextFromTokenMock).not.toHaveBeenCalled();
-    expect(fetchMock).toHaveBeenCalledWith('https://api.jtl-cloud.com/erp/customers', {
-      method: 'GET',
-      headers: {
-        'X-Tenant-ID': 'fallback-tenant-id',
-        Authorization: 'Bearer access-token',
-        'Content-Type': 'application/json',
-      },
+      message: 'The X-Session-Token header is required.',
     });
   });
 
@@ -260,45 +194,6 @@ describe('backend routes', () => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ id: 7 }),
-    });
-  });
-
-  it('uses NOHUB_TENANT_ID for GraphQL requests without a session token', async () => {
-    process.env.NOHUB_TENANT_ID = 'fallback-tenant-id';
-    const fetchMock = vi.fn().mockResolvedValue({
-      ok: true,
-      status: 200,
-      headers: new Headers({
-        'content-type': 'application/json; charset=utf-8',
-      }),
-      text: () => Promise.resolve('{"data":{"viewer":{"id":"1"}}}'),
-    });
-
-    vi.stubGlobal('fetch', fetchMock);
-
-    const { createApp } = await import('./index.js');
-
-    const response = await request(createApp()).post('/graphql').send({
-      query: '{ viewer { id } }',
-      variables: null,
-      operationName: 'Viewer',
-    });
-
-    expect(response.status).toBe(200);
-    expect(response.body).toEqual({ data: { viewer: { id: '1' } } });
-    expect(getSessionContextFromTokenMock).not.toHaveBeenCalled();
-    expect(fetchMock).toHaveBeenCalledWith('https://api.jtl-cloud.com/erp/v2/graphql', {
-      method: 'POST',
-      headers: {
-        'X-Tenant-ID': 'fallback-tenant-id',
-        Authorization: 'Bearer access-token',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        query: '{ viewer { id } }',
-        variables: null,
-        operationName: 'Viewer',
-      }),
     });
   });
 
@@ -344,8 +239,7 @@ describe('backend routes', () => {
     });
   });
 
-  it('returns an error for GraphQL requests when neither session token nor NOHUB_TENANT_ID is available', async () => {
-    process.env.NOHUB_TENANT_ID = '';
+  it('returns an error for GraphQL requests when session token is missing', async () => {
     const { createApp } = await import('./index.js');
 
     const response = await request(createApp()).post('/graphql').send({
@@ -355,7 +249,7 @@ describe('backend routes', () => {
     expect(response.status).toBe(400);
     expect(response.body).toEqual({
       error: 'Failed to execute GraphQL request',
-      message: 'Either the X-Session-Token header or NOHUB_TENANT_ID must be provided.',
+      message: 'The X-Session-Token header is required.',
     });
   });
 

@@ -18,20 +18,22 @@ export type BackendResponse = {
 
 export async function requestBackend({ path, appBridgeClient, method = 'GET', body }: BackendRequestOptions): Promise<BackendResponse> {
   const sessionToken = await appBridgeClient.getSessionToken();
+  
+  if (!sessionToken) {
+    throw new Error('A session token is required to access the backend.');
+  }
+  
   const requestInit: RequestInit = {
     method,
-  };
-
-  if (sessionToken) {
-    requestInit.headers = {
+    headers: {
       'X-Session-Token': sessionToken,
-    };
-  }
+    },
+  };
 
   if (body !== undefined) {
     requestInit.body = body;
     requestInit.headers = {
-      ...(requestInit.headers && !(requestInit.headers instanceof Headers) && !Array.isArray(requestInit.headers) ? requestInit.headers : {}),
+      ...requestInit.headers,
       'Content-Type': 'application/json',
     };
   }

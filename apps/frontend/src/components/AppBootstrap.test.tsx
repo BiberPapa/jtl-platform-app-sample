@@ -55,7 +55,7 @@ describe('AppBootstrap', () => {
     });
   });
 
-  it('renders a safe fallback when bridge bootstrap fails', async () => {
+  it('renders a blocking error when bridge bootstrap fails', async () => {
     const loader = vi.fn<() => Promise<AppBridgeClient>>().mockRejectedValue(new Error('Bridge bootstrap failed.'));
 
     render(<AppBootstrap loadAppBridgeClient={loader} />);

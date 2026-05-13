@@ -1,19 +1,41 @@
 import { Alert } from '@jtl-software/platform-ui-react';
 import { useEffect, useState } from 'react';
 import App from '../App';
-import type { AppBridgeClient } from '../services/appBridgeClient';
+import { type AppBridgeClient } from '../services/appBridgeClient';
 import { AppBridgeProvider } from '../services/appBridgeContext';
 import { createRuntimeAppBridgeClient } from '../services/runtimeAppBridgeClient';
+import { getAppRoute, needsAppBridge } from '../routing/getAppRoute';
 import AppPageShell from './AppPageShell';
 
 type AppBootstrapProps = {
   loadAppBridgeClient?: () => Promise<AppBridgeClient>;
 };
 
-type AppBootstrapState = { status: 'loading' } | { status: 'ready'; appBridgeClient: AppBridgeClient } | { status: 'failed'; message: string };
+type AppBootstrapState =
+  | { status: 'no-bridge-needed'; appBridgeClient: null }
+  | { status: 'loading-bridge' }
+  | { status: 'bridge-ready'; appBridgeClient: AppBridgeClient }
+  | { status: 'bridge-failed'; message: string };
 
 function AppBootstrap({ loadAppBridgeClient = createRuntimeAppBridgeClient }: AppBootstrapProps) {
-  const [bootstrapState, setBootstrapState] = useState<AppBootstrapState>({ status: 'loading' });
+  const route = getAppRoute(new URL(window.location.href));
+  const bridgeRequired = needsAppBridge(route);
+
+  // If this route doesn't need AppBridge, render immediately without initializing it
+  if (!bridgeRequired) {
+    return <App />;
+  }
+
+  // For routes that require AppBridge, initialize it
+  return <AppBootstrapWithBridge loadAppBridgeClient={loadAppBridgeClient} />;
+}
+
+type AppBootstrapWithBridgeProps = {
+  loadAppBridgeClient: () => Promise<AppBridgeClient>;
+};
+
+function AppBootstrapWithBridge({ loadAppBridgeClient }: AppBootstrapWithBridgeProps) {
+  const [bootstrapState, setBootstrapState] = useState<AppBootstrapState>({ status: 'loading-bridge' });
 
   useEffect(() => {
     let isActive = true;
@@ -24,14 +46,14 @@ function AppBootstrap({ loadAppBridgeClient = createRuntimeAppBridgeClient }: Ap
 
         if (isActive) {
           setBootstrapState({
-            status: 'ready',
+            status: 'bridge-ready',
             appBridgeClient,
           });
         }
       } catch (error) {
         if (isActive) {
           setBootstrapState({
-            status: 'failed',
+            status: 'bridge-failed',
             message: getBootstrapFailureMessage(error),
           });
         }
@@ -43,7 +65,7 @@ function AppBootstrap({ loadAppBridgeClient = createRuntimeAppBridgeClient }: Ap
     };
   }, [loadAppBridgeClient]);
 
-  if (bootstrapState.status === 'ready') {
+  if (bootstrapState.status === 'bridge-ready') {
     return (
       <AppBridgeProvider appBridgeClient={bootstrapState.appBridgeClient}>
         <App />
@@ -54,18 +76,18 @@ function AppBootstrap({ loadAppBridgeClient = createRuntimeAppBridgeClient }: Ap
   return (
     <AppPageShell
       eyebrow="Cloud App"
-      title={bootstrapState.status === 'loading' ? 'Loading app shell' : 'App startup failed'}
+      title={bootstrapState.status === 'loading-bridge' ? 'Loading app shell' : 'App startup failed'}
       lead={
-        bootstrapState.status === 'loading'
-          ? 'Preparing the runtime bridge and application shell.'
-          : 'The application could not be initialized. Refresh the page or check the host environment.'
+        bootstrapState.status === 'loading-bridge'
+          ? 'Connecting to JTL Hub and initializing the app.'
+          : 'The application could not initialize AppBridge. This page must be opened from within the JTL Hub or Cloud ERP.'
       }
       width="compact"
     >
       <Alert
-        title={bootstrapState.status === 'loading' ? 'Initializing app...' : 'The application could not be initialized.'}
-        description={bootstrapState.status === 'failed' ? bootstrapState.message : undefined}
-        variant={bootstrapState.status === 'failed' ? 'destructive' : 'info'}
+        title={bootstrapState.status === 'loading-bridge' ? 'Initializing app...' : 'The application could not be initialized.'}
+        description={bootstrapState.status === 'bridge-failed' ? bootstrapState.message : undefined}
+        variant={bootstrapState.status === 'bridge-failed' ? 'destructive' : 'info'}
         closable={false}
       />
     </AppPageShell>

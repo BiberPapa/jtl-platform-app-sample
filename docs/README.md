@@ -4,11 +4,12 @@ This directory is the home for project-specific documentation.
 
 ## Contents
 
-- [architecture.md](./architecture.md)
-- [development.md](./development.md)
-- [ai-context.md](./ai-context.md)
-- [ai/](./ai)
-- [terminology/](./terminology)
+- [setup-and-security.md](./setup-and-security.md) – **Start here**: Clean, secure setup with links to official JTL documentation
+- [architecture.md](./architecture.md) – High-level architecture and design principles
+- [development.md](./development.md) – Local development commands and troubleshooting
+- [ai-context.md](./ai-context.md) – Implementation guidance for AI agents
+- [ai/](./ai) – Frontend implementation patterns and code examples
+- [terminology/](./terminology) – Controlled vocabulary for user-visible text
 
 ## Subtrees
 

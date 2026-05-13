@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { createDummyAppBridgeClient, type AppBridgeClient } from './appBridgeClient';
+import { type AppBridgeClient } from './appBridgeClient';
 import { requestBackend } from './apiClient';
 
 describe('requestBackend', () => {
@@ -73,27 +73,21 @@ describe('requestBackend', () => {
     });
   });
 
-  it('omits the session header when the bridge returns an empty token', async () => {
-    const fetchMock = vi.fn<typeof fetch>().mockResolvedValueOnce(
-      createResponse({
-        ok: true,
-        status: 200,
-        text: '{"message":"ok"}',
-      }),
-    );
+  it('throws when the session token is not available', async () => {
+    const getSessionTokenMock = vi.fn<() => Promise<string | null>>().mockResolvedValueOnce(null);
+    const appBridgeClient: AppBridgeClient = {
+      getSessionToken: getSessionTokenMock as any,
+      setupCompleted: vi.fn(),
+      getCurrentCustomerId: vi.fn(),
+      subscribeToCustomerChanged: vi.fn(),
+    };
 
-    vi.stubGlobal('fetch', fetchMock);
-
-    const response = await requestBackend({
+    const requestPromise = requestBackend({
       path: '/app-info',
-      appBridgeClient: createDummyAppBridgeClient(),
+      appBridgeClient,
     });
 
-    expect(response.ok).toBe(true);
-    expect(response.json).toEqual({ message: 'ok' });
-    expect(fetchMock).toHaveBeenCalledWith('https://api.example.test/app-info', {
-      method: 'GET',
-    });
+    await expect(requestPromise).rejects.toThrow('A session token is required to access the backend.');
   });
 
   it('sends JSON request bodies for backend POST requests', async () => {

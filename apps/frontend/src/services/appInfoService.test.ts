@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { createDummyAppBridgeClient, type AppBridgeClient } from './appBridgeClient';
+import { type AppBridgeClient } from './appBridgeClient';
 import { AppError } from './appError';
 import { requestAppInfo } from './appInfoService';
 
@@ -27,8 +27,6 @@ describe('requestAppInfo', () => {
         ok: true,
         text: JSON.stringify({
           environment: 'qa',
-          nohubTenantId: 'tenant-1',
-          isNohubConfigured: true,
           hubUrl: 'https://hub.qa.jtl-cloud.com',
           cloudErpUrl: 'https://erp.qa.jtl-cloud.com',
           apiBaseUrl: 'https://api.qa.jtl-cloud.com',
@@ -41,23 +39,26 @@ describe('requestAppInfo', () => {
 
     await expect(requestAppInfo(appBridgeClient)).resolves.toEqual({
       environment: 'qa',
-      nohubTenantId: 'tenant-1',
-      isNohubConfigured: true,
       hubUrl: 'https://hub.qa.jtl-cloud.com',
       cloudErpUrl: 'https://erp.qa.jtl-cloud.com',
       apiBaseUrl: 'https://api.qa.jtl-cloud.com',
       authUrl: 'https://auth.qa.jtl-cloud.com/oauth2/token',
     });
+
+    expect(fetchMock).toHaveBeenCalledWith('https://api.example.test/app-info', {
+      method: 'GET',
+      headers: {
+        'X-Session-Token': 'session-token',
+      },
+    });
   });
 
-  it('loads backend app info through the dummy bridge in local mode', async () => {
+  it('loads backend app info with custom session token', async () => {
     const fetchMock = vi.fn<typeof fetch>().mockResolvedValueOnce(
       createResponse({
         ok: true,
         text: JSON.stringify({
           environment: 'prod',
-          nohubTenantId: null,
-          isNohubConfigured: false,
           hubUrl: 'https://hub.jtl-cloud.com',
           cloudErpUrl: 'https://erp.jtl-cloud.com',
           apiBaseUrl: 'https://api.jtl-cloud.com',
@@ -67,12 +68,10 @@ describe('requestAppInfo', () => {
     );
 
     vi.stubGlobal('fetch', fetchMock);
-    const appBridgeClient = createDummyAppBridgeClient();
+    getSessionTokenMock.mockResolvedValueOnce('custom-token');
 
     await expect(requestAppInfo(appBridgeClient)).resolves.toEqual({
       environment: 'prod',
-      nohubTenantId: null,
-      isNohubConfigured: false,
       hubUrl: 'https://hub.jtl-cloud.com',
       cloudErpUrl: 'https://erp.jtl-cloud.com',
       apiBaseUrl: 'https://api.jtl-cloud.com',
@@ -81,6 +80,9 @@ describe('requestAppInfo', () => {
 
     expect(fetchMock).toHaveBeenCalledWith('https://api.example.test/app-info', {
       method: 'GET',
+      headers: {
+        'X-Session-Token': 'custom-token',
+      },
     });
   });
 
@@ -102,6 +104,16 @@ describe('requestAppInfo', () => {
         userMessage: 'The backend app info returned an unexpected payload.',
       },
     });
+  });
+
+  it('throws when session token is not available', async () => {
+    getSessionTokenMock.mockResolvedValueOnce(null as unknown as string);
+
+    const requestPromise = requestAppInfo(appBridgeClient);
+
+    await expect(requestPromise).rejects.toBeInstanceOf(Error);
+    // The error may be wrapped in AppError, so just check it contains relevant info
+    await expect(requestPromise).rejects.toThrow();
   });
 });
 

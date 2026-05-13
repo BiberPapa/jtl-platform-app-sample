@@ -16,7 +16,10 @@ export function createApp() {
   app.use(assignRequestContext);
 
   app.get('/', (_req, res) => {
-    res.send('Hello from TypeScript + Express!');
+    res.status(404).json({
+      error: 'Not Found',
+      message: 'This backend serves as an ERP proxy. Access the app through JTL Hub or via manifest entry points.',
+    });
   });
 
   app.get('/app-info', appInfoHandler);

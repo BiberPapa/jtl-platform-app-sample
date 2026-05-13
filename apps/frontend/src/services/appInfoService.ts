@@ -4,8 +4,6 @@ import { requestBackend } from './apiClient';
 
 export type AppInfoResponse = {
   environment: 'dev' | 'qa' | 'prod';
-  nohubTenantId: string | null;
-  isNohubConfigured: boolean;
   hubUrl: string;
   cloudErpUrl: string;
   apiBaseUrl: string;
@@ -56,8 +54,6 @@ function isAppInfoResponse(value: unknown): value is AppInfoResponse {
 
   return (
     (candidate['environment'] === 'dev' || candidate['environment'] === 'qa' || candidate['environment'] === 'prod') &&
-    (typeof candidate['nohubTenantId'] === 'string' || candidate['nohubTenantId'] === null) &&
-    typeof candidate['isNohubConfigured'] === 'boolean' &&
     typeof candidate['hubUrl'] === 'string' &&
     typeof candidate['cloudErpUrl'] === 'string' &&
     typeof candidate['apiBaseUrl'] === 'string' &&

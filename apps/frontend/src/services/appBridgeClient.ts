@@ -47,30 +47,6 @@ export function createAppBridgeClient(appBridge: AppBridge): AppBridgeClient {
   };
 }
 
-export function createDummyAppBridgeClient(): AppBridgeClient {
-  return {
-    getSessionToken(): Promise<string> {
-      logNohubCall('getSessionToken');
-      return Promise.resolve('');
-    },
-    setupCompleted(): Promise<void> {
-      logNohubCall('setupCompleted');
-      return Promise.resolve();
-    },
-    getCurrentCustomerId(): Promise<string> {
-      logNohubCall('getCurrentCustomerId');
-      return Promise.resolve('');
-    },
-    subscribeToCustomerChanged(): () => void {
-      logNohubCall('subscribeToCustomerChanged');
-
-      return () => {
-        logNohubCall('unsubscribeCustomerChanged');
-      };
-    },
-  };
-}
-
 function isCustomerChangedEvent(value: unknown): value is CustomerChangedEvent {
   if (!value || typeof value !== 'object') {
     return false;
@@ -79,8 +55,4 @@ function isCustomerChangedEvent(value: unknown): value is CustomerChangedEvent {
   const candidate = value as Record<string, unknown>;
 
   return typeof candidate['customerId'] === 'string';
-}
-
-function logNohubCall(methodName: string): void {
-  console.info(`[NOHUB][DummyAppBridge] ${methodName} was called while the app is running outside the hub.`);
 }
